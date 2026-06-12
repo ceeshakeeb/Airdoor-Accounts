@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Airdoor Billing System</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -718,15 +719,21 @@
         <h3>☁️ Google Drive Backup</h3>
         <div class="gdrive-box" id="gdrive-box">
           <div class="gdrive-info">
-            <h4>Google Drive Integration</h4>
-            <p>Connect your Google account to automatically backup all invoices and documents to your Drive. Access from any device, anytime.</p>
+            <h4 id="gdrive-title">Google Drive Integration</h4>
+            <p id="gdrive-desc">Connect your Google account to backup all invoices and documents (as JSON) to your Drive. Access from any device, anytime.</p>
           </div>
           <button class="btn btn-blue" onclick="connectGDrive()" id="gdrive-connect-btn">Connect Google Drive</button>
         </div>
         <div style="margin-top:16px;padding:14px;background:var(--gold-light);border-radius:8px;font-size:13px;color:var(--gray600);border-left:3px solid var(--gold)">
-          <strong style="color:var(--gold)">📋 How it works:</strong> Once connected, every saved document is automatically uploaded as a PDF to your Google Drive folder "Airdoor Billing". You can also manually upload any document using the Upload button in the document list.
+          <strong style="color:var(--gold)">📋 How it works:</strong> Once connected, click "Backup Now" to upload a JSON snapshot of all your documents and settings to a file named <code>airdoor_backup.json</code> in your Google Drive (App Data). Use "Restore from Drive" to pull it back down on another device.
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px" id="gdrive-actions" hidden>
+          <button class="btn btn-gold" onclick="backupToDrive()">⬆ Backup Now</button>
+          <button class="btn btn-outline" onclick="restoreFromDrive()">⬇ Restore from Drive</button>
+          <button class="btn btn-outline" onclick="downloadBackupJSON()">💾 Download JSON</button>
         </div>
       </div>
+
 
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:8px">
         <button class="btn btn-outline" onclick="loadSettings()">Reset</button>
@@ -1036,114 +1043,118 @@ function generateInvoiceHTML(doc) {
 
   const gstLine = s.gst ? `<div style="margin-top:4px;font-size:11px;color:#475569"><strong>GST:</strong> ${s.gst}</div>` : '';
 
+  const docLabel = doc.type === 'Tax Invoice' ? 'INVOICE' : doc.type === 'Proforma Invoice' ? 'PROFORMA' : 'QUOTATION';
+  const NAVY = '#0f2a5e';
+
   return `
-    <div style="font-family:'DM Sans',sans-serif;color:#1e293b;width:100%;min-height:900px">
-      <!-- HEADER -->
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div>
-          <div style="display:flex;align-items:center;gap:12px">
-            ${s.logoDataUrl
-              ? `<img src="${s.logoDataUrl}" alt="Logo" style="max-height:64px;max-width:200px;object-fit:contain;display:block" />`
-              : `<div style="width:38px;height:38px;background:#0f1b2d;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:white;font-family:'Playfair Display',serif">A</div>
-                 <div>
-                   <div style="font-family:'Playfair Display',serif;font-size:24px;color:#0f1b2d;letter-spacing:2px">AIRDOOR</div>
-                   <div style="font-size:10px;letter-spacing:3px;color:#c8922a;text-transform:uppercase">Airconditioning Solutions</div>
-                 </div>`
-            }
-          </div>
-          <div style="font-size:11px;color:#475569;line-height:1.7;margin-top:10px;max-width:280px">${s.address}<br>${s.email} | ${s.phone}</div>
-          ${gstLine}
+    <div style="font-family:'DM Sans',sans-serif;color:#1e293b;width:100%;min-height:900px;position:relative;border:1px solid #e2e8f0;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:stretch;position:relative">
+        <div style="padding:24px 24px 12px 24px;display:flex;align-items:center;gap:14px">
+          ${s.logoDataUrl
+            ? `<img src="${s.logoDataUrl}" alt="Logo" style="max-height:60px;max-width:200px;object-fit:contain;display:block" />`
+            : `<div style="width:46px;height:46px;background:${NAVY};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:white">A</div>
+               <div style="font-size:28px;font-weight:800;color:${NAVY};letter-spacing:1px">airdoor</div>`
+          }
         </div>
-        <div style="text-align:right">
-          <div style="background:${doc.type==='Tax Invoice'?'#0f1b2d':doc.type==='Proforma Invoice'?'#1a6bff':'#c8922a'};color:white;padding:8px 20px;border-radius:6px;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;display:inline-block">${doc.type}</div>
+        <div style="background:${NAVY};color:white;padding:24px 36px;display:flex;align-items:center;justify-content:flex-end;min-width:240px;clip-path:polygon(15% 0,100% 0,100% 100%,0% 100%)">
+          <div style="font-size:28px;font-weight:800;letter-spacing:4px">${docLabel}</div>
         </div>
       </div>
 
-      <!-- DIVIDER -->
-      <div style="height:3px;background:linear-gradient(90deg,#0f1b2d,#c8922a);margin:16px 0;border-radius:2px"></div>
-
-      <!-- META -->
-      <div style="display:flex;gap:24px;margin-bottom:20px">
-        <div style="flex:1">
-          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Billed To</div>
-          <div style="font-size:14px;font-weight:700;color:#0f1b2d">${doc.clientName || '—'}</div>
-          <div style="font-size:12px;color:#475569;line-height:1.7;margin-top:4px">${doc.clientAddress || ''}</div>
-          <div style="font-size:12px;color:#475569">${doc.clientCity || ''}</div>
-          ${doc.clientContact ? `<div style="font-size:12px;color:#475569">Tel.: ${doc.clientContact}</div>` : ''}
-          ${doc.clientGST ? `<div style="font-size:12px;color:#475569;margin-top:4px"><strong>GST:</strong> ${doc.clientGST}</div>` : ''}
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 24px 16px 24px;gap:24px">
+        <div style="font-size:11px;color:#475569;line-height:1.9">
+          <div>📍 ${s.address}</div>
+          <div>📞 ${s.phone}</div>
+          <div>✉️ ${s.email}</div>
+          ${gstLine}
         </div>
-        <div style="min-width:240px">
-          <table style="width:100%;border-collapse:collapse">
-            ${doc.number ? `<tr><td style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding:4px 0;padding-right:16px">Doc No.</td><td style="font-family:'DM Mono',monospace;font-weight:700;color:#0f1b2d;font-size:13px;padding:4px 0">${doc.number}</td></tr>` : ''}
-            ${doc.date ? `<tr><td style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding:4px 0;padding-right:16px">Date</td><td style="font-family:'DM Mono',monospace;color:#1e293b;font-size:12px;padding:4px 0">${dateStr}</td></tr>` : ''}
-            ${doc.jobNo ? `<tr><td style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding:4px 0;padding-right:16px">Job No.</td><td style="font-family:'DM Mono',monospace;color:#1e293b;font-size:12px;padding:4px 0">${doc.jobNo}</td></tr>` : ''}
-            ${doc.poNo ? `<tr><td style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding:4px 0;padding-right:16px">PO No.</td><td style="font-family:'DM Mono',monospace;color:#1e293b;font-size:12px;padding:4px 0">${doc.poNo}</td></tr>` : ''}
-            ${doc.terms ? `<tr><td style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding:4px 0;padding-right:16px">Payment</td><td style="font-size:12px;color:#1e293b;padding:4px 0">${doc.terms}</td></tr>` : ''}
-            ${doc.worksite ? `<tr><td style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding:4px 0;padding-right:16px">Worksite</td><td style="font-size:12px;color:#1e293b;padding:4px 0">${doc.worksite}</td></tr>` : ''}
+        <div style="border:1px solid #e2e8f0;border-radius:8px;padding:14px 20px;min-width:240px">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            ${doc.number ? `<tr><td style="font-weight:700;color:${NAVY};padding:3px 0">Invoice No.</td><td style="padding:3px 0 3px 12px">:</td><td style="padding:3px 0 3px 8px;font-family:'DM Mono',monospace">${doc.number}</td></tr>` : ''}
+            ${doc.date ? `<tr><td style="font-weight:700;color:${NAVY};padding:3px 0">Invoice Date</td><td style="padding:3px 0 3px 12px">:</td><td style="padding:3px 0 3px 8px">${dateStr}</td></tr>` : ''}
+            ${doc.dueDate ? `<tr><td style="font-weight:700;color:${NAVY};padding:3px 0">Due Date</td><td style="padding:3px 0 3px 12px">:</td><td style="padding:3px 0 3px 8px">${new Date(doc.dueDate).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</td></tr>` : ''}
+            ${doc.terms ? `<tr><td style="font-weight:700;color:${NAVY};padding:3px 0">Terms</td><td style="padding:3px 0 3px 12px">:</td><td style="padding:3px 0 3px 8px">${doc.terms}</td></tr>` : ''}
+            ${doc.jobNo ? `<tr><td style="font-weight:700;color:${NAVY};padding:3px 0">Job No.</td><td style="padding:3px 0 3px 12px">:</td><td style="padding:3px 0 3px 8px">${doc.jobNo}</td></tr>` : ''}
+            ${doc.poNo ? `<tr><td style="font-weight:700;color:${NAVY};padding:3px 0">PO No.</td><td style="padding:3px 0 3px 12px">:</td><td style="padding:3px 0 3px 8px">${doc.poNo}</td></tr>` : ''}
           </table>
         </div>
       </div>
 
-      <!-- ITEMS TABLE -->
-      <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;border:1px solid #e2e8f0;border-radius:8px;margin:0 24px 16px 24px;padding:16px 20px">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Bill To</div>
+          <div style="font-size:13px;font-weight:700;color:${NAVY}">${doc.clientName || '—'}</div>
+          <div style="font-size:12px;color:#475569;line-height:1.7;margin-top:2px">${doc.clientAddress || ''}</div>
+          <div style="font-size:12px;color:#475569">${doc.clientCity || ''}</div>
+          ${doc.clientContact ? `<div style="font-size:12px;color:#475569">Tel.: ${doc.clientContact}</div>` : ''}
+          ${doc.clientGST ? `<div style="font-size:12px;color:#475569;margin-top:4px"><strong>GST:</strong> ${doc.clientGST}</div>` : ''}
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Ship To</div>
+          <div style="font-size:12px;color:#475569;line-height:1.7">${doc.worksite || doc.clientAddress || ''}</div>
+          <div style="font-size:12px;color:#475569">${doc.clientCity || ''}</div>
+        </div>
+      </div>
+
+      <table style="width:calc(100% - 48px);margin:0 24px 16px 24px;border-collapse:collapse">
         <thead>
-          <tr style="background:#0f1b2d">
+          <tr style="background:${NAVY}">
             <th style="color:white;padding:10px 10px;font-size:11px;font-weight:600;text-align:center;width:36px">#</th>
             <th style="color:white;padding:10px 10px;font-size:11px;font-weight:600;text-align:left">Description</th>
             <th style="color:white;padding:10px 10px;font-size:11px;font-weight:600;text-align:right;width:60px">Qty</th>
             <th style="color:white;padding:10px 10px;font-size:11px;font-weight:600;text-align:center;width:70px">Unit</th>
-            <th style="color:white;padding:10px 10px;font-size:11px;font-weight:600;text-align:right;width:100px">Rate (₹)</th>
-            <th style="color:white;padding:10px 10px;font-size:11px;font-weight:600;text-align:right;width:110px">Amount (₹)</th>
+            <th style="color:white;padding:10px 10px;font-size:11px;font-weight:600;text-align:right;width:100px">Unit Price</th>
+            <th style="color:white;padding:10px 10px;font-size:11px;font-weight:600;text-align:right;width:110px">Amount</th>
           </tr>
         </thead>
         <tbody>
           ${itemRows}
         </tbody>
-        <tfoot>
-          <tr class="subtotal" style="border-top:2px solid #e2e8f0">
-            <td colspan="5" style="text-align:right;padding:8px 10px;font-size:12px;font-weight:600;color:#475569">Total Taxable Value</td>
-            <td style="text-align:right;padding:8px 10px;font-family:'DM Mono',monospace;font-weight:700">${fmt(doc.subtotal)}</td>
-          </tr>
-          ${discRow}
-          ${taxRows}
-          <tr style="border-top:3px solid #0f1b2d">
-            <td colspan="5" style="text-align:right;padding:12px 10px;font-size:14px;font-weight:700;color:#0f1b2d">GRAND TOTAL</td>
-            <td style="text-align:right;padding:12px 10px;font-family:'DM Mono',monospace;font-size:15px;font-weight:800;color:#0f1b2d">${fmt(doc.grand)}</td>
-          </tr>
-        </tfoot>
       </table>
 
-      <!-- FOOTER -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:16px">
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#0f1b2d;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;border-bottom:2px solid #0f1b2d;padding-bottom:6px">Bank Details</div>
-          <table style="width:100%;border-collapse:collapse">
-            <tr><td style="font-size:11px;color:#94a3b8;font-weight:600;padding:3px 0;width:110px">Account Name</td><td style="font-size:11px;font-family:'DM Mono',monospace;padding:3px 0">${s.accName}</td></tr>
-            <tr><td style="font-size:11px;color:#94a3b8;font-weight:600;padding:3px 0">Account No.</td><td style="font-size:11px;font-family:'DM Mono',monospace;padding:3px 0">${s.accNum}</td></tr>
-            <tr><td style="font-size:11px;color:#94a3b8;font-weight:600;padding:3px 0">Bank</td><td style="font-size:11px;font-family:'DM Mono',monospace;padding:3px 0">${s.bank}</td></tr>
-            <tr><td style="font-size:11px;color:#94a3b8;font-weight:600;padding:3px 0">Branch</td><td style="font-size:11px;font-family:'DM Mono',monospace;padding:3px 0">${s.branch}</td></tr>
-            <tr><td style="font-size:11px;color:#94a3b8;font-weight:600;padding:3px 0">IFSC</td><td style="font-size:11px;font-family:'DM Mono',monospace;padding:3px 0;font-weight:700">${s.ifsc}</td></tr>
+      <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:24px;margin:0 24px 16px 24px;align-items:start">
+        <div style="border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px">
+          <div style="font-size:12px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Payment Information</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <tr><td style="font-weight:600;color:#475569;padding:3px 0;width:100px">Bank Name</td><td style="padding:3px 8px">:</td><td style="padding:3px 0;font-family:'DM Mono',monospace">${s.bank}</td></tr>
+            <tr><td style="font-weight:600;color:#475569;padding:3px 0">A/C Name</td><td style="padding:3px 8px">:</td><td style="padding:3px 0;font-family:'DM Mono',monospace">${s.accName}</td></tr>
+            <tr><td style="font-weight:600;color:#475569;padding:3px 0">A/C No.</td><td style="padding:3px 8px">:</td><td style="padding:3px 0;font-family:'DM Mono',monospace">${s.accNum}</td></tr>
+            <tr><td style="font-weight:600;color:#475569;padding:3px 0">IFSC Code</td><td style="padding:3px 8px">:</td><td style="padding:3px 0;font-family:'DM Mono',monospace;font-weight:700">${s.ifsc}</td></tr>
+            <tr><td style="font-weight:600;color:#475569;padding:3px 0">Branch</td><td style="padding:3px 8px">:</td><td style="padding:3px 0;font-family:'DM Mono',monospace">${s.branch}</td></tr>
           </table>
-          <!-- GST Address -->
-          <div style="margin-top:14px;padding:10px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0">
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">GST Invoice Address</div>
-            <div style="font-size:11px;color:#475569;line-height:1.7">${s.company}<br>${s.address}</div>
-            ${s.gst ? `<div style="font-size:11px;color:#475569;margin-top:4px"><strong>GSTIN:</strong> ${s.gst}</div>` : ''}
+        </div>
+        <div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <tr><td style="padding:8px 10px;color:#475569">Subtotal</td><td style="padding:8px 10px;text-align:right;font-family:'DM Mono',monospace;font-weight:700">${fmt(doc.subtotal)}</td></tr>
+            ${discRow}
+            ${taxRows}
+          </table>
+          <div style="background:${NAVY};color:white;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-radius:6px;margin-top:8px">
+            <div style="font-size:16px;font-weight:800;letter-spacing:1px">TOTAL</div>
+            <div style="font-size:18px;font-weight:800;font-family:'DM Mono',monospace">${fmt(doc.grand)}</div>
           </div>
         </div>
-        <div style="text-align:right;display:flex;flex-direction:column;justify-content:space-between">
-          <div>
-            <div style="font-size:10px;font-weight:700;color:#0f1b2d;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:60px">Authorised Signatory</div>
-            <div style="border-top:1.5px solid #0f1b2d;padding-top:8px">
-              <div style="font-size:13px;font-weight:700;color:#0f1b2d">${s.company}</div>
-              <div style="font-size:11px;color:#475569">Authorised Signatory</div>
-            </div>
-          </div>
-          <div style="margin-top:20px;padding:10px 14px;background:#fdf3e3;border-radius:6px;border:1px solid #c8922a;text-align:left">
-            <div style="font-size:10px;color:#c8922a;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Note</div>
-            <div style="font-size:11px;color:#475569">This is a computer-generated document. No signature required unless specified.</div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:0 24px 24px 24px;gap:24px">
+        <div style="border:1px solid #e2e8f0;border-radius:8px;padding:14px 18px;flex:1">
+          <div style="font-size:12px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Notes</div>
+          <div style="font-size:11px;color:#475569;line-height:1.8">
+            ▶ Please make payment within ${doc.terms || '15 days'} of the invoice date.<br>
+            ▶ Late payment may attract additional charges.<br>
+            ▶ Thank you for your business!
           </div>
         </div>
+        <div style="text-align:right;min-width:140px;padding-top:8px">
+          <div style="border-top:1.5px solid ${NAVY};padding-top:8px;margin-top:50px">
+            <div style="font-size:12px;font-weight:700;color:${NAVY}">${s.company}</div>
+            <div style="font-size:11px;color:#475569">Authorised Signatory</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:${NAVY};color:white;text-align:center;padding:18px;font-size:18px;font-weight:600;clip-path:polygon(0 0,100% 25%,100% 100%,0 100%)">
+        Thank you for your business!
       </div>
     </div>`;
 }
@@ -1334,35 +1345,191 @@ async function downloadSavedPDF() {
 }
 
 // ═══════════════════════════════════════════════════════
-// GOOGLE DRIVE
+// GOOGLE DRIVE BACKUP (JSON, appDataFolder)
 // ═══════════════════════════════════════════════════════
-function connectGDrive() {
-  // Google Drive OAuth flow - opens Google's auth page
-  const clientId = '505328881949-dp4kq97nlv3fmjb2gfprbmsi0ba58a7b.apps.googleusercontent.com'; // Replace with actual client ID
-  const scope = 'https://www.googleapis.com/auth/drive.file';
-  const redirectUri = window.location.href.split('?')[0];
+const GDRIVE_CLIENT_ID = '505328881949-dp4kq97nlv3fmjb2gfprbmsi0ba58a7b.apps.googleusercontent.com';
+const GDRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+const GDRIVE_BACKUP_FILENAME = 'airdoor_backup.json';
+let gdriveTokenClient = null;
+let gdriveAccessToken = localStorage.getItem('airdoor_gdrive_token') || null;
+let gdriveTokenExpiry = Number(localStorage.getItem('airdoor_gdrive_token_exp') || 0);
 
-  // For demo: show instructions
-  if (!gdriveConnected) {
-    const msg = `To connect Google Drive:
-
-1. Go to console.cloud.google.com
-2. Create a project → Enable Google Drive API
-3. Create OAuth 2.0 credentials (Web Application)
-4. Add your URL as authorized origin
-5. Replace 'YOUR_GOOGLE_CLIENT_ID' in the code
-
-For now, all data is saved locally in your browser and can be exported as PDF.
-
-Your ${documents.length} document(s) are safe in local storage.`;
-    alert(msg);
+function gdriveSetConnectedUI(connected) {
+  gdriveConnected = connected;
+  const btn = document.getElementById('gdrive-connect-btn');
+  const statusBtn = document.getElementById('gdrive-status-btn');
+  const actions = document.getElementById('gdrive-actions');
+  const title = document.getElementById('gdrive-title');
+  const desc = document.getElementById('gdrive-desc');
+  if (connected) {
+    if (btn) btn.textContent = 'Disconnect Google Drive';
+    if (statusBtn) statusBtn.textContent = '☁️ Drive Connected';
+    if (actions) actions.hidden = false;
+    if (title) title.textContent = 'Google Drive Connected';
+    if (desc) desc.textContent = 'You can now backup or restore your data as a JSON file in your Google Drive (App Data, hidden from your regular Drive view).';
   } else {
-    gdriveConnected = false;
-    document.getElementById('gdrive-connect-btn').textContent = 'Connect Google Drive';
-    document.getElementById('gdrive-status-btn').textContent = '☁️ Connect Drive';
-    toast('Google Drive disconnected');
+    if (btn) btn.textContent = 'Connect Google Drive';
+    if (statusBtn) statusBtn.textContent = '☁️ Connect Drive';
+    if (actions) actions.hidden = true;
+    if (title) title.textContent = 'Google Drive Integration';
+    if (desc) desc.textContent = 'Connect your Google account to backup all invoices and documents (as JSON) to your Drive. Access from any device, anytime.';
   }
 }
+
+function gdriveHasValidToken() {
+  return gdriveAccessToken && Date.now() < gdriveTokenExpiry;
+}
+
+function gdriveInitTokenClient(callback) {
+  if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
+    toast('Google sign-in script failed to load. Check your connection.', 'error');
+    return;
+  }
+  if (!gdriveTokenClient) {
+    gdriveTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GDRIVE_CLIENT_ID,
+      scope: GDRIVE_SCOPE,
+      callback: (resp) => {
+        if (resp.error) {
+          toast('Google Drive connection failed: ' + resp.error, 'error');
+          return;
+        }
+        gdriveAccessToken = resp.access_token;
+        gdriveTokenExpiry = Date.now() + (Number(resp.expires_in || 3600) * 1000) - 60000;
+        localStorage.setItem('airdoor_gdrive_token', gdriveAccessToken);
+        localStorage.setItem('airdoor_gdrive_token_exp', String(gdriveTokenExpiry));
+        gdriveSetConnectedUI(true);
+        if (callback) callback();
+      },
+    });
+  }
+  return gdriveTokenClient;
+}
+
+function connectGDrive() {
+  if (gdriveConnected) {
+    // Disconnect
+    if (gdriveAccessToken && typeof google !== 'undefined' && google.accounts) {
+      google.accounts.oauth2.revoke(gdriveAccessToken, () => {});
+    }
+    gdriveAccessToken = null;
+    gdriveTokenExpiry = 0;
+    localStorage.removeItem('airdoor_gdrive_token');
+    localStorage.removeItem('airdoor_gdrive_token_exp');
+    gdriveSetConnectedUI(false);
+    toast('Google Drive disconnected');
+    return;
+  }
+
+  const client = gdriveInitTokenClient(() => {
+    toast('Google Drive connected ✓', 'success');
+  });
+  if (!client) return;
+  client.requestAccessToken({ prompt: gdriveHasValidToken() ? '' : 'consent' });
+}
+
+function gdriveEnsureToken(callback) {
+  if (gdriveHasValidToken()) { callback(); return; }
+  const client = gdriveInitTokenClient(callback);
+  if (!client) return;
+  client.requestAccessToken({ prompt: '' });
+}
+
+function gdriveBuildBackupPayload() {
+  return JSON.stringify({
+    exportedAt: new Date().toISOString(),
+    documents,
+    settings,
+  }, null, 2);
+}
+
+async function gdriveFindBackupFileId() {
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name,modifiedTime)&q=${encodeURIComponent(`name='${GDRIVE_BACKUP_FILENAME}'`)}`,
+    { headers: { Authorization: `Bearer ${gdriveAccessToken}` } }
+  );
+  if (!res.ok) throw new Error('Failed to query Drive (' + res.status + ')');
+  const data = await res.json();
+  return (data.files && data.files[0]) ? data.files[0] : null;
+}
+
+async function backupToDrive() {
+  gdriveEnsureToken(async () => {
+    try {
+      toast('Backing up to Google Drive…');
+      const payload = gdriveBuildBackupPayload();
+      const existing = await gdriveFindBackupFileId();
+      const metadata = { name: GDRIVE_BACKUP_FILENAME, mimeType: 'application/json' };
+      if (!existing) metadata.parents = ['appDataFolder'];
+
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+      form.append('file', new Blob([payload], { type: 'application/json' }));
+
+      const url = existing
+        ? `https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=multipart`
+        : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`;
+      const method = existing ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { Authorization: `Bearer ${gdriveAccessToken}` },
+        body: form,
+      });
+      if (!res.ok) throw new Error('Upload failed (' + res.status + ')');
+      toast('Backup saved to Google Drive ✓', 'success');
+    } catch (err) {
+      console.error(err);
+      toast('Backup failed: ' + err.message, 'error');
+    }
+  });
+}
+
+async function restoreFromDrive() {
+  gdriveEnsureToken(async () => {
+    try {
+      const existing = await gdriveFindBackupFileId();
+      if (!existing) { toast('No backup found in Google Drive', 'error'); return; }
+      if (!confirm('This will overwrite your current local documents and settings with the backup from Google Drive (last modified ' + new Date(existing.modifiedTime).toLocaleString() + '). Continue?')) return;
+
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${existing.id}?alt=media`, {
+        headers: { Authorization: `Bearer ${gdriveAccessToken}` },
+      });
+      if (!res.ok) throw new Error('Download failed (' + res.status + ')');
+      const data = await res.json();
+
+      if (Array.isArray(data.documents)) {
+        documents = data.documents;
+        localStorage.setItem('airdoor_docs', JSON.stringify(documents));
+      }
+      if (data.settings) {
+        settings = data.settings;
+        localStorage.setItem('airdoor_settings', JSON.stringify(settings));
+      }
+      loadSettings();
+      updateBadges();
+      filterDocs('all');
+      toast('Restored from Google Drive ✓', 'success');
+    } catch (err) {
+      console.error(err);
+      toast('Restore failed: ' + err.message, 'error');
+    }
+  });
+}
+
+function downloadBackupJSON() {
+  const payload = gdriveBuildBackupPayload();
+  const blob = new Blob([payload], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'airdoor_backup.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 
 // ═══════════════════════════════════════════════════════
 // SETTINGS
@@ -1486,6 +1653,7 @@ window.addEventListener('DOMContentLoaded', () => {
   updateDashboard();
   // Load settings into settings page
   loadSettings();
+  gdriveSetConnectedUI(gdriveHasValidToken());
 });
 
 // Close modal on overlay click
