@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Airdoor Billing System</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -716,21 +715,12 @@
       </div>
 
       <div class="settings-card">
-        <h3>☁️ Google Drive Backup</h3>
-        <div class="gdrive-box" id="gdrive-box">
-          <div class="gdrive-info">
-            <h4 id="gdrive-title">Google Drive Integration</h4>
-            <p id="gdrive-desc">Connect your Google account to backup all invoices and documents (as JSON) to your Drive. Access from any device, anytime.</p>
-          </div>
-          <button class="btn btn-blue" onclick="connectGDrive()" id="gdrive-connect-btn">Connect Google Drive</button>
-        </div>
-        <div style="margin-top:16px;padding:14px;background:var(--gold-light);border-radius:8px;font-size:13px;color:var(--gray600);border-left:3px solid var(--gold)">
-          <strong style="color:var(--gold)">📋 How it works:</strong> Once connected, click "Backup Now" to upload a JSON snapshot of all your documents and settings to a file named <code>airdoor_backup.json</code> in your Google Drive (App Data). Use "Restore from Drive" to pull it back down on another device.
-        </div>
-        <div style="display:flex;gap:10px;margin-top:14px" id="gdrive-actions" hidden>
-          <button class="btn btn-gold" onclick="backupToDrive()">⬆ Backup Now</button>
-          <button class="btn btn-outline" onclick="restoreFromDrive()">⬇ Restore from Drive</button>
-          <button class="btn btn-outline" onclick="downloadBackupJSON()">💾 Download JSON</button>
+        <h3>💾 Backup &amp; Restore</h3>
+        <div style="margin-bottom:14px;font-size:13px;color:var(--gray600);line-height:1.6">Download all your documents and settings as a JSON file. To restore on another device, use the Restore button and pick a previously saved backup file.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-gold" onclick="downloadBackupJSON()">⬇ Download Backup JSON</button>
+          <button class="btn btn-outline" onclick="document.getElementById('restore-file-input').click()">⬆ Restore from JSON</button>
+          <input type="file" id="restore-file-input" accept=".json,application/json" style="display:none" onchange="restoreFromJSON(event)" />
         </div>
       </div>
 
@@ -809,7 +799,6 @@ let settings = JSON.parse(localStorage.getItem('airdoor_settings') || 'null') ||
 let currentDocType = 'Tax Invoice';
 let currentFilter = 'all';
 let viewingDocId = null;
-let gdriveConnected = false;
 
 // ═══════════════════════════════════════════════════════
 // PAGE NAVIGATION
@@ -1047,7 +1036,7 @@ function generateInvoiceHTML(doc) {
   const NAVY = '#0f2a5e';
 
   return `
-    <div style="font-family:'DM Sans',sans-serif;color:#1e293b;width:100%;min-height:900px;position:relative;border:1px solid #e2e8f0;overflow:hidden">
+    <div style="font-family:'DM Sans',sans-serif;color:#1e293b;width:100%;min-height:900px;position:relative;border:1px solid #e2e8f0;overflow:hidden;display:flex;flex-direction:column">
       <div style="display:flex;justify-content:space-between;align-items:stretch;position:relative">
         <div style="padding:24px 24px 12px 24px;display:flex;align-items:center;gap:14px">
           ${s.logoDataUrl
@@ -1136,24 +1125,26 @@ function generateInvoiceHTML(doc) {
         </div>
       </div>
 
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:0 24px 24px 24px;gap:24px">
-        <div style="border:1px solid #e2e8f0;border-radius:8px;padding:14px 18px;flex:1">
-          <div style="font-size:12px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Notes</div>
-          <div style="font-size:11px;color:#475569;line-height:1.8">
-            ▶ Please make payment within ${doc.terms || '15 days'} of the invoice date.<br>
-            ▶ Late payment may attract additional charges.<br>
-            ▶ Thank you for your business!
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:0 24px 24px 24px;gap:24px">
+          <div style="border:1px solid #e2e8f0;border-radius:8px;padding:14px 18px;flex:1">
+            <div style="font-size:12px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Notes</div>
+            <div style="font-size:11px;color:#475569;line-height:1.8">
+              ▶ Please make payment within ${doc.terms || '15 days'} of the invoice date.<br>
+              ▶ Late payment may attract additional charges.<br>
+              ▶ Thank you for your business!
+            </div>
           </div>
-        </div>
-        <div style="text-align:right;min-width:140px;padding-top:8px">
-          <div style="border-top:1.5px solid ${NAVY};padding-top:8px;margin-top:50px">
-            <div style="font-size:12px;font-weight:700;color:${NAVY}">${s.company}</div>
-            <div style="font-size:11px;color:#475569">Authorised Signatory</div>
+          <div style="text-align:right;min-width:140px;padding-top:8px">
+            <div style="border-top:1.5px solid ${NAVY};padding-top:8px;margin-top:50px">
+              <div style="font-size:12px;font-weight:700;color:${NAVY}">${s.company}</div>
+              <div style="font-size:11px;color:#475569">Authorised Signatory</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div style="background:${NAVY};color:white;text-align:center;padding:18px;font-size:18px;font-weight:600;clip-path:polygon(0 0,100% 25%,100% 100%,0 100%)">
+      <div style="background:${NAVY};color:white;text-align:center;padding:11px;font-size:14px;font-weight:600;clip-path:polygon(0 0,100% 15%,100% 100%,0 100%)">
         Thank you for your business!
       </div>
     </div>`;
@@ -1304,18 +1295,47 @@ function deleteDoc(id) {
 // ═══════════════════════════════════════════════════════
 // PDF DOWNLOAD
 // ═══════════════════════════════════════════════════════
-async function downloadPDF() {
-  toast('Generating PDF…');
-  const el = document.getElementById('invoice-preview');
+async function renderToPDF(el, fname) {
   const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const imgData = canvas.toDataURL('image/jpeg', 0.95);
-  const pdfW = pdf.internal.pageSize.getWidth();
-  const pdfH = (canvas.height * pdfW) / canvas.width;
-  pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
-  const fname = (document.getElementById('doc-number').value || 'document').replace(/\//g, '-');
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const imgW = canvas.width;
+  const imgH = canvas.height;
+  const scale = (pageW / imgW) * (canvas.width / canvas.width); // px per mm
+  const mmPerPx = pageW / imgW;
+  const totalHeightMM = imgH * mmPerPx;
+
+  if (totalHeightMM <= pageH) {
+    // Single page
+    pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pageW, totalHeightMM);
+  } else {
+    // Multipage: slice canvas into A4-height chunks
+    const sliceHeightPx = Math.floor(pageH / mmPerPx);
+    let offsetPx = 0;
+    let firstPage = true;
+    while (offsetPx < imgH) {
+      const sliceH = Math.min(sliceHeightPx, imgH - offsetPx);
+      const sliceCanvas = document.createElement('canvas');
+      sliceCanvas.width = imgW;
+      sliceCanvas.height = sliceH;
+      const ctx = sliceCanvas.getContext('2d');
+      ctx.drawImage(canvas, 0, offsetPx, imgW, sliceH, 0, 0, imgW, sliceH);
+      if (!firstPage) pdf.addPage();
+      pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pageW, sliceH * mmPerPx);
+      offsetPx += sliceH;
+      firstPage = false;
+    }
+  }
   pdf.save(fname + '.pdf');
+}
+
+async function downloadPDF() {
+  toast('Generating PDF…');
+  const el = document.getElementById('invoice-preview');
+  const fname = (document.getElementById('doc-number').value || 'document').replace(/\//g, '-');
+  await renderToPDF(el, fname);
   toast('PDF downloaded! ✓', 'success');
 }
 
@@ -1323,19 +1343,19 @@ async function downloadDocPDF(id) {
   const doc = documents.find(d => d.id === id);
   if (!doc) return;
   viewingDocId = id;
-  document.getElementById('modal-invoice-preview').innerHTML = generateInvoiceHTML(doc);
+  // Render into hidden temp div for PDF capture
+  let tempDiv = document.getElementById('_pdf_temp');
+  if (!tempDiv) {
+    tempDiv = document.createElement('div');
+    tempDiv.id = '_pdf_temp';
+    tempDiv.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:white;z-index:-1';
+    document.body.appendChild(tempDiv);
+  }
+  tempDiv.innerHTML = generateInvoiceHTML(doc);
   await new Promise(r => setTimeout(r, 300));
   toast('Generating PDF…');
-  const el = document.getElementById('modal-invoice-preview');
-  const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const imgData = canvas.toDataURL('image/jpeg', 0.95);
-  const pdfW = pdf.internal.pageSize.getWidth();
-  const pdfH = (canvas.height * pdfW) / canvas.width;
-  pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
   const fname = (doc.number || 'document').replace(/\//g, '-');
-  pdf.save(fname + '.pdf');
+  await renderToPDF(tempDiv.firstElementChild, fname);
   toast('PDF downloaded! ✓', 'success');
 }
 
@@ -1345,163 +1365,33 @@ async function downloadSavedPDF() {
 }
 
 // ═══════════════════════════════════════════════════════
-// GOOGLE DRIVE BACKUP (JSON, appDataFolder)
+// LOCAL BACKUP / RESTORE
 // ═══════════════════════════════════════════════════════
-const GDRIVE_CLIENT_ID = '505328881949-dp4kq97nlv3fmjb2gfprbmsi0ba58a7b.apps.googleusercontent.com';
-const GDRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
-const GDRIVE_BACKUP_FILENAME = 'airdoor_backup.json';
-let gdriveTokenClient = null;
-let gdriveAccessToken = localStorage.getItem('airdoor_gdrive_token') || null;
-let gdriveTokenExpiry = Number(localStorage.getItem('airdoor_gdrive_token_exp') || 0);
-
-function gdriveSetConnectedUI(connected) {
-  gdriveConnected = connected;
-  const btn = document.getElementById('gdrive-connect-btn');
-  const statusBtn = document.getElementById('gdrive-status-btn');
-  const actions = document.getElementById('gdrive-actions');
-  const title = document.getElementById('gdrive-title');
-  const desc = document.getElementById('gdrive-desc');
-  if (connected) {
-    if (btn) btn.textContent = 'Disconnect Google Drive';
-    if (statusBtn) statusBtn.textContent = '☁️ Drive Connected';
-    if (actions) actions.hidden = false;
-    if (title) title.textContent = 'Google Drive Connected';
-    if (desc) desc.textContent = 'You can now backup or restore your data as a JSON file in your Google Drive (App Data, hidden from your regular Drive view).';
-  } else {
-    if (btn) btn.textContent = 'Connect Google Drive';
-    if (statusBtn) statusBtn.textContent = '☁️ Connect Drive';
-    if (actions) actions.hidden = true;
-    if (title) title.textContent = 'Google Drive Integration';
-    if (desc) desc.textContent = 'Connect your Google account to backup all invoices and documents (as JSON) to your Drive. Access from any device, anytime.';
-  }
+function downloadBackupJSON() {
+  const payload = JSON.stringify({ exportedAt: new Date().toISOString(), documents, settings }, null, 2);
+  const blob = new Blob([payload], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'airdoor_backup_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded! ✓', 'success');
 }
 
-function gdriveHasValidToken() {
-  return gdriveAccessToken && Date.now() < gdriveTokenExpiry;
-}
-
-function gdriveInitTokenClient(callback) {
-  if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
-    toast('Google sign-in script failed to load. Check your connection.', 'error');
-    return;
-  }
-  if (!gdriveTokenClient) {
-    gdriveTokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: GDRIVE_CLIENT_ID,
-      scope: GDRIVE_SCOPE,
-      callback: (resp) => {
-        if (resp.error) {
-          toast('Google Drive connection failed: ' + resp.error, 'error');
-          return;
-        }
-        gdriveAccessToken = resp.access_token;
-        gdriveTokenExpiry = Date.now() + (Number(resp.expires_in || 3600) * 1000) - 60000;
-        localStorage.setItem('airdoor_gdrive_token', gdriveAccessToken);
-        localStorage.setItem('airdoor_gdrive_token_exp', String(gdriveTokenExpiry));
-        gdriveSetConnectedUI(true);
-        if (callback) callback();
-      },
-    });
-  }
-  return gdriveTokenClient;
-}
-
-function connectGDrive() {
-  if (gdriveConnected) {
-    // Disconnect
-    if (gdriveAccessToken && typeof google !== 'undefined' && google.accounts) {
-      google.accounts.oauth2.revoke(gdriveAccessToken, () => {});
-    }
-    gdriveAccessToken = null;
-    gdriveTokenExpiry = 0;
-    localStorage.removeItem('airdoor_gdrive_token');
-    localStorage.removeItem('airdoor_gdrive_token_exp');
-    gdriveSetConnectedUI(false);
-    toast('Google Drive disconnected');
-    return;
-  }
-
-  const client = gdriveInitTokenClient(() => {
-    toast('Google Drive connected ✓', 'success');
-  });
-  if (!client) return;
-  client.requestAccessToken({ prompt: gdriveHasValidToken() ? '' : 'consent' });
-}
-
-function gdriveEnsureToken(callback) {
-  if (gdriveHasValidToken()) { callback(); return; }
-  const client = gdriveInitTokenClient(callback);
-  if (!client) return;
-  client.requestAccessToken({ prompt: '' });
-}
-
-function gdriveBuildBackupPayload() {
-  return JSON.stringify({
-    exportedAt: new Date().toISOString(),
-    documents,
-    settings,
-  }, null, 2);
-}
-
-async function gdriveFindBackupFileId() {
-  const res = await fetch(
-    `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name,modifiedTime)&q=${encodeURIComponent(`name='${GDRIVE_BACKUP_FILENAME}'`)}`,
-    { headers: { Authorization: `Bearer ${gdriveAccessToken}` } }
-  );
-  if (!res.ok) throw new Error('Failed to query Drive (' + res.status + ')');
-  const data = await res.json();
-  return (data.files && data.files[0]) ? data.files[0] : null;
-}
-
-async function backupToDrive() {
-  gdriveEnsureToken(async () => {
+function restoreFromJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
     try {
-      toast('Backing up to Google Drive…');
-      const payload = gdriveBuildBackupPayload();
-      const existing = await gdriveFindBackupFileId();
-      const metadata = { name: GDRIVE_BACKUP_FILENAME, mimeType: 'application/json' };
-      if (!existing) metadata.parents = ['appDataFolder'];
-
-      const form = new FormData();
-      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-      form.append('file', new Blob([payload], { type: 'application/json' }));
-
-      const url = existing
-        ? `https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=multipart`
-        : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`;
-      const method = existing ? 'PATCH' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: { Authorization: `Bearer ${gdriveAccessToken}` },
-        body: form,
-      });
-      if (!res.ok) throw new Error('Upload failed (' + res.status + ')');
-      toast('Backup saved to Google Drive ✓', 'success');
-    } catch (err) {
-      console.error(err);
-      toast('Backup failed: ' + err.message, 'error');
-    }
-  });
-}
-
-async function restoreFromDrive() {
-  gdriveEnsureToken(async () => {
-    try {
-      const existing = await gdriveFindBackupFileId();
-      if (!existing) { toast('No backup found in Google Drive', 'error'); return; }
-      if (!confirm('This will overwrite your current local documents and settings with the backup from Google Drive (last modified ' + new Date(existing.modifiedTime).toLocaleString() + '). Continue?')) return;
-
-      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${existing.id}?alt=media`, {
-        headers: { Authorization: `Bearer ${gdriveAccessToken}` },
-      });
-      if (!res.ok) throw new Error('Download failed (' + res.status + ')');
-      const data = await res.json();
-
-      if (Array.isArray(data.documents)) {
-        documents = data.documents;
-        localStorage.setItem('airdoor_docs', JSON.stringify(documents));
-      }
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data.documents)) { toast('Invalid backup file', 'error'); return; }
+      if (!confirm('This will overwrite your current documents and settings with the backup (exported ' + (data.exportedAt ? new Date(data.exportedAt).toLocaleString() : 'unknown') + '). Continue?')) return;
+      documents = data.documents;
+      localStorage.setItem('airdoor_docs', JSON.stringify(documents));
       if (data.settings) {
         settings = data.settings;
         localStorage.setItem('airdoor_settings', JSON.stringify(settings));
@@ -1509,25 +1399,13 @@ async function restoreFromDrive() {
       loadSettings();
       updateBadges();
       filterDocs('all');
-      toast('Restored from Google Drive ✓', 'success');
-    } catch (err) {
-      console.error(err);
-      toast('Restore failed: ' + err.message, 'error');
+      toast('Restored successfully! ✓', 'success');
+    } catch(err) {
+      toast('Failed to parse backup file', 'error');
     }
-  });
-}
-
-function downloadBackupJSON() {
-  const payload = gdriveBuildBackupPayload();
-  const blob = new Blob([payload], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'airdoor_backup.json';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  };
+  reader.readAsText(file);
+  e.target.value = '';
 }
 
 
@@ -1653,7 +1531,6 @@ window.addEventListener('DOMContentLoaded', () => {
   updateDashboard();
   // Load settings into settings page
   loadSettings();
-  gdriveSetConnectedUI(gdriveHasValidToken());
 });
 
 // Close modal on overlay click
