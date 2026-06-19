@@ -29,8 +29,9 @@
     --blue: var(--san-marino);        /* Primary Buttons / Active States */
     --blue-light: var(--regent-st-blue); /* Highlights / Badges */
     
-    --gold: #d4af37;                  /* Airdoor Brand Accent */
-    --gold-light: rgba(212, 175, 55, 0.15);
+    --gold: #4A7FA7;                  /* Airdoor Secondary Brand Blue (San Marino) */
+    --gold-light: rgba(74, 127, 167, 0.16);
+    --gold-text: #B3CFE5;              /* Light blue accent for text on dark backgrounds */
     
     --white: #ffffff;                 /* Cards, Sidebars, Modals */
     --gray50: var(--porcelain);       /* Main App Background */
@@ -176,7 +177,7 @@
   .section-title { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--navy); font-weight: 700; }
   .table-wrap { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
   table { width: 100%; border-collapse: collapse; }
-  th { background: var(--navy); color: var(--gold); padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; }
+  th { background: var(--navy); color: var(--gold-text); padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; }
   td { padding: 13px 16px; border-bottom: 1px solid var(--gray100); font-size: 13px; color: var(--gray800); }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: var(--gray50); }
@@ -256,7 +257,7 @@
   .totals-table .total-row td { font-size: 16px; font-weight: 700; color: var(--navy); border-top: 2px solid var(--navy); padding-top: 12px; }
   .totals-table .tax-row td { color: var(--gray600); font-size: 13px; }
   .bank-box { background: var(--navy); color: white; border-radius: 10px; padding: 20px; box-shadow: var(--shadow); }
-  .bank-box h4 { font-size: 11px; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; }
+  .bank-box h4 { font-size: 11px; letter-spacing: 2px; color: var(--gold-text); text-transform: uppercase; margin-bottom: 12px; }
   .bank-item { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
   .bank-item span:first-child { color: var(--blue-light); }
   .bank-item span:last-child { font-family: 'DM Sans', sans-serif; font-weight: 500; }
@@ -360,7 +361,9 @@
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="logo">
-    <img id="topbar-logo-img" src="data:," alt="Airdoor" style="height:40px;max-width:160px;object-fit:contain;display:none" />
+    <div id="topbar-logo-plate" style="background:var(--porcelain);border-radius:8px;padding:5px 12px;display:none;align-items:center">
+      <img id="topbar-logo-img" src="data:," alt="Airdoor" style="height:36px;max-width:150px;object-fit:contain;display:none" />
+    </div>
     <div>
       <div class="logo-text" id="topbar-logo-text">AIRDOOR</div>
       <div style="font-size:11px;color:rgba(255,255,255,0.85);margin-top:2px;letter-spacing:0.5px">Airconditioning Solutions</div>
@@ -1384,7 +1387,7 @@ function generateInvoiceHTML(doc) {
     return `<tr style="background:${bg}"><td style="text-align:center;color:#4A7FA7;padding:7px 8px;font-size:11px;border-bottom:1px solid #e8f0f8">${i+1}</td><td style="padding:7px 8px;line-height:1.5;font-size:12px;color:#1e293b;border-bottom:1px solid #e8f0f8">${item.desc}</td><td style="text-align:right;padding:7px 8px;font-size:12px;color:#1e293b;border-bottom:1px solid #e8f0f8">${item.qty}</td><td style="text-align:center;padding:7px 8px;font-size:12px;color:#475569;border-bottom:1px solid #e8f0f8">${item.unit}</td><td style="text-align:right;padding:7px 8px;font-size:12px;color:#1e293b;border-bottom:1px solid #e8f0f8">${fmt(item.rate)}</td><td style="text-align:right;padding:7px 8px;font-size:12px;font-weight:600;color:#1A3D63;border-bottom:1px solid #e8f0f8">${fmt(item.amount)}</td></tr>`;
   }).join('');
   const gstLine = s.gst ? `<div style="margin-top:3px;font-size:11px;color:#475569"><strong>GST:</strong> ${s.gst}</div>` : '';
-  const docLabel = doc.type === 'Tax Invoice' ? 'INVOICE' : doc.type === 'Proforma Invoice' ? 'PROFORMA' : 'QUOTATION';
+  const docLabel = doc.type === 'Tax Invoice' ? 'TAX INVOICE' : doc.type === 'Proforma Invoice' ? 'PROFORMA' : doc.type === 'Invoice' ? 'INVOICE' : 'QUOTATION';
   
   const PRIMARY = '#1A3D63';
   const PRIMARY_DARK = '#0A1931';
@@ -1794,14 +1797,17 @@ function loadSettings() {
   const logoImg = document.getElementById('logo-preview-img');
   const logoPh = document.getElementById('logo-placeholder');
   const topbarLogoImg = document.getElementById('topbar-logo-img');
+  const topbarLogoPlate = document.getElementById('topbar-logo-plate');
   if (settings.logoDataUrl) {
     if (logoImg) { logoImg.src = settings.logoDataUrl; logoImg.style.display = 'block'; }
     if (logoPh) logoPh.style.display = 'none';
     if (topbarLogoImg) { topbarLogoImg.src = settings.logoDataUrl; topbarLogoImg.style.display = 'block'; }
+    if (topbarLogoPlate) topbarLogoPlate.style.display = 'flex';
   } else {
     if (logoImg) logoImg.style.display = 'none';
     if (logoPh) logoPh.style.display = 'block';
     if (topbarLogoImg) topbarLogoImg.style.display = 'none';
+    if (topbarLogoPlate) topbarLogoPlate.style.display = 'none';
   }
   document.getElementById('s-company').value = settings.company || '';
   document.getElementById('s-gst').value = settings.gst || '';
