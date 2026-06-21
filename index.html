@@ -881,14 +881,16 @@
       </div>
       <!-- Filter bar -->
       <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
+        <select id="exp-filter-proj" onchange="renderExpenses()" style="font-size:13px;padding:8px 12px;min-width:160px"><option value="">All Projects</option></select>
         <select id="exp-filter-cat" onchange="renderExpenses()" style="font-size:13px;padding:8px 12px;min-width:160px"><option value="">All Categories</option></select>
         <input type="month" id="exp-filter-month" onchange="renderExpenses()" style="font-size:13px;padding:8px 12px" />
-        <button class="btn btn-outline" onclick="document.getElementById('exp-filter-cat').value='';document.getElementById('exp-filter-month').value='';renderExpenses()">Clear</button>
+        <button class="btn btn-outline" onclick="openProjectsModal()">🏢 Manage Projects</button>
+        <button class="btn btn-outline" onclick="document.getElementById('exp-filter-proj').value='';document.getElementById('exp-filter-cat').value='';document.getElementById('exp-filter-month').value='';renderExpenses()">Clear</button>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Actions</th></tr></thead>
-          <tbody id="expenses-tbody"><tr><td colspan="5"><div class="empty-state"><div class="empty-icon">💸</div><h3>No expenses yet</h3><p>Start tracking your expenses</p></div></td></tr></tbody>
+          <thead><tr><th>Date</th><th>Project</th><th>Category</th><th>Description</th><th>Amount</th><th>Actions</th></tr></thead>
+          <tbody id="expenses-tbody"><tr><td colspan="6"><div class="empty-state"><div class="empty-icon">💸</div><h3>No expenses yet</h3><p>Start tracking your expenses</p></div></td></tr></tbody>
         </table>
       </div>
     </div>
@@ -1137,6 +1139,9 @@
     <input type="hidden" id="exp-edit-id" />
     <div class="form-grid">
       <div class="form-group"><label>Date</label><input type="date" id="exp-date" /></div>
+      <div class="form-group"><label>Project/Party</label>
+        <select id="exp-project" style="font-size:14px"><option value="">Select project</option></select>
+      </div>
       <div class="form-group"><label>Category</label>
         <select id="exp-category" style="font-size:14px"><option value="">Select category</option></select>
       </div>
@@ -1173,6 +1178,9 @@
     <input type="hidden" id="pur-edit-id" />
     <div class="form-grid">
       <div class="form-group"><label>Date</label><input type="date" id="pur-date" /></div>
+      <div class="form-group"><label>Project/Party</label>
+        <select id="pur-project" style="font-size:14px"><option value="">Select project</option></select>
+      </div>
       <div class="form-group"><label>Supplier</label><input type="text" id="pur-supplier" placeholder="Supplier name" /></div>
       <div class="form-group"><label>Bill No.</label><input type="text" id="pur-bill" placeholder="Optional" /></div>
       <div class="form-group"><label>Amount (₹)</label><input type="number" id="pur-amount" placeholder="0.00" min="0" step="0.01" /></div>
@@ -1212,14 +1220,29 @@
     <h3 id="sal-modal-title">Pay Salary</h3>
     <input type="hidden" id="sal-edit-id" />
     <div class="form-grid">
-      <div class="form-group"><label>Employee</label>
+      <div class="form-group"><label>Type</label>
+        <select id="sal-type" onchange="updateSalaryType()" style="font-size:14px">
+          <option value="Regular">Regular Salary</option>
+          <option value="Daily Labour">Daily Labour</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Project/Party</label>
+        <select id="sal-project" style="font-size:14px"><option value="">Select project</option></select>
+      </div>
+      <div class="form-group" id="emp-field"><label>Employee</label>
         <select id="sal-employee" onchange="autofillSalaryAmount()"><option value="">Select employee</option></select>
       </div>
+      <div class="form-group" id="labour-field" style="display:none"><label>Labour Name</label>
+        <input type="text" id="sal-labour-name" placeholder="Daily labour name" />
+      </div>
       <div class="form-group"><label>Date</label><input type="date" id="sal-date" /></div>
-      <div class="form-group"><label>For Month</label><input type="month" id="sal-for-month" /></div>
+      <div class="form-group"><label>For Month / Period</label><input type="month" id="sal-for-month" /></div>
       <div class="form-group"><label>Amount Paid (₹)</label><input type="number" id="sal-amount" placeholder="0.00" min="0" step="0.01" /></div>
       <div class="form-group"><label>Payment Mode</label>
         <select id="sal-mode"><option>Cash</option><option>Bank Transfer</option><option>UPI</option><option>Cheque</option></select>
+      </div>
+      <div class="form-group"><label>Status</label>
+        <select id="sal-status"><option value="Paid">Paid</option><option value="Pending">Pending</option><option value="Partial">Partial</option></select>
       </div>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
@@ -1237,6 +1260,9 @@
     <div class="form-grid">
       <div class="form-group"><label>Customer</label>
         <select id="pay-customer"><option value="">Select customer</option></select>
+      </div>
+      <div class="form-group"><label>Project/Party</label>
+        <select id="pay-project" style="font-size:14px"><option value="">Select project</option></select>
       </div>
       <div class="form-group"><label>Date</label><input type="date" id="pay-date" /></div>
       <div class="form-group"><label>Against Invoice</label>
@@ -1310,6 +1336,21 @@
     <div style="display:flex;justify-content:flex-end;gap:10px">
       <button class="btn btn-outline" onclick="closeMiniModal('add-user-modal')">Cancel</button>
       <button class="btn btn-gold" id="add-user-submit-btn" onclick="createUserAsAdmin()">Create User</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECTS MODAL -->
+<div class="mini-modal-overlay" id="projects-modal">
+  <div class="mini-modal">
+    <h3>🏢 Manage Projects / Parties</h3>
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <input type="text" id="new-project-input" placeholder="Project or party name…" style="flex:1" onkeydown="if(event.key==='Enter')addProject()" />
+      <button class="btn btn-blue" onclick="addProject()">＋ Add</button>
+    </div>
+    <div id="projects-list" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-outline" onclick="closeMiniModal('projects-modal')">Close</button>
     </div>
   </div>
 </div>
@@ -2482,6 +2523,73 @@ function saveCustomer() {
 function deleteCustomer(id) {
   if (!confirm('Delete this customer?')) return;
   db.collection(CUST_COL).doc(id).delete().then(() => toast('Customer deleted'));
+}
+
+// ═══════════════════════════════════════════════════════
+// PROJECTS / PARTIES
+// ═══════════════════════════════════════════════════════
+let projects = [];
+const PROJECTS_REF = db.collection('settings').doc('projects');
+
+function listenToProjects() {
+  PROJECTS_REF.onSnapshot(snap => {
+    projects = snap.exists ? (snap.data().list || []) : [];
+    if (!snap.exists) PROJECTS_REF.set({ list: projects });
+    populateProjectSelects();
+  });
+}
+
+function openProjectsModal() {
+  renderProjectsList();
+  document.getElementById('projects-modal').classList.add('open');
+}
+
+function addProject() {
+  const input = document.getElementById('new-project-input');
+  const name = input.value.trim();
+  if (!name) return;
+  if (!projects.includes(name)) {
+    projects.push(name);
+    input.value = '';
+    PROJECTS_REF.set({ list: projects });
+    toast('Project added! ✓', 'success');
+  } else {
+    toast('Project already exists', 'error');
+  }
+}
+
+function deleteProject(proj) {
+  if (!confirm(`Delete "${proj}"?`)) return;
+  projects = projects.filter(p => p !== proj);
+  PROJECTS_REF.set({ list: projects });
+  toast('Project deleted', '');
+}
+
+function renderProjectsList() {
+  const list = document.getElementById('projects-list');
+  list.innerHTML = projects.map(proj => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--gray50);border-radius:8px;border:1px solid var(--gray200)">
+      <span style="font-size:13px;color:var(--gray800)">🏢 ${proj}</span>
+      <button type="button" class="btn btn-outline" style="padding:4px 8px;font-size:11px;color:var(--red)" onclick="deleteProject('${proj}')">✕ Delete</button>
+    </div>
+  `).join('');
+}
+
+function populateProjectSelects() {
+  ['exp-project', 'pur-project', 'sal-project', 'pay-project', 'exp-filter-proj'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      const cur = el.value;
+      el.innerHTML = '<option value="">Select project</option>' + projects.map(p => `<option value="${p}">${p}</option>`).join('');
+      el.value = cur;
+    }
+  });
+}
+
+function updateSalaryType() {
+  const type = document.getElementById('sal-type').value;
+  document.getElementById('emp-field').style.display = type === 'Regular' ? 'block' : 'none';
+  document.getElementById('labour-field').style.display = type === 'Daily Labour' ? 'block' : 'none';
 }
 
 // ═══════════════════════════════════════════════════════
