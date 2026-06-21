@@ -81,6 +81,7 @@
   }
   .logo-text { color: white; font-family: 'Playfair Display', serif; font-size: 20px; letter-spacing: 1px; }
   .topbar-actions { display: flex; gap: 10px; align-items: center; }
+  .hamburger-item:hover { background: var(--gray50); }
   .btn {
     padding: 8px 16px;
     border-radius: 8px;
@@ -166,6 +167,37 @@
   .stat-card.gold { border-color: var(--gold); }
   .stat-card.green { border-color: var(--green); }
   .stat-card.red { border-color: var(--red); }
+
+  /* ── DARK MODE ── */
+  body.dark-mode {
+    --white: #16202e;
+    --gray50: #0c1521;
+    --gray100: #1c2a3b;
+    --gray200: #2c3e52;
+    --gray400: #7b93ab;
+    --gray600: #b7c8da;
+    --gray800: #eaf2fb;
+  }
+  body.dark-mode { color: var(--gray800); }
+  body.dark-mode .sidebar, body.dark-mode .form-card, body.dark-mode .settings-card, body.dark-mode .module-card, body.dark-mode .table-wrap, body.dark-mode .stat-card, body.dark-mode .mini-modal {
+    background: var(--white); border-color: var(--gray200);
+  }
+  body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background: var(--gray100); color: var(--gray800); border-color: var(--gray200); }
+  body.dark-mode td { color: var(--gray800); border-color: var(--gray100); }
+  body.dark-mode .empty-state { color: var(--gray400); }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    .topbar, .sidebar, .section-header button, .report-tab, #auth-overlay,
+    .mini-modal-overlay, .modal-overlay, #toast, .btn { display: none !important; }
+    .content { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    .page { display: none !important; }
+    .page.active { display: block !important; }
+    .report-panel { display: none !important; }
+    .report-panel.print-active { display: block !important; }
+    body { background: white !important; }
+    .table-wrap { box-shadow: none !important; border: 1px solid #ccc !important; }
+  }
   .stat-label { font-size: 12px; font-weight: 700; color: var(--gray400); text-transform: uppercase; letter-spacing: 1px; }
   .stat-value { font-size: 28px; font-weight: 700; margin-top: 8px; font-family: 'DM Sans', sans-serif; color: var(--navy); }
   .stat-sub { font-size: 12px; color: var(--gray400); margin-top: 4px; }
@@ -358,6 +390,23 @@
 </head>
 <body>
 
+<!-- AUTH OVERLAY -->
+<div id="auth-overlay" style="position:fixed;inset:0;background:linear-gradient(135deg,var(--big-stone),var(--cello));z-index:500;display:flex;align-items:center;justify-content:center">
+  <div style="background:var(--white);border-radius:16px;padding:36px;width:90vw;max-width:380px;box-shadow:var(--shadow-lg)">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:800;color:var(--navy)">AIRDOOR</div>
+      <div style="font-size:12px;color:var(--gray600);letter-spacing:1px;margin-top:2px">MEP SOLUTIONS · BILLER LOGIN</div>
+    </div>
+    <div id="auth-error" style="display:none;background:#fdecea;color:var(--red);font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:14px"></div>
+    <div class="form-group" style="margin-bottom:14px"><label>Email</label><input type="email" id="auth-email" placeholder="you@airdoor.com" /></div>
+    <div class="form-group" style="margin-bottom:18px"><label>Password</label><input type="password" id="auth-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSubmit()" /></div>
+    <button class="btn btn-gold" style="width:100%;justify-content:center;padding:12px" onclick="authSubmit()" id="auth-submit-btn">Sign In</button>
+    <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--gray600)">
+      Contact airdoor admin for register
+    </div>
+  </div>
+</div>
+
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="logo">
@@ -366,11 +415,22 @@
     </div>
     <div>
       <div class="logo-text" id="topbar-logo-text">AIRDOOR</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.85);margin-top:2px;letter-spacing:0.5px">Airconditioning Solutions</div>
     </div>
   </div>
   <div class="topbar-actions">
-    <button class="btn btn-ghost" onclick="showPage('settings')">⚙️ Settings</button>
+    <button class="btn btn-ghost" id="darkmode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
+    <div style="position:relative">
+      <button class="btn btn-ghost" onclick="toggleHamburgerMenu()" title="Menu" id="hamburger-btn">☰</button>
+      <div id="hamburger-dropdown" style="display:none;position:absolute;top:48px;right:0;background:var(--white);border-radius:10px;box-shadow:var(--shadow-lg);min-width:220px;z-index:200;overflow:hidden">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--gray200)">
+          <div id="user-email-label" style="font-size:13px;font-weight:700;color:var(--navy)"></div>
+          <span id="user-role-badge" style="background:var(--gold-light);color:var(--gold-text);font-size:9px;font-weight:800;letter-spacing:1px;padding:1px 8px;border-radius:99px;margin-top:4px;display:inline-block">VIEWER</span>
+        </div>
+        <div class="hamburger-item" onclick="openProfileModal()" style="padding:12px 16px;cursor:pointer;font-size:13px;color:var(--gray800);display:flex;align-items:center;gap:8px">👤 Profile</div>
+        <div class="hamburger-item" onclick="closeHamburgerMenu();showPage('settings')" style="padding:12px 16px;cursor:pointer;font-size:13px;color:var(--gray800);display:flex;align-items:center;gap:8px">⚙️ Settings</div>
+        <div class="hamburger-item" onclick="logout()" style="padding:12px 16px;cursor:pointer;font-size:13px;color:var(--red);display:flex;align-items:center;gap:8px;border-top:1px solid var(--gray200)">🚪 Sign Out</div>
+      </div>
+    </div>
     <button class="btn btn-gold" onclick="showPage('new')">＋ New Document</button>
   </div>
 </div>
@@ -510,6 +570,12 @@
             <label>PO No.</label>
             <input type="text" id="doc-po" placeholder="Optional" />
           </div>
+          <div class="form-group" style="flex:1" id="against-proforma-wrap">
+            <label>Against Proforma <span style="font-size:10px;color:var(--gray400);text-transform:none;font-weight:400">(if converting)</span></label>
+            <select id="doc-against-proforma" onchange="autofillFromProforma()">
+              <option value="">— None —</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -561,6 +627,15 @@
           <div class="form-group full">
             <label>Notes <span style="font-size:10px;color:var(--gray400);text-transform:none;font-weight:400">(optional — leave blank to hide from invoice)</span></label>
             <textarea id="doc-notes" rows="3" placeholder="Any special instructions, remarks or notes for the client…"></textarea>
+          </div>
+          <div class="form-group full">
+            <label>📎 AMC Service Report <span style="font-size:10px;color:var(--gray400);text-transform:none;font-weight:400">(optional — attach the client's signed service report to send alongside this invoice)</span></label>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <button type="button" class="btn btn-outline" onclick="document.getElementById('service-report-input').click()">⬆ Upload Service Report</button>
+              <input type="file" id="service-report-input" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleServiceReportUpload(event)" />
+              <span id="service-report-filename" style="font-size:12px;color:var(--gray600)"></span>
+              <button type="button" class="btn btn-danger" id="service-report-remove-btn" style="display:none;padding:6px 12px;font-size:12px" onclick="removeServiceReport()">✕ Remove</button>
+            </div>
           </div>
         </div>
       </div>
@@ -648,7 +723,7 @@
       <div class="settings-card">
         <h3>🏢 Company Information</h3>
         <div class="form-grid">
-          <div class="form-group"><label>Company Name</label><input type="text" id="s-company" value="Airdoor Airconditioning Solutions" onchange="updateMainHeader()"/></div>
+          <div class="form-group"><label>Company Name</label><input type="text" id="s-company" oninput="document.getElementById('topbar-logo-text').textContent = this.value || 'AIRDOOR'"/></div>
           <div class="form-group"><label>GST No. / GSTIN</label><input type="text" id="s-gst" placeholder="Your GST number" style="text-transform:uppercase" /></div>
           <div class="form-group full"><label>Registered Address (Invoice Header)</label><textarea id="s-address" rows="2">First Floor Building No 11/540 GandhiNagar Road Pallilamkara, North Kalamassery. Kalamassery PO. 683503, Ernakulam, Kerala</textarea></div>
           <div class="form-group"><label>Email</label><input type="email" id="s-email" value="Airdoor@outlook.com" /></div>
@@ -721,6 +796,20 @@
             <label>Quotation – Next No.</label>
             <input type="number" id="s-quot-next" value="1" min="1" />
           </div>
+        </div>
+      </div>
+
+      <div class="settings-card" id="user-management-card" style="display:none">
+        <h3 style="display:flex;align-items:center;justify-content:space-between">
+          <span>👤 User Management <span style="font-size:11px;font-weight:600;color:var(--gray400)">(Admin only)</span></span>
+          <button class="btn btn-gold" style="padding:7px 14px;font-size:12px" onclick="openAddUserModal()">+ Add User</button>
+        </h3>
+        <div style="margin-bottom:14px;font-size:13px;color:var(--gray600);line-height:1.6">Manage who can access this app and what they can do. Roles: <strong>Admin</strong> (full access incl. Settings), <strong>Accountant</strong> (all modules, no Settings), <strong>Viewer</strong> (read-only: Dashboard, Documents, Customers, Reports).</div>
+        <div class="table-wrap" style="box-shadow:none">
+          <table>
+            <thead><tr><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+            <tbody id="users-tbody"><tr><td colspan="3"><div class="empty-state"><div class="empty-icon">👤</div><h3>Loading users…</h3></div></td></tr></tbody>
+          </table>
         </div>
       </div>
 
@@ -808,13 +897,17 @@
     <div class="page" id="page-reports">
       <div class="section-header">
         <div class="section-title">Reports &amp; Ledger</div>
-        <button class="btn btn-blue" onclick="printReport()">🖨 Print Report</button>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-outline" onclick="exportCurrentReportCSV()">📊 Export Excel (CSV)</button>
+          <button class="btn btn-blue" onclick="printReport()">🖨 Export / Print PDF</button>
+        </div>
       </div>
       <!-- Report tabs -->
-      <div style="display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--gray200)">
+      <div style="display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--gray200);flex-wrap:wrap">
         <button class="report-tab active" id="rtab-ledger" onclick="switchReportTab('ledger')">📒 Customer Ledger</button>
         <button class="report-tab" id="rtab-summary" onclick="switchReportTab('summary')">📊 Summary</button>
         <button class="report-tab" id="rtab-expenses" onclick="switchReportTab('expenses')">💸 Expense Report</button>
+        <button class="report-tab" id="rtab-pnl" onclick="switchReportTab('pnl')">📈 Profit &amp; Loss</button>
       </div>
       <!-- LEDGER TAB -->
       <div id="report-ledger" class="report-panel">
@@ -836,9 +929,18 @@
         </div>
         <div class="table-wrap" id="ledger-table-wrap">
           <table>
-            <thead><tr><th>Date</th><th>Doc No.</th><th>Type</th><th>Customer</th><th>Description</th><th>Amount</th><th>Running Total</th></tr></thead>
+            <thead><tr><th>Date</th><th>Doc No.</th><th>Type</th><th>Customer</th><th>Against Proforma</th><th>Taxable Value</th><th>Tax</th><th>Total Amount</th><th>Payment Received</th><th>Balance</th></tr></thead>
             <tbody id="ledger-tbody"></tbody>
-            <tfoot><tr style="background:var(--navy)"><td colspan="5" style="color:var(--gold);font-weight:700;padding:12px 16px">TOTAL</td><td style="color:white;font-weight:700;padding:12px 16px;text-align:right" id="ledger-total-amt"></td><td></td></tr></tfoot>
+            <tfoot>
+              <tr style="background:var(--navy)">
+                <td colspan="5" style="color:var(--gold);font-weight:700;padding:12px 16px">TOTAL (Tax Invoices only)</td>
+                <td style="color:white;font-weight:700;padding:12px 16px;text-align:right" id="ledger-total-taxable"></td>
+                <td style="color:white;font-weight:700;padding:12px 16px;text-align:right" id="ledger-total-tax"></td>
+                <td style="color:white;font-weight:700;padding:12px 16px;text-align:right" id="ledger-total-amt"></td>
+                <td style="color:white;font-weight:700;padding:12px 16px;text-align:right" id="ledger-total-received"></td>
+                <td style="color:var(--gold);font-weight:700;padding:12px 16px;text-align:right" id="ledger-total-balance"></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </div>
@@ -871,6 +973,26 @@
             <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead>
             <tbody id="rpt-exp-tbody"></tbody>
             <tfoot><tr style="background:var(--navy)"><td colspan="3" style="color:var(--gold);font-weight:700;padding:12px 16px">TOTAL</td><td style="color:white;font-weight:700;padding:12px 16px;text-align:right" id="rpt-exp-total"></td></tr></tfoot>
+          </table>
+        </div>
+      </div>
+      <!-- P&L TAB -->
+      <div id="report-pnl" class="report-panel" style="display:none">
+        <div style="display:flex;gap:12px;margin-bottom:20px;align-items:flex-end;flex-wrap:wrap">
+          <div class="form-group"><label>From</label><input type="date" id="pnl-from" onchange="renderPnL()" /></div>
+          <div class="form-group"><label>To</label><input type="date" id="pnl-to" onchange="renderPnL()" /></div>
+          <button class="btn btn-outline" onclick="document.getElementById('pnl-from').value='';document.getElementById('pnl-to').value='';renderPnL()">Clear</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+          <div class="stat-card green" data-icon="💰"><div class="stat-label">Revenue</div><div class="stat-value" id="pnl-revenue">₹0</div><div class="stat-sub">Tax invoices billed</div></div>
+          <div class="stat-card red" data-icon="📉"><div class="stat-label">Total Costs</div><div class="stat-value" id="pnl-costs">₹0</div><div class="stat-sub">Expenses + Salary + Purchases</div></div>
+          <div class="stat-card blue" data-icon="📈"><div class="stat-label">Net Profit</div><div class="stat-value" id="pnl-profit">₹0</div><div class="stat-sub" id="pnl-margin">0% margin</div></div>
+          <div class="stat-card gold" data-icon="🧾"><div class="stat-label">Period</div><div class="stat-value" style="font-size:14px" id="pnl-period">All time</div><div class="stat-sub">Reporting window</div></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Line Item</th><th style="text-align:right">Amount</th></tr></thead>
+            <tbody id="pnl-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -977,9 +1099,12 @@
       <h2 id="modal-title">Document</h2>
       <div style="display:flex;gap:8px">
         <button class="btn btn-blue" onclick="downloadSavedPDF()">⬇ PDF</button>
+        <button class="btn btn-outline" onclick="sendViaEmail(viewingDocId)">📧 Email</button>
+        <button class="btn btn-outline" style="color:#1ba94c" onclick="sendViaWhatsApp(viewingDocId)">💬 WhatsApp</button>
         <button class="btn btn-ghost" style="color:var(--gray600);border:1.5px solid var(--gray400)" onclick="closeModal()">✕ Close</button>
       </div>
     </div>
+    <div id="modal-service-report-note" style="display:none;margin-bottom:12px;background:var(--blue-light);border-radius:8px;padding:10px 16px;font-size:13px"></div>
     <div class="preview-container">
       <div id="modal-invoice-preview"></div>
     </div>
@@ -1130,6 +1255,65 @@
   </div>
 </div>
 
+<!-- PROFILE MODAL -->
+<div class="mini-modal-overlay" id="profile-modal">
+  <div class="mini-modal">
+    <h3>👤 My Profile</h3>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;background:var(--gray50);border-radius:10px;padding:14px 16px">
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--cello);color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px" id="profile-avatar-initial">?</div>
+      <div>
+        <div id="profile-email-display" style="font-weight:700;color:var(--navy);font-size:14px"></div>
+        <span id="profile-role-display" style="background:var(--gold-light);color:var(--gold-text);font-size:9px;font-weight:800;letter-spacing:1px;padding:1px 8px;border-radius:99px">VIEWER</span>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Display Name <span style="font-size:10px;color:var(--gray400);text-transform:none;font-weight:400">(shown instead of email in the header)</span></label>
+      <input type="text" id="profile-display-name" placeholder="e.g. Akshay K." />
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:24px">
+      <button class="btn btn-gold" onclick="saveProfileName()">💾 Save Name</button>
+    </div>
+
+    <div style="border-top:1px solid var(--gray200);padding-top:18px">
+      <div style="font-weight:700;color:var(--navy);font-size:13px;margin-bottom:12px">🔒 Change Password</div>
+      <div class="form-group" style="margin-bottom:12px"><label>Current Password</label><input type="password" id="profile-current-pass" placeholder="Required to confirm it's you" /></div>
+      <div class="form-group" style="margin-bottom:12px"><label>New Password</label><input type="password" id="profile-new-pass" placeholder="Min 6 characters" /></div>
+      <div class="form-group" style="margin-bottom:16px"><label>Confirm New Password</label><input type="password" id="profile-confirm-pass" placeholder="Re-type new password" /></div>
+      <div id="profile-pass-error" style="display:none;background:#fdecea;color:var(--red);font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:12px"></div>
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn btn-blue" onclick="changeMyPassword()">🔑 Update Password</button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:20px;border-top:1px solid var(--gray200);padding-top:16px">
+      <button class="btn btn-outline" onclick="closeMiniModal('profile-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD USER MODAL (Admin only) -->
+<div class="mini-modal-overlay" id="add-user-modal">
+  <div class="mini-modal">
+    <h3>➕ Add User</h3>
+    <div class="form-group" style="margin-bottom:14px"><label>Email</label><input type="email" id="new-user-email" placeholder="user@airdoor.com" /></div>
+    <div class="form-group" style="margin-bottom:14px"><label>Temporary Password</label><input type="text" id="new-user-password" placeholder="Min 6 characters" /></div>
+    <div class="form-group" style="margin-bottom:18px">
+      <label>Role</label>
+      <select id="new-user-role" style="width:100%">
+        <option value="viewer">Viewer</option>
+        <option value="accountant">Accountant</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div id="add-user-error" style="display:none;background:#fdecea;color:var(--red);font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:14px"></div>
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn btn-outline" onclick="closeMiniModal('add-user-modal')">Cancel</button>
+      <button class="btn btn-gold" id="add-user-submit-btn" onclick="createUserAsAdmin()">Create User</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div id="toast">✓ Saved!</div>
 
@@ -1210,8 +1394,211 @@ function listenToData() {
   listenToPayments();
 }
 
-auth.onAuthStateChanged(user => { if (user) listenToData(); });
-auth.signInAnonymously().catch(err => console.error(err));
+let currentUser = null;
+let currentRole = 'viewer'; // admin | accountant | viewer
+
+// Role permission map: which nav pages each role can see
+const ROLE_PAGES = {
+  admin: ['dashboard','new','list','customers','purchases','expenses','salary','payments','reports','settings'],
+  accountant: ['dashboard','new','list','customers','purchases','expenses','salary','payments','reports'],
+  viewer: ['dashboard','list','customers','reports']
+};
+
+function authSubmit() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+  errEl.style.display = 'none';
+  if (!email || !pass) { errEl.textContent = 'Email and password required'; errEl.style.display = 'block'; return; }
+  auth.signInWithEmailAndPassword(email, pass)
+    .catch(err => { errEl.textContent = err.message; errEl.style.display = 'block'; });
+}
+
+function logout() {
+  if (!confirm('Sign out?')) return;
+  auth.signOut();
+}
+
+// Permanent admin email — always resolves to admin regardless of stored role
+const PERMANENT_ADMIN_EMAIL = 'airdoor@outlook.com';
+
+async function resolveUserRole(user) {
+  const ref = db.collection('users').doc(user.uid);
+  const snap = await ref.get();
+  const isPermanentAdmin = (user.email || '').toLowerCase() === PERMANENT_ADMIN_EMAIL;
+  if (snap.exists) {
+    let data = snap.data();
+    if (isPermanentAdmin && data.role !== 'admin') {
+      data = { ...data, role: 'admin' };
+      await ref.set({ role: 'admin' }, { merge: true });
+    }
+    currentUserDoc = data;
+    return data.role || 'viewer';
+  }
+  // First-ever user becomes admin automatically; everyone after defaults to viewer (admin can promote later)
+  const allUsers = await db.collection('users').limit(1).get();
+  const role = isPermanentAdmin ? 'admin' : (allUsers.empty ? 'admin' : 'viewer');
+  const data = { email: user.email, role, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+  await ref.set(data);
+  currentUserDoc = data;
+  return role;
+}
+
+let currentUserDoc = null;
+
+function applyRoleToUI() {
+  const allowed = ROLE_PAGES[currentRole] || ROLE_PAGES.viewer;
+  document.querySelectorAll('.nav-item').forEach(item => {
+    const page = item.getAttribute('data-page');
+    item.style.display = allowed.includes(page) ? '' : 'none';
+  });
+  const newBtn = document.querySelector('.topbar-actions .btn-gold');
+  if (newBtn && currentRole === 'viewer') newBtn.style.display = 'none';
+  document.body.setAttribute('data-role', currentRole);
+  const roleBadge = document.getElementById('user-role-badge');
+  if (roleBadge) roleBadge.textContent = currentRole.toUpperCase();
+  const userEmailEl = document.getElementById('user-email-label');
+  if (userEmailEl && currentUser) userEmailEl.textContent = (currentUserDoc && currentUserDoc.displayName) || currentUser.email;
+  const umCard = document.getElementById('user-management-card');
+  if (umCard) umCard.style.display = currentRole === 'admin' ? 'block' : 'none';
+  if (currentRole === 'admin') listenToUsers();
+}
+
+function toggleHamburgerMenu() {
+  const dd = document.getElementById('hamburger-dropdown');
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+function closeHamburgerMenu() { document.getElementById('hamburger-dropdown').style.display = 'none'; }
+document.addEventListener('click', e => {
+  const dd = document.getElementById('hamburger-dropdown');
+  const btn = document.getElementById('hamburger-btn');
+  if (dd && dd.style.display === 'block' && !dd.contains(e.target) && e.target !== btn) dd.style.display = 'none';
+});
+
+function openProfileModal() {
+  closeHamburgerMenu();
+  if (!currentUser) return;
+  document.getElementById('profile-email-display').textContent = currentUser.email;
+  document.getElementById('profile-role-display').textContent = currentRole.toUpperCase();
+  document.getElementById('profile-avatar-initial').textContent = (currentUser.email || '?').charAt(0).toUpperCase();
+  document.getElementById('profile-display-name').value = (currentUserDoc && currentUserDoc.displayName) || '';
+  document.getElementById('profile-current-pass').value = '';
+  document.getElementById('profile-new-pass').value = '';
+  document.getElementById('profile-confirm-pass').value = '';
+  document.getElementById('profile-pass-error').style.display = 'none';
+  document.getElementById('profile-modal').classList.add('open');
+}
+
+function saveProfileName() {
+  const name = document.getElementById('profile-display-name').value.trim();
+  db.collection('users').doc(currentUser.uid).set({ displayName: name }, { merge: true }).then(() => {
+    currentUserDoc = currentUserDoc || {};
+    currentUserDoc.displayName = name;
+    applyRoleToUI();
+    toast('Display name updated! ✓', 'success');
+  }).catch(err => toast('Failed: ' + err.message, 'error'));
+}
+
+function changeMyPassword() {
+  const curPass = document.getElementById('profile-current-pass').value;
+  const newPass = document.getElementById('profile-new-pass').value;
+  const confirmPass = document.getElementById('profile-confirm-pass').value;
+  const errEl = document.getElementById('profile-pass-error');
+  errEl.style.display = 'none';
+  if (!curPass || !newPass || !confirmPass) { errEl.textContent = 'All password fields are required'; errEl.style.display = 'block'; return; }
+  if (newPass.length < 6) { errEl.textContent = 'New password must be at least 6 characters'; errEl.style.display = 'block'; return; }
+  if (newPass !== confirmPass) { errEl.textContent = 'New passwords do not match'; errEl.style.display = 'block'; return; }
+  const cred = firebase.auth.EmailAuthProvider.credential(currentUser.email, curPass);
+  currentUser.reauthenticateWithCredential(cred)
+    .then(() => currentUser.updatePassword(newPass))
+    .then(() => { closeMiniModal('profile-modal'); toast('Password updated! ✓', 'success'); })
+    .catch(err => { errEl.textContent = err.message; errEl.style.display = 'block'; });
+}
+
+let appUsers = [];
+function listenToUsers() {
+  db.collection('users').onSnapshot(snap => {
+    appUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderUsersTable();
+  });
+}
+
+function renderUsersTable() {
+  const tbody = document.getElementById('users-tbody');
+  if (!tbody) return;
+  if (!appUsers.length) { tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state"><div class="empty-icon">👤</div><h3>No users yet</h3></div></td></tr>'; return; }
+  tbody.innerHTML = appUsers.map(u => `<tr>
+    <td style="font-weight:600;color:var(--navy)">${u.email || '—'}${u.id === currentUser?.uid ? ' <span style="color:var(--gray400);font-size:11px">(you)</span>' : ''}</td>
+    <td><select onchange="setUserRole('${u.id}', this.value)" style="font-size:12px;padding:5px 10px" ${u.id === currentUser?.uid ? 'disabled' : ''}>
+      <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+      <option value="accountant" ${u.role==='accountant'?'selected':''}>Accountant</option>
+      <option value="viewer" ${u.role==='viewer'?'selected':''}>Viewer</option>
+    </select></td>
+    <td style="font-size:11px;color:var(--gray400)">${u.id === currentUser?.uid ? 'Cannot change your own role' : ''}</td>
+  </tr>`).join('');
+}
+
+function setUserRole(uid, role) {
+  db.collection('users').doc(uid).set({ role }, { merge: true }).then(() => toast('Role updated! ✓', 'success'));
+}
+
+function openAddUserModal() {
+  document.getElementById('new-user-email').value = '';
+  document.getElementById('new-user-password').value = '';
+  document.getElementById('new-user-role').value = 'viewer';
+  document.getElementById('add-user-error').style.display = 'none';
+  document.getElementById('add-user-modal').classList.add('open');
+}
+
+async function createUserAsAdmin() {
+  const email = document.getElementById('new-user-email').value.trim();
+  const pass = document.getElementById('new-user-password').value;
+  const role = document.getElementById('new-user-role').value;
+  const errEl = document.getElementById('add-user-error');
+  const btn = document.getElementById('add-user-submit-btn');
+  errEl.style.display = 'none';
+  if (!email || !pass) { errEl.textContent = 'Email and password required'; errEl.style.display = 'block'; return; }
+  if (pass.length < 6) { errEl.textContent = 'Password must be at least 6 characters'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Creating…';
+  // Use a secondary, isolated Firebase app instance so creating the new user
+  // does not sign the admin out of their own session.
+  const secondaryAppName = 'admin-create-user-' + Date.now();
+  const secondaryApp = firebase.initializeApp(firebaseConfig, secondaryAppName);
+  try {
+    const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, pass);
+    await db.collection('users').doc(cred.user.uid).set({
+      email, role, createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: currentUser?.email || null
+    });
+    await secondaryApp.auth().signOut();
+    await secondaryApp.delete();
+    closeMiniModal('add-user-modal');
+    toast('User created! ✓', 'success');
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+    await secondaryApp.delete();
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create User';
+  }
+}
+
+function toggleDarkMode() {
+  document.body.classList.toggle('dark-mode');
+  localStorage.setItem('airdoor-dark-mode', document.body.classList.contains('dark-mode') ? '1' : '0');
+}
+
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    currentUser = user;
+    currentRole = await resolveUserRole(user);
+    document.getElementById('auth-overlay').style.display = 'none';
+    applyRoleToUI();
+    listenToData();
+  } else {
+    currentUser = null;
+    document.getElementById('auth-overlay').style.display = 'flex';
+  }
+});
 
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1242,7 +1629,36 @@ function selectType(type) {
   document.getElementById('cgst-row').style.display = showTax ? '' : 'none';
   document.getElementById('sgst-row').style.display = showTax ? '' : 'none';
   document.getElementById('igst-row').style.display = 'none';
+  document.getElementById('against-proforma-wrap').style.display = type === 'Tax Invoice' ? '' : 'none';
+  if (type === 'Tax Invoice') populateProformaDropdown();
   calcTotals();
+}
+
+function populateProformaDropdown() {
+  const sel = document.getElementById('doc-against-proforma');
+  if (!sel) return;
+  const current = sel.value;
+  const proformas = documents.filter(d => d.type === 'Proforma Invoice' && d.status !== 'draft');
+  sel.innerHTML = '<option value="">— None —</option>' + proformas.map(d => `<option value="${d.number}">${d.number} — ${d.clientName} (₹${Number(d.grand||0).toLocaleString('en-IN',{maximumFractionDigits:0})})</option>`).join('');
+  sel.value = current;
+}
+
+function autofillFromProforma() {
+  const num = document.getElementById('doc-against-proforma').value;
+  if (!num) return;
+  const proforma = documents.find(d => d.number === num && d.type === 'Proforma Invoice');
+  if (!proforma || !confirm('Copy client details and items from this Proforma into the current Tax Invoice?')) return;
+  document.getElementById('client-name').value = proforma.clientName || '';
+  document.getElementById('client-gst').value = proforma.clientGST || '';
+  document.getElementById('client-address').value = proforma.clientAddress || '';
+  document.getElementById('client-city').value = proforma.clientCity || '';
+  document.getElementById('client-contact').value = proforma.clientContact || '';
+  document.getElementById('doc-worksite').value = proforma.worksite || '';
+  document.getElementById('items-container').innerHTML = '';
+  (proforma.items || []).forEach(item => addItem(item.desc, item.qty, item.unit, item.rate, item.amount));
+  if (!proforma.items || !proforma.items.length) addItem();
+  calcTotals();
+  toast('Copied from Proforma ✓', 'success');
 }
 
 function autoNumber() {
@@ -1354,11 +1770,15 @@ function collectFormData() {
 
   return {
     id: Date.now().toString(), type: currentDocType, number: document.getElementById('doc-number').value, date: document.getElementById('doc-date').value,
-    jobNo: document.getElementById('doc-job').value, poNo: document.getElementById('doc-po').value, clientName: document.getElementById('client-name').value,
+    jobNo: document.getElementById('doc-job').value, poNo: document.getElementById('doc-po').value,
+    againstProforma: document.getElementById('doc-against-proforma') ? document.getElementById('doc-against-proforma').value : '',
+    clientName: document.getElementById('client-name').value,
     clientGST: document.getElementById('client-gst').value, clientAddress: document.getElementById('client-address').value, clientCity: document.getElementById('client-city').value,
     clientContact: document.getElementById('client-contact').value, worksite: document.getElementById('doc-worksite').value, terms: document.getElementById('doc-terms').value,
     paymentTerms: document.getElementById('doc-payment-terms').value,
     notes: document.getElementById('doc-notes').value,
+    serviceReportUrl: pendingServiceReport ? pendingServiceReport.url : (currentServiceReportOnLoad ? currentServiceReportOnLoad.url : ''),
+    serviceReportName: pendingServiceReport ? pendingServiceReport.name : (currentServiceReportOnLoad ? currentServiceReportOnLoad.name : ''),
     items, subtotal, discount, discType, discVal, taxType, cgst, sgst, igst, roundOff, grand, settings: { ...settings }
   };
 }
@@ -1388,6 +1808,7 @@ function generateInvoiceHTML(doc) {
   }).join('');
   const gstLine = s.gst ? `<div style="margin-top:3px;font-size:11px;color:#475569"><strong>GST:</strong> ${s.gst}</div>` : '';
   const docLabel = doc.type === 'Tax Invoice' ? 'TAX INVOICE' : doc.type === 'Proforma Invoice' ? 'PROFORMA' : doc.type === 'Invoice' ? 'INVOICE' : 'QUOTATION';
+  const numLabel = doc.type === 'Tax Invoice' ? 'Invoice No.' : doc.type === 'Proforma Invoice' ? 'Proforma No.' : doc.type === 'Invoice' ? 'Invoice No.' : 'Quotation No.';
   
   const PRIMARY = '#1A3D63';
   const PRIMARY_DARK = '#0A1931';
@@ -1405,17 +1826,42 @@ function generateInvoiceHTML(doc) {
       <div style="font-size:11px;color:#475569;line-height:1.8;white-space:pre-line">${doc.notes}</div>
     </div>` : '';
 
+  // Letterhead is fixed per document type — no longer user-selectable in Settings:
+  //   Tax Invoice -> classic (slanted banner)
+  //   Quotation   -> minimal (underline only)
+  //   Proforma    -> proforma (outlined accent card)
+  const template = doc.type === 'Quotation' ? 'minimal' : doc.type === 'Proforma Invoice' ? 'proforma' : 'classic';
+  let headerBannerHTML;
+  if (template === 'proforma') {
+    headerBannerHTML = `<div style="display:flex;align-items:center;padding:14px 32px">
+          <div style="background:${LIGHT_BLUE};border-left:5px solid ${PRIMARY};border-radius:6px;padding:10px 22px">
+            <div style="font-size:20px;font-weight:800;letter-spacing:3px;color:${PRIMARY}">${docLabel}</div>
+          </div>
+        </div>`;
+  } else if (template === 'minimal') {
+    headerBannerHTML = `<div style="display:flex;align-items:center;padding:14px 24px 8px 24px">
+          <div style="font-size:24px;font-weight:800;letter-spacing:3px;color:${PRIMARY};border-bottom:3px solid ${PRIMARY};padding-bottom:4px">${docLabel}</div>
+        </div>`;
+  } else { // classic
+    headerBannerHTML = `<div style="background:${PRIMARY};color:${ACCENT};padding:14px 32px;display:flex;align-items:center;justify-content:flex-end;min-width:220px;clip-path:polygon(15% 0,100% 0,100% 100%,0% 100%)">
+          <div style="font-size:22px;font-weight:800;letter-spacing:4px">${docLabel}</div>
+        </div>`;
+  }
+  const footerBarHTML = template === 'minimal'
+    ? `<div style="border-top:2px solid ${PRIMARY};color:${PRIMARY};text-align:center;padding:9px;font-size:13px;font-weight:600;flex-shrink:0">Thank you for your business!</div>`
+    : template === 'proforma'
+    ? `<div style="background:${LIGHT_BLUE};color:${PRIMARY};border-top:3px solid ${PRIMARY};text-align:center;padding:9px;font-size:13px;font-weight:700;flex-shrink:0">Thank you for your business!</div>`
+    : `<div style="background:${PRIMARY};color:${ACCENT};text-align:center;padding:9px;font-size:13px;font-weight:600;flex-shrink:0;clip-path:polygon(0 0,100% 12%,100% 100%,0 100%)">Thank you for your business!</div>`;
+
   return `
     <div style="font-family:'DM Sans',sans-serif;color:#1e293b;background:#ffffff;width:100%;min-height:880px;position:relative;border:1px solid #e2e8f0;display:flex;flex-direction:column;box-sizing:border-box">
       
       <!-- HEADER ROW: Logo + Doc Type Label -->
       <div style="display:flex;justify-content:space-between;align-items:stretch;position:relative;flex-shrink:0">
         <div style="padding:14px 24px 8px 24px;display:flex;align-items:center;gap:14px">
-          ${s.logoDataUrl ? `<div style="display:flex;flex-direction:column;gap:1px"><img src="${s.logoDataUrl}" alt="Logo" style="max-height:49px;max-width:234px;object-fit:contain;display:block" /><div style="font-size:9px;color:#4A7FA7;letter-spacing:2px;font-weight:600;text-transform:uppercase;margin-left:2px">MEP Solutions</div></div>` : `<div style="width:44px;height:44px;background:${PRIMARY};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700;color:${ACCENT}">A</div><div style="display:flex;flex-direction:column;gap:1px"><div style="font-size:29px;font-weight:800;color:${PRIMARY};letter-spacing:1px;line-height:1">airdoor</div><div style="font-size:9px;color:#4A7FA7;letter-spacing:2px;font-weight:600;text-transform:uppercase">MEP Solutions</div></div>`}
+          ${s.logoDataUrl ? `<img src="${s.logoDataUrl}" alt="Logo" style="max-height:59px;max-width:281px;object-fit:contain;display:block" />` : `<div style="width:44px;height:44px;background:${PRIMARY};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700;color:${ACCENT}">A</div><div style="font-size:29px;font-weight:800;color:${PRIMARY};letter-spacing:1px;line-height:1">airdoor</div>`}
         </div>
-        <div style="background:${PRIMARY};color:${ACCENT};padding:14px 32px;display:flex;align-items:center;justify-content:flex-end;min-width:220px;clip-path:polygon(15% 0,100% 0,100% 100%,0% 100%)">
-          <div style="font-size:22px;font-weight:800;letter-spacing:4px">${docLabel}</div>
-        </div>
+        ${headerBannerHTML}
       </div>
 
       <!-- COMPANY INFO + INVOICE META -->
@@ -1423,11 +1869,12 @@ function generateInvoiceHTML(doc) {
         <div style="font-size:11px;color:#475569;line-height:1.8"><div>${s.address}</div><div>${s.phone}</div><div>${s.email}</div>${gstLine}</div>
         <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 18px;min-width:230px;background:${ACCENT}">
           <table style="width:100%;border-collapse:collapse;font-size:12px;color:#1e293b">
-            ${doc.number ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">Invoice No.</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px;font-weight:600">${doc.number}</td></tr>` : ''}
+            ${doc.number ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">${numLabel}</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px;font-weight:600">${doc.number}</td></tr>` : ''}
             ${doc.date ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">Date</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px">${dateStr}</td></tr>` : ''}
             ${doc.terms ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">Terms</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px">${doc.terms}</td></tr>` : ''}
             ${doc.jobNo ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">Job No.</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px">${doc.jobNo}</td></tr>` : ''}
             ${doc.poNo ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">PO No.</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px">${doc.poNo}</td></tr>` : ''}
+            ${doc.againstProforma ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">Against Proforma</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px">${doc.againstProforma}</td></tr>` : ''}
           </table>
         </div>
       </div>
@@ -1495,7 +1942,7 @@ function generateInvoiceHTML(doc) {
       </div>
 
       <!-- FOOTER BAR -->
-      <div style="background:${PRIMARY};color:${ACCENT};text-align:center;padding:9px;font-size:13px;font-weight:600;flex-shrink:0;clip-path:polygon(0 0,100% 12%,100% 100%,0 100%)">Thank you for your business!</div>
+      ${footerBarHTML}
     </div>`;
 }
 
@@ -1535,7 +1982,7 @@ function _persistDoc(doc, status, successMsg) {
 function saveDraft() {
   const doc = collectFormData();
   if (!doc.clientName) { toast('Please enter client name', 'error'); return; }
-  _persistDoc(doc, 'draft', 'Draft saved! You can edit it later. ✓').catch(err => toast('Save failed: ' + err.message, 'error'));
+  _persistDoc(doc, 'draft', 'Draft saved! You can edit it later. ✓').then(() => { pendingServiceReport = null; currentServiceReportOnLoad = null; }).catch(err => toast('Save failed: ' + err.message, 'error'));
 }
 
 function generateDoc() {
@@ -1544,7 +1991,7 @@ function generateDoc() {
   if (!doc.number) { autoNumber(); doc.number = document.getElementById('doc-number').value; }
   if (doc.items.length === 0) { toast('Add at least one line item', 'error'); return; }
   if (!confirm('Once generated, this document is FINAL and cannot be edited. Continue?')) return;
-  _persistDoc(doc, 'final', 'Document generated — locked for editing! ✓').catch(err => toast('Generate failed: ' + err.message, 'error'));
+  _persistDoc(doc, 'final', 'Document generated — locked for editing! ✓').then(() => { pendingServiceReport = null; currentServiceReportOnLoad = null; }).catch(err => toast('Generate failed: ' + err.message, 'error'));
 }
 
 function editDraft(id) {
@@ -1557,6 +2004,7 @@ function editDraft(id) {
   document.getElementById('doc-date').value = doc.date || '';
   document.getElementById('doc-job').value = doc.jobNo || '';
   document.getElementById('doc-po').value = doc.poNo || '';
+  if (doc.type === 'Tax Invoice') { populateProformaDropdown(); document.getElementById('doc-against-proforma').value = doc.againstProforma || ''; }
   document.getElementById('client-name').value = doc.clientName || '';
   document.getElementById('client-gst').value = doc.clientGST || '';
   document.getElementById('client-address').value = doc.clientAddress || '';
@@ -1569,6 +2017,16 @@ function editDraft(id) {
   document.getElementById('tax-type').value = doc.taxType || 'cgst_sgst';
   document.getElementById('discount-type').value = doc.discType || 'none';
   document.getElementById('discount-val').value = doc.discVal || 0;
+
+  pendingServiceReport = null;
+  removeServiceReport();
+  if (doc.serviceReportUrl) {
+    currentServiceReportOnLoad = { url: doc.serviceReportUrl, name: doc.serviceReportName || 'Service Report' };
+    document.getElementById('service-report-filename').textContent = '✓ ' + currentServiceReportOnLoad.name + ' (already attached)';
+    document.getElementById('service-report-remove-btn').style.display = '';
+  } else {
+    currentServiceReportOnLoad = null;
+  }
 
   document.getElementById('items-container').innerHTML = '';
   (doc.items || []).forEach(item => addItem(item.desc, item.qty, item.unit, item.rate, item.amount));
@@ -1669,7 +2127,33 @@ function docRow(doc, showWorksite = false) {
   const isDraft = doc.status === 'draft';
   const statusBadge = isDraft ? `<span style="background:#fff3cd;color:#92740a;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">DRAFT</span>` : `<span style="background:#e6f4ea;color:#1e7e34;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">FINAL 🔒</span>`;
   const editBtn = isDraft ? `<button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="editDraft('${doc.id}')">✏ Edit</button>` : '';
-  return `<tr><td><span style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600">${doc.number || '—'}</span>${statusBadge}</td><td><span class="doc-type ${typeClass}">${doc.type}</span></td><td style="font-weight:700; color:var(--navy);">${doc.clientName || '—'}</td>${showWorksite ? `<td style="font-size:12px;color:var(--gray600)">${doc.worksite || '—'}</td>` : ''}<td style="font-size:12px;color:var(--gray600)">${dateStr}</td><td class="amount-cell">₹${Number(doc.grand||0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td><td><div style="display:flex;gap:6px">${editBtn}<button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="viewDoc('${doc.id}')">👁 View</button><button class="btn btn-blue" style="padding:5px 10px;font-size:12px" onclick="downloadDocPDF('${doc.id}')">⬇ PDF</button><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteDoc('${doc.id}')">🗑</button></div></td></tr>`;
+  const reportIcon = doc.serviceReportUrl ? `<span title="Service report attached" style="font-size:13px">📎</span>` : '';
+  return `<tr><td><span style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600">${doc.number || '—'}</span>${statusBadge} ${reportIcon}</td><td><span class="doc-type ${typeClass}">${doc.type}</span></td><td style="font-weight:700; color:var(--navy);">${doc.clientName || '—'}</td>${showWorksite ? `<td style="font-size:12px;color:var(--gray600)">${doc.worksite || '—'}</td>` : ''}<td style="font-size:12px;color:var(--gray600)">${dateStr}</td><td class="amount-cell">₹${Number(doc.grand||0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap">${editBtn}<button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="viewDoc('${doc.id}')">👁 View</button><button class="btn btn-blue" style="padding:5px 10px;font-size:12px" onclick="downloadDocPDF('${doc.id}')">⬇ PDF</button><button class="btn btn-outline" style="padding:5px 8px;font-size:12px" title="Send via Email" onclick="sendViaEmail('${doc.id}')">📧</button><button class="btn btn-outline" style="padding:5px 8px;font-size:12px;color:#1ba94c" title="Send via WhatsApp" onclick="sendViaWhatsApp('${doc.id}')">💬</button><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteDoc('${doc.id}')">🗑</button></div></td></tr>`;
+}
+
+function sendViaEmail(id) {
+  const doc = documents.find(d => d.id === id);
+  if (!doc) return;
+  const subject = `${doc.type} ${doc.number || ''} — ${settings.company || 'Airdoor'}`;
+  let body = `Dear ${doc.clientName || 'Customer'},\n\nPlease find the details of your ${doc.type} below:\n\nDoc No.: ${doc.number || '—'}\nDate: ${doc.date || '—'}\nAmount: ₹${Number(doc.grand||0).toLocaleString('en-IN',{minimumFractionDigits:2})}\n`;
+  if (doc.worksite) body += `Worksite: ${doc.worksite}\n`;
+  if (doc.serviceReportUrl) body += `\nService Report: ${doc.serviceReportUrl}\n`;
+  body += `\nPlease download the invoice PDF from the app and attach it before sending, or use the Download PDF button to save a copy first.\n\nThank you for your business!\n${settings.company || 'Airdoor'}`;
+  const email = (doc.clientContact && doc.clientContact.includes('@')) ? doc.clientContact.split(/[\s,/]+/).find(p => p.includes('@')) || '' : '';
+  window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  toast('Opening email client… attach the downloaded PDF manually', '');
+}
+
+function sendViaWhatsApp(id) {
+  const doc = documents.find(d => d.id === id);
+  if (!doc) return;
+  let phone = (doc.clientContact || '').replace(/[^0-9]/g, '');
+  if (phone.length === 10) phone = '91' + phone; // default India code
+  let msg = `Hi ${doc.clientName || ''}, here are your ${doc.type} details from ${settings.company || 'Airdoor'}:\n\nDoc No.: ${doc.number || '—'}\nDate: ${doc.date || '—'}\nAmount: ₹${Number(doc.grand||0).toLocaleString('en-IN',{minimumFractionDigits:2})}`;
+  if (doc.serviceReportUrl) msg += `\n\n📎 Service Report: ${doc.serviceReportUrl}`;
+  msg += `\n\nThank you for your business! Please find the invoice PDF attached separately.`;
+  const url = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
 }
 
 function viewDoc(id) {
@@ -1678,6 +2162,13 @@ function viewDoc(id) {
   viewingDocId = id;
   document.getElementById('modal-title').textContent = doc.type + ' — ' + doc.number;
   document.getElementById('modal-invoice-preview').innerHTML = generateInvoiceHTML(doc);
+  const noteEl = document.getElementById('modal-service-report-note');
+  if (doc.serviceReportUrl) {
+    noteEl.innerHTML = `📎 <strong>Service Report attached:</strong> ${doc.serviceReportName || 'View file'} — <a href="${doc.serviceReportUrl}" target="_blank" style="color:var(--navy);font-weight:700">Open / Download</a>`;
+    noteEl.style.display = 'block';
+  } else {
+    noteEl.style.display = 'none';
+  }
   document.getElementById('view-modal').classList.add('open');
 }
 
@@ -1786,11 +2277,8 @@ function restoreFromJSON(e) {
 }
 
 function updateMainHeader() {
-  const companyNameInput = document.getElementById('s-company');
   const topbarText = document.getElementById('topbar-logo-text');
-  if(companyNameInput && topbarText) {
-    topbarText.textContent = companyNameInput.value || 'AIRDOOR';
-  }
+  if (topbarText) topbarText.textContent = (settings.company && settings.company.trim()) || 'AIRDOOR';
 }
 
 function loadSettings() {
@@ -1828,6 +2316,31 @@ function loadSettings() {
   document.getElementById('s-quot-next').value = settings.quotNext || 1;
   
   updateMainHeader();
+}
+
+let pendingServiceReport = null; // { url, name } for current new/edit document
+let currentServiceReportOnLoad = null; // existing report when editing a draft
+
+function handleServiceReportUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 8 * 1024 * 1024) { toast('File too large (max 8MB)', 'error'); return; }
+  toast('Uploading service report…', '');
+  const path = `service-reports/${Date.now()}_${file.name}`;
+  const ref = storage.ref().child(path);
+  ref.put(file).then(snap => snap.ref.getDownloadURL()).then(url => {
+    pendingServiceReport = { url, name: file.name };
+    document.getElementById('service-report-filename').textContent = '✓ ' + file.name;
+    document.getElementById('service-report-remove-btn').style.display = '';
+    toast('Service report uploaded! ✓', 'success');
+  }).catch(err => toast('Upload failed: ' + err.message, 'error'));
+}
+
+function removeServiceReport() {
+  pendingServiceReport = null;
+  document.getElementById('service-report-input').value = '';
+  document.getElementById('service-report-filename').textContent = '';
+  document.getElementById('service-report-remove-btn').style.display = 'none';
 }
 
 function handleLogoUpload(e) {
@@ -1868,6 +2381,8 @@ function saveSettings() {
 function resetForm() {
   if (!confirm('Clear all form fields?')) return;
   editingDocId = null;
+  removeServiceReport();
+  currentServiceReportOnLoad = null;
   ['doc-number','doc-date','doc-job','doc-po','client-name','client-gst','client-address','client-city','client-contact','doc-worksite','doc-terms','doc-payment-terms','doc-notes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('items-container').innerHTML = ''; document.getElementById('discount-val').value = '0';
   calcTotals(); addItem();
@@ -2103,7 +2618,9 @@ function closeMiniModal(id) { document.getElementById(id).classList.remove('open
 // ═══════════════════════════════════════════════════════
 // REPORTS
 // ═══════════════════════════════════════════════════════
+let currentReportTab = 'ledger';
 function switchReportTab(tab) {
+  currentReportTab = tab;
   document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('rtab-' + tab).classList.add('active');
   document.querySelectorAll('.report-panel').forEach(p => p.style.display = 'none');
@@ -2111,37 +2628,89 @@ function switchReportTab(tab) {
   if (tab === 'ledger') renderLedger();
   if (tab === 'summary') renderSummary();
   if (tab === 'expenses') renderExpenseReport();
+  if (tab === 'pnl') renderPnL();
 }
 
 function renderLedger() {
   const custFilter = document.getElementById('ledger-customer')?.value || '';
   const fromDate = document.getElementById('ledger-from')?.value || '';
   const toDate = document.getElementById('ledger-to')?.value || '';
-  let filtered = [...documents];
-  if (custFilter) filtered = filtered.filter(d => d.clientName === custFilter);
-  if (fromDate) filtered = filtered.filter(d => (d.date || '') >= fromDate);
-  if (toDate) filtered = filtered.filter(d => (d.date || '') <= toDate);
-  filtered.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : 1);
+  let filteredDocs = documents.filter(d => d.status !== 'draft');
+  if (custFilter) filteredDocs = filteredDocs.filter(d => d.clientName === custFilter);
+  if (fromDate) filteredDocs = filteredDocs.filter(d => (d.date || '') >= fromDate);
+  if (toDate) filteredDocs = filteredDocs.filter(d => (d.date || '') <= toDate);
+
+  let filteredPayments = [...payments];
+  if (custFilter) filteredPayments = filteredPayments.filter(p => p.customer === custFilter);
+  if (fromDate) filteredPayments = filteredPayments.filter(p => (p.date || '') >= fromDate);
+  if (toDate) filteredPayments = filteredPayments.filter(p => (p.date || '') <= toDate);
+
   const tbody = document.getElementById('ledger-tbody');
   if (!tbody) return;
-  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📒</div><h3>No documents found</h3></div></td></tr>'; document.getElementById('ledger-total-amt').textContent = '₹0.00'; return; }
-  let running = 0;
-  tbody.innerHTML = filtered.map(doc => {
-    running += doc.grand || 0;
+
+  // Merge documents + payments into one chronological feed
+  const rows = [
+    ...filteredDocs.map(d => ({ kind: 'doc', date: d.date, doc: d })),
+    ...filteredPayments.map(p => ({ kind: 'payment', date: p.date, payment: p }))
+  ].sort((a, b) => (a.date || '') < (b.date || '') ? -1 : 1);
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📒</div><h3>No records found</h3></div></td></tr>';
+    ['ledger-total-taxable','ledger-total-tax','ledger-total-amt','ledger-total-received','ledger-total-balance'].forEach(id => document.getElementById(id).textContent = '₹0.00');
+    return;
+  }
+
+  const fmt = n => '₹' + Number(n||0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+  let totalTaxable = 0, totalTax = 0, totalAmount = 0, totalReceived = 0;
+  let runningBalance = 0;
+
+  tbody.innerHTML = rows.map(r => {
+    if (r.kind === 'payment') {
+      const p = r.payment;
+      totalReceived += p.amount || 0;
+      runningBalance -= (p.amount || 0);
+      const dateStr = p.date ? new Date(p.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+      return `<tr style="background:#f0fdf4">
+        <td style="font-size:13px">${dateStr}</td>
+        <td style="font-weight:600;font-size:12px">${p.ref || '—'}</td>
+        <td><span class="doc-type" style="background:#dcfce7;color:var(--green)">PAYMENT</span></td>
+        <td style="font-weight:600;color:var(--navy)">${p.customer||'—'}</td>
+        <td style="font-size:11px;color:var(--gray400)">—</td>
+        <td style="font-size:12px;color:var(--gray400)">—</td>
+        <td style="font-size:12px;color:var(--gray400)">—</td>
+        <td style="font-size:12px;color:var(--gray400)">—</td>
+        <td class="amount-cell" style="color:var(--green)">+${fmt(p.amount)}</td>
+        <td style="font-size:12px;font-weight:600;color:${runningBalance>=0?'var(--red)':'var(--green)'}">${fmt(Math.abs(runningBalance))} ${runningBalance>=0?'Dr':'Cr'}</td>
+      </tr>`;
+    }
+    const doc = r.doc;
     const dateStr = doc.date ? new Date(doc.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
     const typeClass = doc.type === 'Tax Invoice' ? 'type-tax' : doc.type === 'Proforma Invoice' ? 'type-proforma' : 'type-quotation';
-    const desc = (doc.items || []).map(i => i.desc).filter(Boolean).slice(0,2).join(', ');
+    const isTaxInvoice = doc.type === 'Tax Invoice';
+    const taxable = doc.subtotal || 0;
+    const tax = (doc.cgst||0) + (doc.sgst||0) + (doc.igst||0);
+    const total = doc.grand || 0;
+    if (isTaxInvoice) { totalTaxable += taxable; totalTax += tax; totalAmount += total; runningBalance += total; }
+    const fadedStyle = isTaxInvoice ? '' : 'color:var(--gray400)';
     return `<tr>
       <td style="font-size:13px">${dateStr}</td>
       <td style="font-weight:600;font-size:12px">${doc.number||'—'}</td>
       <td><span class="doc-type ${typeClass}">${doc.type}</span></td>
       <td style="font-weight:600;color:var(--navy)">${doc.clientName||'—'}</td>
-      <td style="font-size:12px;color:var(--gray600)">${desc}</td>
-      <td class="amount-cell">₹${Number(doc.grand||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
-      <td style="font-size:12px;color:var(--navy);font-weight:600">₹${running.toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+      <td style="font-size:12px;color:var(--gray600)">${doc.againstProforma || '—'}</td>
+      <td style="font-size:12px;${fadedStyle}">${fmt(taxable)}</td>
+      <td style="font-size:12px;${fadedStyle}">${fmt(tax)}</td>
+      <td class="amount-cell" style="${fadedStyle}">${fmt(total)}${!isTaxInvoice ? ' <span style="font-size:9px">(not billed)</span>' : ''}</td>
+      <td style="font-size:12px;color:var(--gray400)">—</td>
+      <td style="font-size:12px;font-weight:600;color:${runningBalance>=0?'var(--red)':'var(--green)'}">${fmt(Math.abs(runningBalance))} ${runningBalance>=0?'Dr':'Cr'}</td>
     </tr>`;
   }).join('');
-  document.getElementById('ledger-total-amt').textContent = '₹' + running.toLocaleString('en-IN', {minimumFractionDigits:2});
+
+  document.getElementById('ledger-total-taxable').textContent = fmt(totalTaxable);
+  document.getElementById('ledger-total-tax').textContent = fmt(totalTax);
+  document.getElementById('ledger-total-amt').textContent = fmt(totalAmount);
+  document.getElementById('ledger-total-received').textContent = fmt(totalReceived);
+  document.getElementById('ledger-total-balance').textContent = fmt(totalAmount - totalReceived);
 }
 
 function renderSummary() {
@@ -2193,7 +2762,82 @@ function renderExpenseReport() {
   document.getElementById('rpt-exp-total').textContent = '₹' + total.toLocaleString('en-IN',{minimumFractionDigits:2});
 }
 
-function printReport() { window.print(); }
+function printReport() {
+  document.querySelectorAll('.report-panel').forEach(p => p.classList.remove('print-active'));
+  const activePanel = document.getElementById('report-' + currentReportTab);
+  if (activePanel) activePanel.classList.add('print-active');
+  window.print();
+}
+
+function renderPnL() {
+  const from = document.getElementById('pnl-from')?.value || '';
+  const to = document.getElementById('pnl-to')?.value || '';
+  const inRange = d => (!from || (d||'') >= from) && (!to || (d||'') <= to);
+
+  const revenue = documents.filter(d => d.type === 'Tax Invoice' && d.status !== 'draft' && inRange(d.date)).reduce((s,d) => s + (d.grand||0), 0);
+  const expTotal = expenses.filter(e => inRange(e.date)).reduce((s,e) => s + (e.amount||0), 0);
+  const salTotal = salaryPayments.filter(p => inRange(p.date)).reduce((s,p) => s + (p.amount||0), 0);
+  const purTotal = purchases.filter(p => inRange(p.date)).reduce((s,p) => s + (p.amount||0), 0);
+  const totalCosts = expTotal + salTotal + purTotal;
+  const profit = revenue - totalCosts;
+  const margin = revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : '0.0';
+
+  const fmt = n => '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+  const el = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  el('pnl-revenue', fmt(revenue));
+  el('pnl-costs', fmt(totalCosts));
+  el('pnl-profit', fmt(profit));
+  el('pnl-margin', margin + '% margin');
+  const profitEl = document.getElementById('pnl-profit');
+  if (profitEl) profitEl.style.color = profit >= 0 ? 'var(--green)' : 'var(--red)';
+  el('pnl-period', (from || to) ? `${from || '…'} → ${to || '…'}` : 'All time');
+
+  const tbody = document.getElementById('pnl-tbody');
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr><td style="font-weight:700;color:var(--navy)">Revenue (Tax Invoices)</td><td class="amount-cell" style="color:var(--green)">+${fmt(revenue)}</td></tr>
+      <tr><td style="padding-left:28px;color:var(--gray600)">Expenses</td><td class="amount-cell" style="color:var(--red)">-${fmt(expTotal)}</td></tr>
+      <tr><td style="padding-left:28px;color:var(--gray600)">Salary Paid</td><td class="amount-cell" style="color:var(--red)">-${fmt(salTotal)}</td></tr>
+      <tr><td style="padding-left:28px;color:var(--gray600)">Purchases</td><td class="amount-cell" style="color:var(--red)">-${fmt(purTotal)}</td></tr>
+      <tr style="background:var(--navy)"><td style="color:var(--gold);font-weight:800;padding:12px 16px">NET PROFIT / LOSS</td><td style="color:white;font-weight:800;padding:12px 16px;text-align:right">${fmt(profit)}</td></tr>
+    `;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// CSV / EXCEL EXPORT
+// ═══════════════════════════════════════════════════════
+function downloadCSV(filename, headers, rows) {
+  const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv = [headers.map(esc).join(','), ...rows.map(r => r.map(esc).join(','))].join('\r\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('CSV downloaded! Open in Excel ✓', 'success');
+}
+
+function exportCurrentReportCSV() {
+  if (currentReportTab === 'ledger') {
+    const rows = Array.from(document.querySelectorAll('#ledger-tbody tr')).map(tr => Array.from(tr.children).map(td => td.textContent.trim()));
+    downloadCSV('customer_ledger.csv', ['Date','Doc/Ref No.','Type','Customer','Against Proforma','Taxable Value','Tax','Total Amount','Payment Received','Balance'], rows);
+  } else if (currentReportTab === 'summary') {
+    const rows = Array.from(document.querySelectorAll('#summary-tbody tr')).map(tr => Array.from(tr.children).map(td => td.textContent));
+    downloadCSV('monthly_summary.csv', ['Month','Tax Invoices','Proforma','Quotations','Total Billed'], rows);
+  } else if (currentReportTab === 'expenses') {
+    const from = document.getElementById('rpt-exp-from')?.value || '';
+    const to = document.getElementById('rpt-exp-to')?.value || '';
+    let filtered = expenses;
+    if (from) filtered = filtered.filter(e => (e.date||'') >= from);
+    if (to) filtered = filtered.filter(e => (e.date||'') <= to);
+    const rows = filtered.map(e => [e.date||'', e.category||'', e.desc||'', (e.amount||0).toFixed(2)]);
+    downloadCSV('expense_report.csv', ['Date','Category','Description','Amount'], rows);
+  } else if (currentReportTab === 'pnl') {
+    const rows = Array.from(document.querySelectorAll('#pnl-tbody tr')).map(tr => Array.from(tr.children).map(td => td.textContent.replace(/^[+-]/,'')));
+    downloadCSV('profit_and_loss.csv', ['Line Item','Amount'], rows);
+  }
+}
 
 // ═══════════════════════════════════════════════════════
 // PURCHASES
@@ -2528,6 +3172,13 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('doc-date').valueAsDate = new Date();
   addItem();
   updateBankPreview();
+  if (localStorage.getItem('airdoor-dark-mode') === '1') document.body.classList.add('dark-mode');
+});
+
+document.addEventListener('keydown', e => {
+  const onNewPage = document.getElementById('page-new')?.classList.contains('active');
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && onNewPage) { e.preventDefault(); saveDraft(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && onNewPage) { e.preventDefault(); generateDoc(); }
 });
 
 document.getElementById('view-modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
