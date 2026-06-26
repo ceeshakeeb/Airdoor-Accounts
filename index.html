@@ -149,6 +149,7 @@
 
   /* ── DASHBOARD ── */
   .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
+  @media (max-width: 1400px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
   .stat-card {
     background: var(--white);
     border-radius: var(--radius);
@@ -444,13 +445,14 @@
     <div class="sidebar-section" style="margin-top:12px">Documents</div>
     <div class="nav-item" data-page="list" onclick="showPage('list'); filterDocs('all')"><span class="icon">📄</span> All Documents <span class="badge" id="badge-all">0</span></div>
     <div class="nav-item" data-page="list" onclick="showPage('list'); filterDocs('Tax Invoice')"><span class="icon">🧾</span> Tax Invoices <span class="badge" id="badge-tax">0</span></div>
+    <div class="nav-item" data-page="list" onclick="showPage('list'); filterDocs('Invoice')"><span class="icon">📄</span> Non-Tax Invoices <span class="badge" id="badge-invoice">0</span></div>
     <div class="nav-item" data-page="list" onclick="showPage('list'); filterDocs('Proforma Invoice')"><span class="icon">📋</span> Proforma <span class="badge" id="badge-proforma">0</span></div>
     <div class="nav-item" data-page="list" onclick="showPage('list'); filterDocs('Quotation')"><span class="icon">💬</span> Quotations <span class="badge" id="badge-quotation">0</span></div>
     <div class="sidebar-section" style="margin-top:12px">Modules</div>
     <div class="nav-item" data-page="customers" onclick="showPage('customers')"><span class="icon">👥</span> Customers</div>
     <div class="nav-item" data-page="purchases" onclick="showPage('purchases')"><span class="icon">📦</span> Purchases</div>
     <div class="nav-item" data-page="expenses" onclick="showPage('expenses')"><span class="icon">💸</span> Expenses</div>
-    <div class="nav-item" data-page="salary" onclick="showPage('salary')"><span class="icon">💼</span> Salary</div>
+    <div class="nav-item" data-page="salary" onclick="showPage('salary')"><span class="icon">💼</span> Salary / Labour</div>
     <div class="nav-item" data-page="payments" onclick="showPage('payments')"><span class="icon">💳</span> Payments</div>
     <div class="nav-item" data-page="reports" onclick="showPage('reports')"><span class="icon">📊</span> Reports</div>
     <div class="sidebar-section" style="margin-top:12px">Account</div>
@@ -472,22 +474,56 @@
         <div class="stat-card blue" data-icon="🧾">
           <div class="stat-label">Tax Invoices</div>
           <div class="stat-value" id="stat-tax">0</div>
-          <div class="stat-sub">Total issued</div>
+          <div class="stat-sub" id="stat-tax-amt">₹0</div>
         </div>
         <div class="stat-card gold" data-icon="📋">
+          <div class="stat-label">Non-Tax Invoices</div>
+          <div class="stat-value" id="stat-invoice">0</div>
+          <div class="stat-sub" id="stat-invoice-amt">₹0</div>
+        </div>
+        <div class="stat-card green" data-icon="📊">
           <div class="stat-label">Proforma</div>
           <div class="stat-value" id="stat-proforma">0</div>
-          <div class="stat-sub">Total issued</div>
+          <div class="stat-sub" id="stat-proforma-amt">₹0</div>
         </div>
-        <div class="stat-card green" data-icon="💬">
+        <div class="stat-card red" data-icon="💬">
           <div class="stat-label">Quotations</div>
           <div class="stat-value" id="stat-quotation">0</div>
-          <div class="stat-sub">Total issued</div>
+          <div class="stat-sub" id="stat-quotation-amt">₹0</div>
         </div>
-        <div class="stat-card red" data-icon="₹">
+        <div class="stat-card blue" data-icon="💸">
+          <div class="stat-label">Total Expenses</div>
+          <div class="stat-value" id="stat-expenses">₹0</div>
+          <div class="stat-sub">All expenses</div>
+        </div>
+        <div class="stat-card gold" data-icon="📦">
+          <div class="stat-label">Total Purchases</div>
+          <div class="stat-value" id="stat-purchases">₹0</div>
+          <div class="stat-sub">All purchases</div>
+        </div>
+        <div class="stat-card green" data-icon="💼">
+          <div class="stat-label">Salary Paid / Pending</div>
+          <div style="margin-top:8px"><div style="font-size:14px;font-weight:700;color:var(--green)" id="stat-salary-paid">₹0</div><div style="font-size:12px;color:var(--red);margin-top:4px" id="stat-salary-pending">Pending: ₹0</div></div>
+        </div>
+        <div class="stat-card red" data-icon="💰">
           <div class="stat-label">Total Billed</div>
-          <div class="stat-value" id="stat-total">0</div>
-          <div class="stat-sub">Gross amount (₹)</div>
+          <div class="stat-value" id="stat-total">₹0</div>
+          <div class="stat-sub">Proforma + Non-Tax Invoice</div>
+        </div>
+        <div class="stat-card blue" data-icon="🏦">
+          <div class="stat-label">Total Balance</div>
+          <div class="stat-value" id="stat-balance">₹0</div>
+          <div class="stat-sub">Received - (Exp + Sal + Pur)</div>
+        </div>
+        <div class="stat-card gold" data-icon="⏳">
+          <div class="stat-label">Outstanding Payment</div>
+          <div class="stat-value" id="stat-outstanding">₹0</div>
+          <div class="stat-sub">Billed - Received</div>
+        </div>
+        <div class="stat-card green" data-icon="💳">
+          <div class="stat-label">Total Received</div>
+          <div class="stat-value" id="stat-received">₹0</div>
+          <div class="stat-sub">All payments received</div>
         </div>
       </div>
 
@@ -540,6 +576,10 @@
           <div class="type-btn selected-tax" id="type-tax" onclick="selectType('Tax Invoice')">
             <div class="type-icon">🧾</div>
             <div class="type-label">Tax Invoice</div>
+          </div>
+          <div class="type-btn" id="type-invoice" onclick="selectType('Invoice')">
+            <div class="type-icon">📄</div>
+            <div class="type-label">Invoice (Non-Tax)</div>
           </div>
           <div class="type-btn" id="type-proforma" onclick="selectType('Proforma Invoice')">
             <div class="type-icon">📋</div>
@@ -775,6 +815,10 @@
             <input type="text" id="s-tax-prefix" value="ADMS/25-26/" />
           </div>
           <div class="form-group">
+            <label>Invoice Prefix (Non-Tax)</label>
+            <input type="text" id="s-invoice-prefix" value="ADM/INV/25-26/" />
+          </div>
+          <div class="form-group">
             <label>Proforma Prefix</label>
             <input type="text" id="s-pro-prefix" value="ADM/PRO/25-26/" />
           </div>
@@ -787,6 +831,10 @@
           <div class="form-group">
             <label>Tax Invoice – Next No.</label>
             <input type="number" id="s-tax-next" value="1" min="1" />
+          </div>
+          <div class="form-group">
+            <label>Invoice – Next No.</label>
+            <input type="number" id="s-invoice-next" value="1" min="1" />
           </div>
           <div class="form-group">
             <label>Proforma – Next No.</label>
@@ -1028,17 +1076,17 @@
     <!-- SALARY PAGE -->
     <div class="page" id="page-salary">
       <div class="section-header">
-        <div class="section-title">Salary Management</div>
+        <div class="section-title">Salary / Labour Payment</div>
         <div style="display:flex;gap:10px">
           <button class="btn btn-outline" onclick="openEmployeeModal()">👤 Add Employee</button>
-          <button class="btn btn-gold" onclick="openSalaryModal()">＋ Pay Salary</button>
+          <button class="btn btn-gold" onclick="openSalaryModal()">＋ Pay Salary / Labour</button>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
         <div class="stat-card blue" data-icon="👥"><div class="stat-label">Employees</div><div class="stat-value" id="sal-emp-count">0</div><div class="stat-sub">Active staff</div></div>
-        <div class="stat-card gold" data-icon="💼"><div class="stat-label">This Month Paid</div><div class="stat-value" id="sal-month">₹0</div><div class="stat-sub">Total payroll</div></div>
+        <div class="stat-card gold" data-icon="💼"><div class="stat-label">Salary Paid / Pending</div><div style="margin-top:8px"><div style="font-size:14px;font-weight:700;color:var(--green)" id="sal-month-paid">₹0</div><div style="font-size:12px;color:var(--red);margin-top:4px" id="sal-month-pending-txt">Pending: ₹0</div></div></div>
         <div class="stat-card green" data-icon="📅"><div class="stat-label">This Year Paid</div><div class="stat-value" id="sal-year">₹0</div><div class="stat-sub">Annual payroll</div></div>
-        <div class="stat-card red" data-icon="🧾"><div class="stat-label">Total Payments</div><div class="stat-value" id="sal-count">0</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card red" data-icon="🧾"><div class="stat-label">Total Entries</div><div class="stat-value" id="sal-count">0</div><div class="stat-sub">Salary + Labour</div></div>
       </div>
       <!-- Employee list -->
       <div class="module-card">
@@ -1050,17 +1098,18 @@
           </table>
         </div>
       </div>
-      <!-- Salary payments log -->
+      <!-- Salary & Labour payments log -->
       <div style="margin-top:24px">
         <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
+          <select id="sal-filter-type" onchange="renderSalaryPayments()" style="font-size:13px;padding:8px 12px;min-width:160px"><option value="">All Types</option><option value="Regular">Salary</option><option value="Daily Labour">Labour</option></select>
           <select id="sal-filter-emp" onchange="renderSalaryPayments()" style="font-size:13px;padding:8px 12px;min-width:160px"><option value="">All Employees</option></select>
           <input type="month" id="sal-filter-month" onchange="renderSalaryPayments()" style="font-size:13px;padding:8px 12px" />
-          <button class="btn btn-outline" onclick="document.getElementById('sal-filter-emp').value='';document.getElementById('sal-filter-month').value='';renderSalaryPayments()">Clear</button>
+          <button class="btn btn-outline" onclick="document.getElementById('sal-filter-type').value='';document.getElementById('sal-filter-emp').value='';document.getElementById('sal-filter-month').value='';renderSalaryPayments()">Clear</button>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Date</th><th>Employee</th><th>Month</th><th>Amount Paid</th><th>Mode</th><th>Actions</th></tr></thead>
-            <tbody id="salary-tbody"><tr><td colspan="6"><div class="empty-state"><div class="empty-icon">💼</div><h3>No salary payments yet</h3></div></td></tr></tbody>
+            <thead><tr><th>Date</th><th>Type</th><th>Name</th><th>Details</th><th>Amount</th><th>Status</th><th>Mode</th><th>Actions</th></tr></thead>
+            <tbody id="salary-tbody"><tr><td colspan="8"><div class="empty-state"><div class="empty-icon">💼</div><h3>No salary/labour payments yet</h3></div></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1217,10 +1266,11 @@
 <!-- SALARY PAYMENT MODAL -->
 <div class="mini-modal-overlay" id="salary-modal">
   <div class="mini-modal">
-    <h3 id="sal-modal-title">Pay Salary</h3>
+    <h3 id="sal-modal-title">Pay Salary / Labour</h3>
     <input type="hidden" id="sal-edit-id" />
+    <input type="hidden" id="sal-total-amount" />
     <div class="form-grid">
-      <div class="form-group"><label>Type</label>
+      <div class="form-group" id="sal-type-field"><label>Type</label>
         <select id="sal-type" onchange="updateSalaryType()" style="font-size:14px">
           <option value="Regular">Regular Salary</option>
           <option value="Daily Labour">Daily Labour</option>
@@ -1233,16 +1283,23 @@
         <select id="sal-employee" onchange="autofillSalaryAmount()"><option value="">Select employee</option></select>
       </div>
       <div class="form-group" id="labour-field" style="display:none"><label>Labour Name</label>
-        <input type="text" id="sal-labour-name" placeholder="Daily labour name" />
+        <input type="text" id="sal-labour-name" placeholder="Labour person name" />
+      </div>
+      <div class="form-group" id="labour-work-field" style="display:none"><label>Work Details</label>
+        <input type="text" id="sal-labour-work" placeholder="e.g., Installation, Maintenance" />
+      </div>
+      <div class="form-group" id="labour-days-field" style="display:none"><label>Number of Days</label>
+        <input type="number" id="sal-labour-days" placeholder="0" min="0" step="0.5" onchange="calcLabourAmount()" />
+      </div>
+      <div class="form-group" id="labour-rate-field" style="display:none"><label>Per Day Rate (₹)</label>
+        <input type="number" id="sal-labour-rate" placeholder="0.00" min="0" step="0.01" onchange="calcLabourAmount()" />
       </div>
       <div class="form-group"><label>Date</label><input type="date" id="sal-date" /></div>
       <div class="form-group"><label>For Month / Period</label><input type="month" id="sal-for-month" /></div>
+      <div class="form-group"><label>Total Amount Due (₹)</label><input type="number" id="sal-total-due" placeholder="0.00" min="0" step="0.01" readonly style="background:var(--gray50)" /></div>
       <div class="form-group"><label>Amount Paid (₹)</label><input type="number" id="sal-amount" placeholder="0.00" min="0" step="0.01" /></div>
       <div class="form-group"><label>Payment Mode</label>
         <select id="sal-mode"><option>Cash</option><option>Bank Transfer</option><option>UPI</option><option>Cheque</option></select>
-      </div>
-      <div class="form-group"><label>Status</label>
-        <select id="sal-status"><option value="Paid">Paid</option><option value="Pending">Pending</option><option value="Partial">Partial</option></select>
       </div>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
@@ -1400,6 +1457,7 @@ let settings = {
   proPrefix: 'ADM/PRO/25-26/',
   quotPrefix: 'ADM/QUT/25-26/',
   taxNext: 1,
+  invoiceNext: 1,
   proNext: 1,
   quotNext: 1
 };
@@ -1661,9 +1719,11 @@ function showPage(name) {
 function selectType(type) {
   currentDocType = type;
   document.getElementById('type-tax').className = 'type-btn';
+  document.getElementById('type-invoice').className = 'type-btn';
   document.getElementById('type-proforma').className = 'type-btn';
   document.getElementById('type-quotation').className = 'type-btn';
   if (type === 'Tax Invoice') document.getElementById('type-tax').classList.add('selected-tax');
+  if (type === 'Invoice') document.getElementById('type-invoice').classList.add('selected-tax');
   if (type === 'Proforma Invoice') document.getElementById('type-proforma').classList.add('selected-proforma');
   if (type === 'Quotation') document.getElementById('type-quotation').classList.add('selected-quotation');
   const showTax = type !== 'Quotation';
@@ -1705,6 +1765,7 @@ function autofillFromProforma() {
 function autoNumber() {
   let num, prefix;
   if (currentDocType === 'Tax Invoice') { prefix = settings.taxPrefix; num = settings.taxNext; }
+  else if (currentDocType === 'Invoice') { prefix = settings.invoicePrefix || 'ADM/INV/25-26/'; num = settings.invoiceNext || 1; }
   else if (currentDocType === 'Proforma Invoice') { prefix = settings.proPrefix; num = settings.proNext; }
   else { prefix = settings.quotPrefix; num = settings.quotNext; }
   document.getElementById('doc-number').value = prefix + num;
@@ -1848,8 +1909,8 @@ function generateInvoiceHTML(doc) {
     return `<tr style="background:${bg}"><td style="text-align:center;color:#4A7FA7;padding:7px 8px;font-size:11px;border-bottom:1px solid #e8f0f8">${i+1}</td><td style="padding:7px 8px;line-height:1.5;font-size:12px;color:#1e293b;border-bottom:1px solid #e8f0f8">${item.desc}</td><td style="text-align:right;padding:7px 8px;font-size:12px;color:#1e293b;border-bottom:1px solid #e8f0f8">${item.qty}</td><td style="text-align:center;padding:7px 8px;font-size:12px;color:#475569;border-bottom:1px solid #e8f0f8">${item.unit}</td><td style="text-align:right;padding:7px 8px;font-size:12px;color:#1e293b;border-bottom:1px solid #e8f0f8">${fmt(item.rate)}</td><td style="text-align:right;padding:7px 8px;font-size:12px;font-weight:600;color:#1A3D63;border-bottom:1px solid #e8f0f8">${fmt(item.amount)}</td></tr>`;
   }).join('');
   const gstLine = s.gst ? `<div style="margin-top:3px;font-size:11px;color:#475569"><strong>GST:</strong> ${s.gst}</div>` : '';
-  const docLabel = doc.type === 'Tax Invoice' ? 'TAX INVOICE' : doc.type === 'Proforma Invoice' ? 'PROFORMA' : doc.type === 'Invoice' ? 'INVOICE' : 'QUOTATION';
-  const numLabel = doc.type === 'Tax Invoice' ? 'Invoice No.' : doc.type === 'Proforma Invoice' ? 'Proforma No.' : doc.type === 'Invoice' ? 'Invoice No.' : 'Quotation No.';
+  const docLabel = doc.type === 'Tax Invoice' ? 'TAX INVOICE' : doc.type === 'Invoice' ? 'INVOICE' : doc.type === 'Proforma Invoice' ? 'PROFORMA' : 'QUOTATION';
+  const numLabel = doc.type === 'Tax Invoice' ? 'Invoice No.' : doc.type === 'Invoice' ? 'Invoice No.' : doc.type === 'Proforma Invoice' ? 'Proforma No.' : 'Quotation No.';
   
   const PRIMARY = '#1A3D63';
   const PRIMARY_DARK = '#0A1931';
@@ -2011,6 +2072,7 @@ function _persistDoc(doc, status, successMsg) {
         if (status === 'final') {
           const updates = {};
           if (doc.type === 'Tax Invoice') updates.taxNext = (settings.taxNext || 1) + 1;
+          else if (doc.type === 'Invoice') updates.invoiceNext = (settings.invoiceNext || 1) + 1;
           else if (doc.type === 'Proforma Invoice') updates.proNext = (settings.proNext || 1) + 1;
           else updates.quotNext = (settings.quotNext || 1) + 1;
           return SETTINGS_REF.set(updates, { merge: true });
@@ -2085,19 +2147,72 @@ function editDraft(id) {
 // ═══════════════════════════════════════════════════════
 function updateDashboard() {
   const tax = documents.filter(d => d.type === 'Tax Invoice');
+  const invoice = documents.filter(d => d.type === 'Invoice');
   const pro = documents.filter(d => d.type === 'Proforma Invoice');
   const quot = documents.filter(d => d.type === 'Quotation');
-  const total = documents.reduce((s, d) => s + (d.grand || 0), 0);
+  
+  const taxAmt = tax.reduce((s, d) => s + (d.grand || 0), 0);
+  const invoiceAmt = invoice.reduce((s, d) => s + (d.grand || 0), 0);
+  const proAmt = pro.reduce((s, d) => s + (d.grand || 0), 0);
+  const quotAmt = quot.reduce((s, d) => s + (d.grand || 0), 0);
+  
+  const totalExpenses = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+  const totalPurchases = purchases.reduce((s, p) => s + (p.amount || 0), 0);
+  
+  // Calculate salary paid and pending
+  let salaryPaid = 0;
+  let salaryPending = 0;
+  salaryPayments.forEach(p => {
+    const totalAmt = p.type === 'Daily Labour' ? ((p.days || 0) * (p.rate || 0)) : (p.totalAmount || p.amount || 0);
+    const paidAmt = p.paidAmount || p.amount || 0;
+    if (paidAmt >= totalAmt) {
+      salaryPaid += totalAmt;
+    } else if (paidAmt === 0) {
+      salaryPending += totalAmt;
+    } else {
+      salaryPaid += paidAmt;
+      salaryPending += (totalAmt - paidAmt);
+    }
+  });
+  
+  const totalSalary = salaryPaid + salaryPending;
+  const totalReceived = payments.reduce((s, p) => s + (p.amount || 0), 0);
+  
+  // Total billed = Proforma + Non-Tax Invoice (as per requirement)
+  const totalBilled = proAmt + invoiceAmt;
+  
+  // Total balance = Total received - (expenses + salary + purchases)
+  const totalBalance = totalReceived - (totalExpenses + totalSalary + totalPurchases);
+  
+  // Outstanding = Total billed - payment received
+  const outstanding = Math.max(0, totalBilled - totalReceived);
 
   document.getElementById('stat-tax').textContent = tax.length;
+  document.getElementById('stat-tax-amt').textContent = '₹' + taxAmt.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  
+  document.getElementById('stat-invoice').textContent = invoice.length;
+  document.getElementById('stat-invoice-amt').textContent = '₹' + invoiceAmt.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  
   document.getElementById('stat-proforma').textContent = pro.length;
+  document.getElementById('stat-proforma-amt').textContent = '₹' + proAmt.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  
   document.getElementById('stat-quotation').textContent = quot.length;
-  document.getElementById('stat-total').textContent = total.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  document.getElementById('stat-quotation-amt').textContent = '₹' + quotAmt.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  
+  document.getElementById('stat-expenses').textContent = '₹' + totalExpenses.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  document.getElementById('stat-purchases').textContent = '₹' + totalPurchases.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  document.getElementById('stat-salary-paid').textContent = '₹' + salaryPaid.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  document.getElementById('stat-salary-pending').textContent = 'Pending: ₹' + salaryPending.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  
+  document.getElementById('stat-total').textContent = '₹' + totalBilled.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  document.getElementById('stat-balance').textContent = '₹' + totalBalance.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  document.getElementById('stat-outstanding').textContent = '₹' + outstanding.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  document.getElementById('stat-received').textContent = '₹' + totalReceived.toLocaleString('en-IN', { maximumFractionDigits: 0 });
 
   updateBadges();
   renderRecentTable();
 
-  const counts = [tax.length, pro.length, quot.length];
+  const counts = [tax.length, invoice.length, pro.length, quot.length];
   if (window.docPieChartInst) {
     window.docPieChartInst.data.datasets[0].data = counts;
     window.docPieChartInst.update();
@@ -2106,10 +2221,10 @@ function updateDashboard() {
     window.docPieChartInst = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['Tax Invoices', 'Proforma', 'Quotations'],
+        labels: ['Tax Invoices', 'Non-Tax Invoices', 'Proforma', 'Quotations'],
         datasets: [{
           data: counts,
-          backgroundColor: ['#4A7FA7', '#1A3D63', '#B3CFE5'],
+          backgroundColor: ['#4A7FA7', '#87CEEB', '#1A3D63', '#B3CFE5'],
           borderColor: '#ffffff',
           borderWidth: 2
         }]
@@ -2128,6 +2243,7 @@ function updateDashboard() {
 function updateBadges() {
   document.getElementById('badge-all').textContent = documents.length;
   document.getElementById('badge-tax').textContent = documents.filter(d => d.type === 'Tax Invoice').length;
+  document.getElementById('badge-invoice').textContent = documents.filter(d => d.type === 'Invoice').length;
   document.getElementById('badge-proforma').textContent = documents.filter(d => d.type === 'Proforma Invoice').length;
   document.getElementById('badge-quotation').textContent = documents.filter(d => d.type === 'Quotation').length;
 }
@@ -2350,9 +2466,11 @@ function loadSettings() {
   document.getElementById('s-branch').value = settings.branch || '';
   document.getElementById('s-ifsc').value = settings.ifsc || '';
   document.getElementById('s-tax-prefix').value = settings.taxPrefix || '';
+  document.getElementById('s-invoice-prefix').value = settings.invoicePrefix || '';
   document.getElementById('s-pro-prefix').value = settings.proPrefix || '';
   document.getElementById('s-quot-prefix').value = settings.quotPrefix || '';
   document.getElementById('s-tax-next').value = settings.taxNext || 1;
+  document.getElementById('s-invoice-next').value = settings.invoiceNext || 1;
   document.getElementById('s-pro-next').value = settings.proNext || 1;
   document.getElementById('s-quot-next').value = settings.quotNext || 1;
   
@@ -2413,8 +2531,8 @@ function saveSettings() {
     accName: document.getElementById('s-acc-name').value, accNum: document.getElementById('s-acc-num').value, bank: document.getElementById('s-bank').value,
     branch: document.getElementById('s-branch').value, ifsc: document.getElementById('s-ifsc').value, paymentTerms: document.getElementById('s-payment-terms').value,
     taxPrefix: document.getElementById('s-tax-prefix').value,
-    proPrefix: document.getElementById('s-pro-prefix').value, quotPrefix: document.getElementById('s-quot-prefix').value,
-    taxNext: parseInt(document.getElementById('s-tax-next').value) || 1, proNext: parseInt(document.getElementById('s-pro-next').value) || 1, quotNext: parseInt(document.getElementById('s-quot-next').value) || 1
+    invoicePrefix: document.getElementById('s-invoice-prefix').value, proPrefix: document.getElementById('s-pro-prefix').value, quotPrefix: document.getElementById('s-quot-prefix').value,
+    taxNext: parseInt(document.getElementById('s-tax-next').value) || 1, invoiceNext: parseInt(document.getElementById('s-invoice-next').value) || 1, proNext: parseInt(document.getElementById('s-pro-next').value) || 1, quotNext: parseInt(document.getElementById('s-quot-next').value) || 1
   };
   SETTINGS_REF.set(updated, { merge: true }).then(() => { updateBankPreview(); toast('Settings saved! ✓', 'success'); }).catch(err => toast('Save failed', 'error'));
 }
@@ -2590,6 +2708,22 @@ function updateSalaryType() {
   const type = document.getElementById('sal-type').value;
   document.getElementById('emp-field').style.display = type === 'Regular' ? 'block' : 'none';
   document.getElementById('labour-field').style.display = type === 'Daily Labour' ? 'block' : 'none';
+  document.getElementById('labour-work-field').style.display = type === 'Daily Labour' ? 'block' : 'none';
+  document.getElementById('labour-days-field').style.display = type === 'Daily Labour' ? 'block' : 'none';
+  document.getElementById('labour-rate-field').style.display = type === 'Daily Labour' ? 'block' : 'none';
+}
+
+function calcLabourAmount() {
+  const days = parseFloat(document.getElementById('sal-labour-days').value) || 0;
+  const rate = parseFloat(document.getElementById('sal-labour-rate').value) || 0;
+  const amount = days * rate;
+  document.getElementById('sal-amount').value = amount.toFixed(2);
+  document.getElementById('sal-total-due').value = amount.toFixed(2);
+}
+
+function togglePartialPayment() {
+  const status = document.getElementById('sal-status').value;
+  document.getElementById('partial-amount-field').style.display = status === 'Partial' ? 'block' : 'none';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3126,57 +3260,235 @@ function deleteEmployee(id) {
 function renderSalaryPayments() {
   const tbody = document.getElementById('salary-tbody');
   if (!tbody) return;
+  const typeF = document.getElementById('sal-filter-type')?.value || '';
   const empF = document.getElementById('sal-filter-emp')?.value || '';
   const monF = document.getElementById('sal-filter-month')?.value || '';
   let filtered = salaryPayments;
-  if (empF) filtered = filtered.filter(p => p.employeeName === empF);
+  if (typeF) filtered = filtered.filter(p => p.type === typeF);
+  if (empF) filtered = filtered.filter(p => p.employeeName === empF || p.labourName === empF);
   if (monF) filtered = filtered.filter(p => p.forMonth === monF);
-  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">💼</div><h3>No salary payments found</h3></div></td></tr>'; return; }
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">💼</div><h3>No salary/labour payments found</h3></div></td></tr>'; return; }
   tbody.innerHTML = filtered.map(p => {
-    const monthLabel = p.forMonth ? new Date(p.forMonth+'-01').toLocaleDateString('en-IN',{month:'short',year:'numeric'}) : '—';
+    const name = p.type === 'Daily Labour' ? (p.labourName || '—') : (p.employeeName || '—');
+    const details = p.type === 'Daily Labour' ? `${p.workDetails || '—'} (${p.days || 0} days @ ₹${p.rate || 0}/day)` : (p.forMonth || '—');
+    const totalAmt = p.type === 'Daily Labour' ? ((p.days || 0) * (p.rate || 0)) : (p.totalAmount || p.amount || 0);
+    const paidAmt = p.paidAmount || p.amount || 0;
+    const balanceAmt = Math.max(0, totalAmt - paidAmt);
+    
+    let statusBadge = '';
+    if (paidAmt >= totalAmt) {
+      statusBadge = '<span style="background:var(--green);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Paid</span>';
+    } else if (paidAmt === 0) {
+      statusBadge = '<span style="background:var(--red);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Pending</span>';
+    } else {
+      statusBadge = `<span style="background:#ffa500;color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Partial (₹${paidAmt})</span>`;
+    }
+    
+    const menuId = `sal-menu-${p.id}`;
+    const actionsBtns = balanceAmt > 0.01 ? 
+      `<button class="btn btn-gold" style="padding:4px 8px;font-size:11px" onclick="editSalaryPaymentBalance('${p.id}')">Pay Balance ₹${balanceAmt.toFixed(0)}</button>
+       <div style="position:relative;display:inline-block;margin-left:4px">
+         <button class="btn btn-outline" style="padding:4px 8px;font-size:14px" onclick="toggleMenu('${menuId}')">⋮</button>
+         <div id="${menuId}" style="display:none;position:absolute;right:0;background:var(--white);border:1px solid var(--gray200);border-radius:6px;box-shadow:var(--shadow);z-index:50;min-width:120px">
+           <div style="padding:8px 12px;cursor:pointer;font-size:12px;color:var(--red);hover:background:var(--gray50)" onclick="deleteSalaryPayment('${p.id}');toggleMenu('${menuId}')">🗑 Delete</div>
+         </div>
+       </div>` :
+      `<button class="btn btn-outline" style="padding:4px 8px;font-size:11px" onclick="editSalaryPayment('${p.id}')">✏️ Edit</button>
+       <div style="position:relative;display:inline-block;margin-left:4px">
+         <button class="btn btn-outline" style="padding:4px 8px;font-size:14px" onclick="toggleMenu('${menuId}')">⋮</button>
+         <div id="${menuId}" style="display:none;position:absolute;right:0;background:var(--white);border:1px solid var(--gray200);border-radius:6px;box-shadow:var(--shadow);z-index:50;min-width:120px">
+           <div style="padding:8px 12px;cursor:pointer;font-size:12px;color:var(--red);hover:background:var(--gray50)" onclick="deleteSalaryPayment('${p.id}');toggleMenu('${menuId}')">🗑 Delete</div>
+         </div>
+       </div>`;
+    
     return `<tr>
       <td style="font-size:13px">${p.date || '—'}</td>
-      <td style="font-weight:600;color:var(--navy)">${p.employeeName || '—'}</td>
-      <td style="font-size:12px">${monthLabel}</td>
-      <td class="amount-cell">₹${Number(p.amount||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+      <td style="font-size:12px;font-weight:600">${p.type === 'Daily Labour' ? '👷 Labour' : '💼 Salary'}</td>
+      <td style="font-weight:600;color:var(--navy)">${name}</td>
+      <td style="font-size:12px">${details}</td>
+      <td class="amount-cell">₹${Number(totalAmt||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+      <td>${statusBadge}</td>
       <td style="font-size:12px">${p.mode || '—'}</td>
-      <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteSalaryPayment('${p.id}')">🗑</button></td>
+      <td style="font-size:12px;white-space:nowrap">${actionsBtns}</td>
     </tr>`;
   }).join('');
+}
+
+function toggleMenu(menuId) {
+  const menu = document.getElementById(menuId);
+  if (menu) {
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  }
 }
 
 function updateSalarySummary() {
   const now = new Date();
   const thisMonth = now.toISOString().slice(0,7);
   const thisYear = now.getFullYear().toString();
-  const monthTotal = salaryPayments.filter(p => (p.date||'').startsWith(thisMonth)).reduce((s,p)=>s+(p.amount||0),0);
-  const yearTotal = salaryPayments.filter(p => (p.date||'').startsWith(thisYear)).reduce((s,p)=>s+(p.amount||0),0);
+  
+  let monthPaid = 0;
+  let monthPending = 0;
+  
+  salaryPayments.filter(p => (p.date||'').startsWith(thisMonth)).forEach(p => {
+    const totalAmt = p.type === 'Daily Labour' ? ((p.days || 0) * (p.rate || 0)) : (p.totalAmount || p.amount || 0);
+    const paidAmt = p.paidAmount || p.amount || 0;
+    
+    if (paidAmt >= totalAmt) {
+      monthPaid += totalAmt;
+    } else if (paidAmt === 0) {
+      monthPending += totalAmt;
+    } else {
+      monthPaid += paidAmt;
+      monthPending += (totalAmt - paidAmt);
+    }
+  });
+  
+  const yearTotal = salaryPayments.filter(p => (p.date||'').startsWith(thisYear)).reduce((s,p)=>{
+    return s + (p.amount || 0);
+  },0);
+  
   const el = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
   el('sal-emp-count', employees.length);
-  el('sal-month', '₹'+monthTotal.toLocaleString('en-IN',{maximumFractionDigits:0}));
+  el('sal-month-paid', '₹'+monthPaid.toLocaleString('en-IN',{maximumFractionDigits:0}));
+  el('sal-month-pending-txt', 'Pending: ₹'+monthPending.toLocaleString('en-IN',{maximumFractionDigits:0}));
   el('sal-year', '₹'+yearTotal.toLocaleString('en-IN',{maximumFractionDigits:0}));
   el('sal-count', salaryPayments.length);
 }
 
 function openSalaryModal() {
   document.getElementById('sal-edit-id').value = '';
-  document.getElementById('sal-modal-title').textContent = 'Pay Salary';
+  document.getElementById('sal-modal-title').textContent = 'Pay Salary / Labour';
   document.getElementById('sal-date').valueAsDate = new Date();
   document.getElementById('sal-for-month').value = new Date().toISOString().slice(0,7);
+  document.getElementById('sal-type').value = 'Regular';
+  document.getElementById('sal-type-field').style.display = 'block';
+  updateSalaryType();
   document.getElementById('sal-employee').value = '';
+  document.getElementById('sal-labour-name').value = '';
+  document.getElementById('sal-labour-work').value = '';
+  document.getElementById('sal-labour-days').value = '';
+  document.getElementById('sal-labour-rate').value = '';
   document.getElementById('sal-amount').value = '';
+  document.getElementById('sal-total-due').value = '';
   document.getElementById('salary-modal').classList.add('open');
 }
 
 function saveSalaryPayment() {
-  const empId = document.getElementById('sal-employee').value;
-  const emp = employees.find(x => x.id === empId);
-  const amount = parseFloat(document.getElementById('sal-amount').value) || 0;
+  const editId = document.getElementById('sal-edit-id').value;
+  const type = document.getElementById('sal-type').value;
   const date = document.getElementById('sal-date').value;
-  const forMonth = document.getElementById('sal-for-month').value;
-  if (!emp || !amount || !date) { toast('Employee, date and amount required', 'error'); return; }
-  const data = { employeeId: empId, employeeName: emp.name, amount, date, forMonth, mode: document.getElementById('sal-mode').value };
-  db.collection(SAL_COL).add(data).then(() => { closeMiniModal('salary-modal'); toast('Salary payment saved! ✓', 'success'); }).catch(e => toast('Error: ' + e.message, 'error'));
+  const paidAmount = parseFloat(document.getElementById('sal-amount').value) || 0;
+  
+  if (!date || !paidAmount) { toast('Date and amount required', 'error'); return; }
+  
+  let totalAmount = paidAmount;
+  
+  if (type === 'Regular') {
+    const empId = document.getElementById('sal-employee').value;
+    const emp = employees.find(x => x.id === empId);
+    if (!emp) { toast('Employee required', 'error'); return; }
+  } else if (type === 'Daily Labour') {
+    const labourName = document.getElementById('sal-labour-name').value.trim();
+    const workDetails = document.getElementById('sal-labour-work').value.trim();
+    const days = parseFloat(document.getElementById('sal-labour-days').value) || 0;
+    const rate = parseFloat(document.getElementById('sal-labour-rate').value) || 0;
+    
+    if (!labourName || !workDetails || !days || !rate) { toast('Labour details required', 'error'); return; }
+    totalAmount = days * rate;
+  }
+  
+  // Auto-detect status based on paid vs total
+  let status = 'Pending';
+  if (paidAmount >= totalAmount) status = 'Paid';
+  else if (paidAmount > 0) status = 'Partial';
+  
+  let data = { type, date, totalAmount, paidAmount, status, mode: document.getElementById('sal-mode').value, forMonth: document.getElementById('sal-for-month').value };
+  
+  if (type === 'Regular') {
+    const empId = document.getElementById('sal-employee').value;
+    const emp = employees.find(x => x.id === empId);
+    data.employeeId = empId;
+    data.employeeName = emp.name;
+  } else if (type === 'Daily Labour') {
+    data.labourName = document.getElementById('sal-labour-name').value.trim();
+    data.workDetails = document.getElementById('sal-labour-work').value.trim();
+    data.days = parseFloat(document.getElementById('sal-labour-days').value) || 0;
+    data.rate = parseFloat(document.getElementById('sal-labour-rate').value) || 0;
+  }
+  
+  const savePromise = editId 
+    ? db.collection(SAL_COL).doc(editId).update(data)
+    : db.collection(SAL_COL).add(data);
+  
+  savePromise.then(() => { 
+    closeMiniModal('salary-modal'); 
+    toast(editId ? 'Payment updated! ✓' : 'Payment saved! ✓', 'success'); 
+    document.getElementById('sal-employee').value = '';
+    document.getElementById('sal-labour-name').value = '';
+    document.getElementById('sal-labour-work').value = '';
+    document.getElementById('sal-labour-days').value = '';
+    document.getElementById('sal-labour-rate').value = '';
+    document.getElementById('sal-amount').value = '';
+  }).catch(e => toast('Error: ' + e.message, 'error'));
+}
+
+function editSalaryPayment(id) {
+  const p = salaryPayments.find(x => x.id === id);
+  if (!p) return;
+  
+  document.getElementById('sal-edit-id').value = id;
+  document.getElementById('sal-modal-title').textContent = 'Edit Payment';
+  document.getElementById('sal-type').value = p.type;
+  document.getElementById('sal-date').value = p.date || '';
+  document.getElementById('sal-for-month').value = p.forMonth || '';
+  
+  updateSalaryType();
+  
+  if (p.type === 'Regular') {
+    document.getElementById('sal-employee').value = p.employeeId || '';
+  } else {
+    document.getElementById('sal-labour-name').value = p.labourName || '';
+    document.getElementById('sal-labour-work').value = p.workDetails || '';
+    document.getElementById('sal-labour-days').value = p.days || '';
+    document.getElementById('sal-labour-rate').value = p.rate || '';
+    calcLabourAmount();
+  }
+  
+  document.getElementById('sal-mode').value = p.mode || 'Cash';
+  document.getElementById('sal-total-due').value = (p.totalAmount || p.amount || 0).toFixed(2);
+  document.getElementById('sal-amount').value = (p.paidAmount || p.amount || 0).toFixed(2);
+  document.getElementById('salary-modal').classList.add('open');
+}
+
+function editSalaryPaymentBalance(id) {
+  const p = salaryPayments.find(x => x.id === id);
+  if (!p) return;
+  
+  const totalAmt = p.type === 'Daily Labour' ? ((p.days || 0) * (p.rate || 0)) : (p.totalAmount || p.amount || 0);
+  const paidAmt = p.paidAmount || p.amount || 0;
+  const balanceAmt = Math.max(0, totalAmt - paidAmt);
+  
+  document.getElementById('sal-edit-id').value = id;
+  document.getElementById('sal-modal-title').textContent = 'Pay Balance Amount';
+  document.getElementById('sal-type').value = p.type;
+  document.getElementById('sal-date').valueAsDate = new Date();
+  document.getElementById('sal-for-month').value = p.forMonth || '';
+  
+  updateSalaryType();
+  
+  if (p.type === 'Regular') {
+    document.getElementById('sal-employee').value = p.employeeId || '';
+  } else {
+    document.getElementById('sal-labour-name').value = p.labourName || '';
+    document.getElementById('sal-labour-work').value = p.workDetails || '';
+    document.getElementById('sal-labour-days').value = p.days || '';
+    document.getElementById('sal-labour-rate').value = p.rate || '';
+  }
+  
+  document.getElementById('sal-mode').value = p.mode || 'Cash';
+  document.getElementById('sal-total-due').value = totalAmt.toFixed(2);
+  document.getElementById('sal-amount').value = (paidAmt + balanceAmt).toFixed(2);
+  document.getElementById('salary-modal').classList.add('open');
 }
 
 function deleteSalaryPayment(id) {
