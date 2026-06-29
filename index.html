@@ -3006,6 +3006,7 @@ function fillJobFromProject() {
   const sel = document.getElementById('doc-project-select');
   const p = projectsList.find(x => x.id === sel.value);
   document.getElementById('doc-job').value = p ? (p.jobNo || '') : '';
+  if (p && p.name) document.getElementById('doc-worksite').value = p.name;
 }
 
 function populateProjectSelects() {
