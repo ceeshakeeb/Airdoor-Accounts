@@ -988,6 +988,39 @@
       </div>
 
       <div class="settings-card">
+        <h3>✍️ Authorised Signatures</h3>
+        <div style="margin-bottom:16px;font-size:13px;color:var(--gray600);line-height:1.6">Upload up to 2 signature images. When generating a document you will be asked which to use. Supports PNG, JPG (transparent PNG recommended).</div>
+        <div style="display:flex;gap:28px;flex-wrap:wrap">
+          <!-- Signature 1 -->
+          <div style="flex:1;min-width:220px">
+            <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px">Signature 1</div>
+            <div id="sign1-preview-box" style="width:180px;height:80px;border:2px dashed var(--gray400);border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--gray50);overflow:hidden;cursor:pointer;position:relative;margin-bottom:10px" onclick="document.getElementById('sign1-file-input').click()">
+              <img id="sign1-preview-img" src="" alt="" style="max-width:100%;max-height:100%;object-fit:contain;display:none" />
+              <div id="sign1-placeholder" style="text-align:center;color:var(--gray600)"><div style="font-size:22px">✍️</div><div style="font-size:11px;margin-top:4px">Click to upload</div></div>
+            </div>
+            <input type="file" id="sign1-file-input" accept="image/*" style="display:none" onchange="handleSignatureUpload(event,1)" />
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-blue" style="font-size:12px;padding:6px 12px" onclick="document.getElementById('sign1-file-input').click()">📁 Choose</button>
+              <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="removeSignature(1)">🗑 Remove</button>
+            </div>
+          </div>
+          <!-- Signature 2 -->
+          <div style="flex:1;min-width:220px">
+            <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px">Signature 2</div>
+            <div id="sign2-preview-box" style="width:180px;height:80px;border:2px dashed var(--gray400);border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--gray50);overflow:hidden;cursor:pointer;position:relative;margin-bottom:10px" onclick="document.getElementById('sign2-file-input').click()">
+              <img id="sign2-preview-img" src="" alt="" style="max-width:100%;max-height:100%;object-fit:contain;display:none" />
+              <div id="sign2-placeholder" style="text-align:center;color:var(--gray600)"><div style="font-size:22px">✍️</div><div style="font-size:11px;margin-top:4px">Click to upload</div></div>
+            </div>
+            <input type="file" id="sign2-file-input" accept="image/*" style="display:none" onchange="handleSignatureUpload(event,2)" />
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-blue" style="font-size:12px;padding:6px 12px" onclick="document.getElementById('sign2-file-input').click()">📁 Choose</button>
+              <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="removeSignature(2)">🗑 Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-card">
         <h3>💾 Backup &amp; Restore</h3>
         <div style="margin-bottom:14px;font-size:13px;color:var(--gray600);line-height:1.6">Download all your documents and settings as a JSON file. To restore on another device, use the Restore button and pick a previously saved backup file.</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -1562,6 +1595,20 @@
     <div id="projects-list" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px"></div>
     <div style="display:flex;justify-content:flex-end;margin-top:20px">
       <button class="btn btn-outline" onclick="closeMiniModal('projects-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIGNATURE PICKER MODAL -->
+<div class="mini-modal-overlay" id="sign-picker-modal">
+  <div class="mini-modal" style="max-width:420px">
+    <h3>✍️ Select Signature</h3>
+    <p style="font-size:13px;color:var(--gray600);margin-bottom:20px">Choose which authorised signature to include on this document, or proceed without one.</p>
+    <div style="display:flex;flex-direction:column;gap:12px" id="sign-picker-options">
+      <!-- Populated dynamically -->
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-outline" onclick="closeMiniModal('sign-picker-modal')">Cancel</button>
     </div>
   </div>
 </div>
@@ -2189,10 +2236,13 @@ function generateInvoiceHTML(doc) {
             <div style="font-size:14px;font-weight:800;letter-spacing:1px">TOTAL</div>
             <div style="font-size:16px;font-weight:800">${fmt(doc.grand)}</div>
           </div>
-          <div style="text-align:right;padding-top:77px">
-            ${doc.type !== 'Quotation' ? `<div style="border-top:1.5px solid ${PRIMARY};padding-top:6px;display:inline-block;min-width:180px">
-              <div style="font-size:12px;font-weight:700;color:${PRIMARY}">For Airdoor MEP Solutions</div>
-              <div style="font-size:11px;color:#475569">Authorised Signatory</div>
+          <div style="text-align:right;padding-top:${doc.selectedSignature ? '20px' : '77px'}">
+            ${doc.type !== 'Quotation' ? `<div style="display:inline-block;min-width:180px">
+              ${doc.selectedSignature ? `<div style="margin-bottom:4px;text-align:center"><img src="${doc.selectedSignature}" style="max-height:55px;max-width:170px;object-fit:contain" /></div>` : ''}
+              <div style="border-top:1.5px solid ${PRIMARY};padding-top:6px">
+                <div style="font-size:12px;font-weight:700;color:${PRIMARY}">For Airdoor MEP Solutions</div>
+                <div style="font-size:11px;color:#475569">Authorised Signatory</div>
+              </div>
             </div>` : ''}
           </div>
         </div>
@@ -2248,7 +2298,47 @@ function generateDoc() {
   if (!doc.clientName) { toast('Please enter client name', 'error'); return; }
   if (!doc.number) { autoNumber(); doc.number = document.getElementById('doc-number').value; }
   if (doc.items.length === 0) { toast('Add at least one line item', 'error'); return; }
+  // Only show sig picker for Invoice, Tax Invoice, Proforma Invoice (not Quotation)
+  if (doc.type !== 'Quotation') {
+    openSignaturePicker(doc);
+  } else {
+    if (!confirm('Once generated, this document is FINAL and cannot be edited. Continue?')) return;
+    _persistDoc(doc, 'final', 'Document generated — locked for editing! ✓').then(() => { pendingServiceReport = null; currentServiceReportOnLoad = null; }).catch(err => toast('Generate failed: ' + err.message, 'error'));
+  }
+}
+
+function openSignaturePicker(doc) {
+  const opts = document.getElementById('sign-picker-options');
+  opts.innerHTML = '';
+  const sigs = [];
+  if (settings.sign1DataUrl) sigs.push({ label: 'Signature 1', url: settings.sign1DataUrl, key: 'sign1' });
+  if (settings.sign2DataUrl) sigs.push({ label: 'Signature 2', url: settings.sign2DataUrl, key: 'sign2' });
+
+  const btnStyle = 'display:flex;align-items:center;gap:14px;padding:12px 16px;border:2px solid var(--gray300);border-radius:10px;background:var(--gray50);cursor:pointer;transition:border-color .2s;width:100%;text-align:left';
+
+  sigs.forEach(sig => {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-outline';
+    btn.style.cssText = btnStyle;
+    btn.innerHTML = `<img src="${sig.url}" style="height:40px;max-width:100px;object-fit:contain;border-radius:4px;background:#fff;padding:2px" /><span style="font-size:13px;font-weight:600;color:var(--navy)">${sig.label}</span>`;
+    btn.onclick = () => { closeMiniModal('sign-picker-modal'); _finalizeGenerate(doc, sig.url); };
+    opts.appendChild(btn);
+  });
+
+  // No signature option
+  const noBtn = document.createElement('button');
+  noBtn.className = 'btn btn-outline';
+  noBtn.style.cssText = btnStyle;
+  noBtn.innerHTML = `<span style="font-size:22px">🚫</span><span style="font-size:13px;font-weight:600;color:var(--gray600)">No Signature</span>`;
+  noBtn.onclick = () => { closeMiniModal('sign-picker-modal'); _finalizeGenerate(doc, null); };
+  opts.appendChild(noBtn);
+
+  document.getElementById('sign-picker-modal').classList.add('open');
+}
+
+function _finalizeGenerate(doc, signatureUrl) {
   if (!confirm('Once generated, this document is FINAL and cannot be edited. Continue?')) return;
+  if (signatureUrl) doc.selectedSignature = signatureUrl;
   _persistDoc(doc, 'final', 'Document generated — locked for editing! ✓').then(() => { pendingServiceReport = null; currentServiceReportOnLoad = null; }).catch(err => toast('Generate failed: ' + err.message, 'error'));
 }
 
@@ -2629,6 +2719,8 @@ function loadSettings() {
   document.getElementById('s-quot-next').value = settings.quotNext || 1;
   
   updateMainHeader();
+  _updateSignPreview(1, settings.sign1DataUrl || '');
+  _updateSignPreview(2, settings.sign2DataUrl || '');
 }
 
 let pendingServiceReport = null; // { url, name } for current new/edit document
@@ -2676,6 +2768,44 @@ function removeLogo() {
   SETTINGS_REF.set({ logoDataUrl: '' }, { merge: true }).then(() => {
     document.getElementById('logo-file-input').value = ''; toast('Logo removed');
   });
+}
+
+function handleSignatureUpload(e, num) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { toast('Image too large (max 2MB)', 'error'); return; }
+  toast('Processing signature...', '');
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const key = `sign${num}DataUrl`;
+    const data = {};
+    data[key] = ev.target.result;
+    SETTINGS_REF.set(data, { merge: true }).then(() => {
+      settings[key] = ev.target.result;
+      _updateSignPreview(num, ev.target.result);
+      toast(`Signature ${num} saved! ✓`, 'success');
+    }).catch(err => toast('Upload failed: ' + err.message, 'error'));
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeSignature(num) {
+  const key = `sign${num}DataUrl`;
+  const data = {};
+  data[key] = '';
+  SETTINGS_REF.set(data, { merge: true }).then(() => {
+    settings[key] = '';
+    _updateSignPreview(num, '');
+    toast(`Signature ${num} removed`);
+  });
+}
+
+function _updateSignPreview(num, url) {
+  const img = document.getElementById(`sign${num}-preview-img`);
+  const ph = document.getElementById(`sign${num}-placeholder`);
+  if (!img || !ph) return;
+  if (url) { img.src = url; img.style.display = 'block'; ph.style.display = 'none'; }
+  else { img.style.display = 'none'; ph.style.display = 'block'; document.getElementById(`sign${num}-file-input`).value = ''; }
 }
 
 function saveSettings() {
