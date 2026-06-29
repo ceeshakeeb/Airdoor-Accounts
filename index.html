@@ -2137,17 +2137,17 @@ function generateInvoiceHTML(doc) {
   const template = doc.type === 'Quotation' ? 'minimal' : doc.type === 'Proforma Invoice' ? 'proforma' : 'classic';
   let headerBannerHTML;
   if (template === 'proforma') {
-    headerBannerHTML = `<div style="display:flex;align-items:center;padding:14px 32px">
+    headerBannerHTML = `<div style="display:flex;align-items:center;padding:14px 42px">
           <div style="background:${LIGHT_BLUE};border-left:5px solid ${PRIMARY};border-radius:6px;padding:10px 22px">
             <div style="font-size:20px;font-weight:800;letter-spacing:3px;color:${PRIMARY}">${docLabel}</div>
           </div>
         </div>`;
   } else if (template === 'minimal') {
-    headerBannerHTML = `<div style="display:flex;align-items:center;padding:14px 24px 8px 24px">
+    headerBannerHTML = `<div style="display:flex;align-items:center;padding:14px 36px 8px 36px">
           <div style="font-size:24px;font-weight:800;letter-spacing:3px;color:${PRIMARY};border-bottom:3px solid ${PRIMARY};padding-bottom:4px">${docLabel}</div>
         </div>`;
   } else { // classic
-    headerBannerHTML = `<div style="background:${PRIMARY};color:${ACCENT};padding:14px 32px;display:flex;align-items:center;justify-content:flex-end;min-width:220px;clip-path:polygon(15% 0,100% 0,100% 100%,0% 100%)">
+    headerBannerHTML = `<div style="background:${PRIMARY};color:${ACCENT};padding:14px 42px;display:flex;align-items:center;justify-content:flex-end;min-width:220px;clip-path:polygon(15% 0,100% 0,100% 100%,0% 100%)">
           <div style="font-size:22px;font-weight:800;letter-spacing:4px">${docLabel}</div>
         </div>`;
   }
@@ -2158,18 +2158,18 @@ function generateInvoiceHTML(doc) {
     : `<div style="background:${PRIMARY};color:${ACCENT};text-align:center;padding:9px;font-size:13px;font-weight:600;flex-shrink:0;clip-path:polygon(0 0,100% 12%,100% 100%,0 100%)">Thank you for your business!</div>`;
 
   return `
-    <div style="font-family:'DM Sans',sans-serif;color:#1e293b;background:#ffffff;width:100%;min-height:880px;position:relative;border:1px solid #e2e8f0;display:flex;flex-direction:column;box-sizing:border-box">
+    <div style="font-family:'DM Sans',sans-serif;color:#1e293b;background:#ffffff;width:100%;min-height:880px;position:relative;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;display:flex;flex-direction:column;box-sizing:border-box">
       
       <!-- HEADER ROW: Logo + Doc Type Label -->
       <div style="display:flex;justify-content:space-between;align-items:stretch;position:relative;flex-shrink:0">
-        <div style="padding:14px 24px 8px 24px;display:flex;align-items:center;gap:14px">
+        <div style="padding:14px 36px 8px 36px;display:flex;align-items:center;gap:14px">
           ${s.logoDataUrl ? `<img src="${s.logoDataUrl}" alt="Logo" style="max-height:59px;max-width:281px;object-fit:contain;display:block" />` : `<div style="width:44px;height:44px;background:${PRIMARY};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700;color:${ACCENT}">A</div><div style="font-size:29px;font-weight:800;color:${PRIMARY};letter-spacing:1px;line-height:1">airdoor</div>`}
         </div>
         ${headerBannerHTML}
       </div>
 
       <!-- COMPANY INFO + INVOICE META -->
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 24px 12px 24px;gap:24px;flex-shrink:0">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 36px 12px 36px;gap:24px;flex-shrink:0">
         <div style="font-size:11px;color:#475569;line-height:1.8;flex:1"><div style="white-space:pre-line">${s.address || ''}</div><div>${s.phone}</div><div>${s.email}</div>${gstLine}</div>
         <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 18px;min-width:230px;background:${ACCENT};flex-shrink:0">
           <table style="width:100%;border-collapse:collapse;font-size:12px;color:#1e293b">
@@ -2184,13 +2184,13 @@ function generateInvoiceHTML(doc) {
       </div>
 
       <!-- BILL TO / WORKSITE -->
-      <div style="display:grid;grid-template-columns:3fr 2fr;gap:20px;border:1px solid #e2e8f0;border-radius:8px;margin:0 24px 12px 24px;padding:12px 18px;background:#fafcff;flex-shrink:0">
+      <div style="display:grid;grid-template-columns:3fr 2fr;gap:20px;border:1px solid #e2e8f0;border-radius:8px;margin:0 36px 12px 36px;padding:12px 18px;background:#fafcff;flex-shrink:0">
         <div><div style="font-size:11px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Bill To</div><div style="font-size:13px;font-weight:700;color:${PRIMARY}">${doc.clientName || '—'}</div><div style="font-size:11px;color:#475569;line-height:1.6;margin-top:2px">${doc.clientAddress || ''}</div><div style="font-size:11px;color:#475569">${doc.clientCity || ''}</div>${doc.clientContact ? `<div style="font-size:11px;color:#475569">Tel.: ${doc.clientContact}</div>` : ''}${doc.clientGST ? `<div style="font-size:11px;color:#475569;margin-top:3px"><strong>GST:</strong> ${doc.clientGST}</div>` : ''}</div>
         <div><div style="font-size:11px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Worksite / Delivery Note</div><div style="font-size:11px;color:#475569;line-height:1.6">${doc.worksite || '—'}</div></div>
       </div>
 
       <!-- ITEMS TABLE -->
-      <table style="width:calc(100% - 48px);margin:0 24px 12px 24px;border-collapse:collapse;color:#1e293b;flex-shrink:0">
+      <table style="width:calc(100% - 72px);margin:0 36px 12px 36px;border-collapse:collapse;color:#1e293b;flex-shrink:0">
         <thead><tr>
           <th style="background:${PRIMARY} !important;color:${ACCENT} !important;padding:8px 8px;font-size:11px;font-weight:700;text-align:center;width:36px">SL</th>
           <th style="background:${PRIMARY} !important;color:${ACCENT} !important;padding:8px;font-size:11px;font-weight:700;text-align:left">Description</th>
@@ -2206,7 +2206,7 @@ function generateInvoiceHTML(doc) {
       <div style="flex:1"></div>
 
       <!-- FOOTER GRID: Bank / Payment / Notes  |  Totals / Signature -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:0 24px 16px 24px;align-items:end;flex-shrink:0">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:0 36px 16px 36px;align-items:end;flex-shrink:0">
         <!-- Left: Bank + Payment Terms + Notes -->
         <div style="display:flex;flex-direction:column;gap:10px">
           <div style="border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;background:#fafcff">
