@@ -195,14 +195,14 @@
   .page.active { display: block; }
 
   /* ── DASHBOARD ── */
-  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
   @media (max-width: 1400px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
   .stat-card {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--radius);
-    padding: 24px;
+    padding: 14px 16px;
     border: 1px solid var(--glass-border);
     border-left: 4px solid transparent;
     position: relative;
@@ -213,8 +213,8 @@
   .stat-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(10,25,49,0.16); }
   .stat-card::after {
     content: attr(data-icon);
-    position: absolute; right: 16px; top: 16px;
-    font-size: 28px; opacity: 0.15;
+    position: absolute; right: 12px; top: 10px;
+    font-size: 22px; opacity: 0.15;
   }
   .stat-card.blue { border-left-color: var(--blue); }
   .stat-card.gold { border-left-color: var(--gold); }
@@ -253,9 +253,9 @@
     body { background: white !important; }
     .table-wrap { box-shadow: none !important; border: 1px solid #ccc !important; }
   }
-  .stat-label { font-size: 12px; font-weight: 700; color: var(--gray400); text-transform: uppercase; letter-spacing: 1px; }
-  .stat-value { font-size: 28px; font-weight: 700; margin-top: 8px; font-family: 'DM Sans', sans-serif; color: var(--navy); }
-  .stat-sub { font-size: 12px; color: var(--gray400); margin-top: 4px; }
+  .stat-label { font-size: 11px; font-weight: 700; color: var(--gray400); text-transform: uppercase; letter-spacing: 1px; }
+  .stat-value { font-size: 22px; font-weight: 700; margin-top: 6px; font-family: 'DM Sans', sans-serif; color: var(--navy); }
+  .stat-sub { font-size: 11px; color: var(--gray400); margin-top: 3px; }
 
   .dash-split { display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; }
 
@@ -577,6 +577,7 @@
     <div class="nav-item" data-page="purchases" onclick="showPage('purchases')"><span class="icon">📦</span> Purchases</div>
     <div class="nav-item" data-page="expenses" onclick="showPage('expenses')"><span class="icon">💸</span> Expenses</div>
     <div class="nav-item" data-page="salary" onclick="showPage('salary')"><span class="icon">💼</span> Salary / Labour</div>
+    <div class="nav-item" data-page="deposits" onclick="showPage('deposits')"><span class="icon">🔐</span> Security Deposits</div>
     <div class="nav-item" data-page="payments" onclick="showPage('payments')"><span class="icon">💳</span> Payments</div>
     <div class="nav-item" data-page="reports" onclick="showPage('reports')"><span class="icon">📊</span> Reports</div>
     <div class="sidebar-section" style="margin-top:12px">Account</div>
@@ -594,26 +595,32 @@
           <div style="color:var(--gray600);font-size:13px;margin-top:4px">Overview of your billing activity</div>
         </div>
       </div>
+      <div style="display:flex;gap:10px;margin-bottom:18px;align-items:flex-end;flex-wrap:wrap">
+        <div class="form-group" style="margin:0"><label style="font-size:11px">Customer</label><select id="dash-filter-customer" onchange="updateDashboard()" style="font-size:13px;padding:6px 10px;min-width:180px"><option value="">All Customers</option></select></div>
+        <div class="form-group" style="margin:0"><label style="font-size:11px">From</label><input type="date" id="dash-filter-from" onchange="updateDashboard()" style="font-size:13px;padding:6px 10px" /></div>
+        <div class="form-group" style="margin:0"><label style="font-size:11px">To</label><input type="date" id="dash-filter-to" onchange="updateDashboard()" style="font-size:13px;padding:6px 10px" /></div>
+        <button class="btn btn-outline" style="padding:6px 14px;font-size:12px" onclick="document.getElementById('dash-filter-customer').value='';document.getElementById('dash-filter-from').value='';document.getElementById('dash-filter-to').value='';updateDashboard()">Clear</button>
+      </div>
       <div class="stat-grid">
         <div class="stat-card blue" data-icon="🧾">
           <div class="stat-label">Tax Invoices</div>
-          <div class="stat-value" id="stat-tax">0</div>
-          <div class="stat-sub" id="stat-tax-amt">₹0</div>
+          <div class="stat-value" id="stat-tax-amt">₹0</div>
+          <div class="stat-sub" id="stat-tax">0 documents</div>
         </div>
         <div class="stat-card gold" data-icon="📋">
           <div class="stat-label">Non-Tax Invoices</div>
-          <div class="stat-value" id="stat-invoice">0</div>
-          <div class="stat-sub" id="stat-invoice-amt">₹0</div>
+          <div class="stat-value" id="stat-invoice-amt">₹0</div>
+          <div class="stat-sub" id="stat-invoice">0 documents</div>
         </div>
         <div class="stat-card green" data-icon="📊">
           <div class="stat-label">Proforma</div>
-          <div class="stat-value" id="stat-proforma">0</div>
-          <div class="stat-sub" id="stat-proforma-amt">₹0</div>
+          <div class="stat-value" id="stat-proforma-amt">₹0</div>
+          <div class="stat-sub" id="stat-proforma">0 documents</div>
         </div>
         <div class="stat-card red" data-icon="💬">
           <div class="stat-label">Quotations</div>
-          <div class="stat-value" id="stat-quotation">0</div>
-          <div class="stat-sub" id="stat-quotation-amt">₹0</div>
+          <div class="stat-value" id="stat-quotation-amt">₹0</div>
+          <div class="stat-sub" id="stat-quotation">0 documents</div>
         </div>
         <div class="stat-card blue" data-icon="💸">
           <div class="stat-label">Total Expenses</div>
@@ -1093,10 +1100,10 @@
       </div>
       <!-- Summary Cards -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px" id="expense-summary-cards">
-        <div class="stat-card blue" data-icon="💸"><div class="stat-label">This Month</div><div class="stat-value" id="exp-month">₹0</div><div class="stat-sub">Total expenses</div></div>
+        <div class="stat-card blue" data-icon="💸"><div class="stat-label">Total Expenses</div><div class="stat-value" id="exp-month">₹0</div><div class="stat-sub">Based on current filter</div></div>
         <div class="stat-card gold" data-icon="📅"><div class="stat-label">This Year</div><div class="stat-value" id="exp-year">₹0</div><div class="stat-sub">Annual total</div></div>
         <div class="stat-card green" data-icon="🏷"><div class="stat-label">Categories</div><div class="stat-value" id="exp-cats">0</div><div class="stat-sub">Active</div></div>
-        <div class="stat-card red" data-icon="🧾"><div class="stat-label">Total Entries</div><div class="stat-value" id="exp-count">0</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card red" data-icon="🧾"><div class="stat-label">Total Entries</div><div class="stat-value" id="exp-count">0</div><div class="stat-sub">Based on current filter</div></div>
       </div>
       <!-- Filter bar -->
       <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
@@ -1202,7 +1209,9 @@
         <div style="display:flex;gap:12px;margin-bottom:20px;align-items:flex-end;flex-wrap:wrap">
           <div class="form-group"><label>From</label><input type="date" id="pnl-from" onchange="renderPnL()" /></div>
           <div class="form-group"><label>To</label><input type="date" id="pnl-to" onchange="renderPnL()" /></div>
-          <button class="btn btn-outline" onclick="document.getElementById('pnl-from').value='';document.getElementById('pnl-to').value='';renderPnL()">Clear</button>
+          <div class="form-group"><label>Customer</label><select id="pnl-filter-customer" onchange="renderPnL()" style="font-size:13px;padding:8px 12px;min-width:180px"><option value="">All Customers</option></select></div>
+          <div class="form-group"><label>Project</label><select id="pnl-filter-project" onchange="renderPnL()" style="font-size:13px;padding:8px 12px;min-width:180px"><option value="">All Projects</option></select></div>
+          <button class="btn btn-outline" onclick="document.getElementById('pnl-from').value='';document.getElementById('pnl-to').value='';document.getElementById('pnl-filter-customer').value='';document.getElementById('pnl-filter-project').value='';renderPnL()">Clear</button>
         </div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
           <div class="stat-card green" data-icon="💰"><div class="stat-label">Revenue</div><div class="stat-value" id="pnl-revenue">₹0</div><div class="stat-sub">Tax invoices billed</div></div>
@@ -1226,15 +1235,16 @@
         <button class="btn btn-gold" onclick="openPurchaseModal()">＋ Add Purchase</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
-        <div class="stat-card blue" data-icon="📦"><div class="stat-label">This Month</div><div class="stat-value" id="pur-month">₹0</div><div class="stat-sub">Total purchases</div></div>
+        <div class="stat-card blue" data-icon="📦"><div class="stat-label">Total Purchases</div><div class="stat-value" id="pur-month">₹0</div><div class="stat-sub">Based on current filter</div></div>
         <div class="stat-card gold" data-icon="📅"><div class="stat-label">This Year</div><div class="stat-value" id="pur-year">₹0</div><div class="stat-sub">Annual total</div></div>
         <div class="stat-card green" data-icon="🚚"><div class="stat-label">Suppliers</div><div class="stat-value" id="pur-suppliers">0</div><div class="stat-sub">Distinct</div></div>
-        <div class="stat-card red" data-icon="🧾"><div class="stat-label">Total Entries</div><div class="stat-value" id="pur-count">0</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card red" data-icon="🧾"><div class="stat-label">Total Entries</div><div class="stat-value" id="pur-count">0</div><div class="stat-sub">Based on current filter</div></div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
         <input type="text" id="pur-filter-supplier" placeholder="Filter by supplier…" oninput="renderPurchases()" style="font-size:13px;padding:8px 12px;min-width:200px" />
+        <select id="pur-filter-proj" onchange="renderPurchases()" style="font-size:13px;padding:8px 12px;min-width:160px"><option value="">All Projects</option></select>
         <input type="month" id="pur-filter-month" onchange="renderPurchases()" style="font-size:13px;padding:8px 12px" />
-        <button class="btn btn-outline" onclick="document.getElementById('pur-filter-supplier').value='';document.getElementById('pur-filter-month').value='';renderPurchases()">Clear</button>
+        <button class="btn btn-outline" onclick="document.getElementById('pur-filter-supplier').value='';document.getElementById('pur-filter-proj').value='';document.getElementById('pur-filter-month').value='';renderPurchases()">Clear</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -1255,9 +1265,9 @@
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
         <div class="stat-card blue" data-icon="👥"><div class="stat-label">Employees</div><div class="stat-value" id="sal-emp-count">0</div><div class="stat-sub">Active staff</div></div>
-        <div class="stat-card gold" data-icon="💼"><div class="stat-label">Salary Paid / Pending</div><div style="margin-top:8px"><div style="font-size:14px;font-weight:700;color:var(--green)" id="sal-month-paid">₹0</div><div style="font-size:12px;color:var(--red);margin-top:4px" id="sal-month-pending-txt">Pending: ₹0</div></div></div>
-        <div class="stat-card green" data-icon="📅"><div class="stat-label">This Year Paid</div><div class="stat-value" id="sal-year">₹0</div><div class="stat-sub">Annual payroll</div></div>
-        <div class="stat-card red" data-icon="🧾"><div class="stat-label">Total Entries</div><div class="stat-value" id="sal-count">0</div><div class="stat-sub">Salary + Labour</div></div>
+        <div class="stat-card gold" data-icon="💼"><div class="stat-label">Paid / Pending</div><div style="margin-top:8px"><div style="font-size:14px;font-weight:700;color:var(--green)" id="sal-month-paid">₹0</div><div style="font-size:12px;color:var(--red);margin-top:4px" id="sal-month-pending-txt">Pending: ₹0</div></div></div>
+        <div class="stat-card green" data-icon="📅"><div class="stat-label">Total Paid</div><div class="stat-value" id="sal-year">₹0</div><div class="stat-sub">Based on current filter</div></div>
+        <div class="stat-card red" data-icon="🧾"><div class="stat-label">Total Entries</div><div class="stat-value" id="sal-count">0</div><div class="stat-sub">Based on current filter</div></div>
       </div>
       <!-- Employee list -->
       <div class="module-card">
@@ -1293,10 +1303,10 @@
         <button class="btn btn-gold" onclick="openPaymentModal()">＋ Record Payment</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
-        <div class="stat-card blue" data-icon="💳"><div class="stat-label">This Month</div><div class="stat-value" id="pay-month">₹0</div><div class="stat-sub">Total received</div></div>
-        <div class="stat-card gold" data-icon="📅"><div class="stat-label">This Year</div><div class="stat-value" id="pay-year">₹0</div><div class="stat-sub">Annual total</div></div>
+        <div class="stat-card blue" data-icon="💳"><div class="stat-label">Total Received</div><div class="stat-value" id="pay-month">₹0</div><div class="stat-sub">Based on current filter</div></div>
+        <div class="stat-card gold" data-icon="📅"><div class="stat-label">Total Billed</div><div class="stat-value" id="pay-year">₹0</div><div class="stat-sub">Based on current filter</div></div>
         <div class="stat-card green" data-icon="🏦"><div class="stat-label">Outstanding</div><div class="stat-value" id="pay-outstanding">₹0</div><div class="stat-sub">Billed minus received</div></div>
-        <div class="stat-card red" data-icon="🧾"><div class="stat-label">Total Entries</div><div class="stat-value" id="pay-count">0</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card red" data-icon="🧾"><div class="stat-label">Total Entries</div><div class="stat-value" id="pay-count">0</div><div class="stat-sub">Based on current filter</div></div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
         <select id="pay-filter-customer" onchange="renderPayments()" style="font-size:13px;padding:8px 12px;min-width:180px"><option value="">All Customers</option></select>
@@ -1311,10 +1321,42 @@
       </div>
     </div>
 
+    <!-- SECURITY DEPOSITS PAGE -->
+    <div class="page" id="page-deposits">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Security Deposits</div>
+          <div style="color:var(--gray600);font-size:13px;margin-top:4px">Track refundable deposits — not counted in income or expenses</div>
+        </div>
+        <button class="btn btn-gold" onclick="openDepositModal()">＋ Add Deposit</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+        <div class="stat-card blue" data-icon="🔐"><div class="stat-label">Total Deposited</div><div class="stat-value" id="dep-total">₹0</div><div class="stat-sub">All active deposits</div></div>
+        <div class="stat-card green" data-icon="✅"><div class="stat-label">Refunded</div><div class="stat-value" id="dep-refunded">₹0</div><div class="stat-sub">Returned to us</div></div>
+        <div class="stat-card gold" data-icon="⏳"><div class="stat-label">Pending Refund</div><div class="stat-value" id="dep-pending">₹0</div><div class="stat-sub">Awaiting return</div></div>
+        <div class="stat-card red" data-icon="🧾"><div class="stat-label">Total Entries</div><div class="stat-value" id="dep-count">0</div><div class="stat-sub">All deposits</div></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
+        <input type="text" id="dep-filter-party" placeholder="Filter by party / vendor…" oninput="renderDeposits()" style="font-size:13px;padding:8px 12px;min-width:200px" />
+        <select id="dep-filter-status" onchange="renderDeposits()" style="font-size:13px;padding:8px 12px;min-width:150px">
+          <option value="">All Status</option>
+          <option value="Pending">Pending</option>
+          <option value="Refunded">Refunded</option>
+          <option value="Forfeited">Forfeited</option>
+        </select>
+        <input type="month" id="dep-filter-month" onchange="renderDeposits()" style="font-size:13px;padding:8px 12px" />
+        <button class="btn btn-outline" onclick="document.getElementById('dep-filter-party').value='';document.getElementById('dep-filter-status').value='';document.getElementById('dep-filter-month').value='';renderDeposits()">Clear</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Party / Vendor</th><th>Purpose</th><th>Amount</th><th>Expected Refund</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead>
+          <tbody id="deposits-tbody"><tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔐</div><h3>No security deposits yet</h3></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
-
-<!-- PREVIEW MODAL (view saved doc) -->
 <div class="modal-overlay" id="view-modal">
   <div class="modal" style="max-height:95vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -1613,6 +1655,35 @@
   </div>
 </div>
 
+<!-- DEPOSIT MODAL -->
+<div class="mini-modal-overlay" id="deposit-modal">
+  <div class="mini-modal" style="max-width:480px">
+    <h3 id="dep-modal-title">Add Security Deposit</h3>
+    <input type="hidden" id="dep-edit-id" />
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="form-group" style="margin:0"><label>Date *</label><input type="date" id="dep-date" style="font-size:13px" /></div>
+      <div class="form-group" style="margin:0"><label>Amount (₹) *</label><input type="number" id="dep-amount" placeholder="0.00" style="font-size:13px" /></div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px"><label>Party / Vendor *</label><input type="text" id="dep-party" placeholder="Who holds this deposit?" style="font-size:13px" /></div>
+    <div class="form-group" style="margin-bottom:12px"><label>Purpose / Description</label><input type="text" id="dep-purpose" placeholder="e.g. Office rent deposit, Site security deposit" style="font-size:13px" /></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="form-group" style="margin:0"><label>Expected Refund Date</label><input type="date" id="dep-refund-date" style="font-size:13px" /></div>
+      <div class="form-group" style="margin:0"><label>Status</label>
+        <select id="dep-status" style="font-size:13px">
+          <option value="Pending">Pending Refund</option>
+          <option value="Refunded">Refunded</option>
+          <option value="Forfeited">Forfeited</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px"><label>Notes</label><input type="text" id="dep-notes" placeholder="Any extra notes…" style="font-size:13px" /></div>
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn btn-outline" onclick="closeMiniModal('deposit-modal')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveDeposit()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div id="toast">✓ Saved!</div>
 
@@ -1693,6 +1764,7 @@ function listenToData() {
   listenToPurchases();
   listenToSalary();
   listenToPayments();
+  listenToDeposits();
 }
 
 let currentUser = null;
@@ -1912,11 +1984,12 @@ function showPage(name) {
   if (name === 'settings') loadSettings();
   if (name === 'customers') renderCustomersTable();
   if (name === 'projects') renderProjectsPage();
-  if (name === 'expenses') { renderExpenses(); updateExpenseSummary(); }
+  if (name === 'expenses') { renderExpenses(); }
   if (name === 'reports') { populateCustomerDropdowns(); renderLedger(); }
-  if (name === 'purchases') { renderPurchases(); updatePurchaseSummary(); }
-  if (name === 'salary') { renderEmployees(); renderSalaryPayments(); updateSalarySummary(); }
-  if (name === 'payments') { populatePaymentDropdowns(); renderPayments(); updatePaymentSummary(); }
+  if (name === 'purchases') { renderPurchases(); }
+  if (name === 'salary') { renderEmployees(); renderSalaryPayments(); }
+  if (name === 'payments') { populatePaymentDropdowns(); renderPayments(); }
+  if (name === 'deposits') { renderDeposits(); }
 }
 
 function selectType(type) {
@@ -2390,57 +2463,62 @@ function editDraft(id) {
 // DASHBOARD & CHART
 // ═══════════════════════════════════════════════════════
 function updateDashboard() {
-  const tax = documents.filter(d => d.type === 'Tax Invoice');
-  const invoice = documents.filter(d => d.type === 'Invoice');
-  const pro = documents.filter(d => d.type === 'Proforma Invoice');
-  const quot = documents.filter(d => d.type === 'Quotation');
+  // Populate customer dropdown on first call
+  const dCust = document.getElementById('dash-filter-customer');
+  if (dCust && dCust.options.length <= 1) {
+    dCust.innerHTML = '<option value="">All Customers</option>' + customers.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+  }
+
+  const custF = document.getElementById('dash-filter-customer')?.value || '';
+  const fromF = document.getElementById('dash-filter-from')?.value || '';
+  const toF   = document.getElementById('dash-filter-to')?.value || '';
+  const inRange = d => (!fromF || (d||'') >= fromF) && (!toF || (d||'') <= toF);
+  const matchCust = d => !custF || d.clientName === custF;
+
+  const filtDocs = documents.filter(d => matchCust(d) && inRange(d.date));
+  const filtPay  = payments.filter(p => (!custF || p.customer === custF) && inRange(p.date));
+  const filtExp  = expenses.filter(e => inRange(e.date));
+  const filtPur  = purchases.filter(p => inRange(p.date));
+  const filtSal  = salaryPayments.filter(p => inRange(p.date));
+
+  const tax     = filtDocs.filter(d => d.type === 'Tax Invoice');
+  const invoice = filtDocs.filter(d => d.type === 'Invoice');
+  const pro     = filtDocs.filter(d => d.type === 'Proforma Invoice');
+  const quot    = filtDocs.filter(d => d.type === 'Quotation');
   
-  const taxAmt = tax.reduce((s, d) => s + (d.grand || 0), 0);
-  const invoiceAmt = invoice.reduce((s, d) => s + (d.grand || 0), 0);
-  const proAmt = pro.reduce((s, d) => s + (d.grand || 0), 0);
-  const quotAmt = quot.reduce((s, d) => s + (d.grand || 0), 0);
+  const taxAmt     = tax.reduce((s,d)=>s+(d.grand||0),0);
+  const invoiceAmt = invoice.reduce((s,d)=>s+(d.grand||0),0);
+  const proAmt     = pro.reduce((s,d)=>s+(d.grand||0),0);
+  const quotAmt    = quot.reduce((s,d)=>s+(d.grand||0),0);
   
-  const totalExpenses = expenses.reduce((s, e) => s + (e.amount || 0), 0);
-  const totalPurchases = purchases.reduce((s, p) => s + (p.amount || 0), 0);
+  const totalExpenses  = filtExp.reduce((s,e)=>s+(e.amount||0),0);
+  const totalPurchases = filtPur.reduce((s,p)=>s+(p.amount||0),0);
   
-  // Calculate salary paid and pending
-  let salaryPaid = 0;
-  let salaryPending = 0;
-  salaryPayments.forEach(p => {
-    const totalAmt = p.type === 'Daily Labour' ? ((p.days || 0) * (p.rate || 0)) : (p.totalAmount || p.amount || 0);
-    const paidAmt = p.paidAmount || p.amount || 0;
-    if (paidAmt >= totalAmt) {
-      salaryPaid += totalAmt;
-    } else if (paidAmt === 0) {
-      salaryPending += totalAmt;
-    } else {
-      salaryPaid += paidAmt;
-      salaryPending += (totalAmt - paidAmt);
-    }
+  let salaryPaid = 0, salaryPending = 0;
+  filtSal.forEach(p => {
+    const totalAmt = p.type === 'Daily Labour' ? ((p.days||0)*(p.rate||0)) : (p.totalAmount||p.amount||0);
+    const paidAmt  = p.paidAmount || p.amount || 0;
+    if (paidAmt >= totalAmt)      { salaryPaid += totalAmt; }
+    else if (paidAmt === 0)       { salaryPending += totalAmt; }
+    else { salaryPaid += paidAmt; salaryPending += (totalAmt - paidAmt); }
   });
   
-  const totalSalary = salaryPaid + salaryPending;
-  const totalReceived = payments.reduce((s, p) => s + (p.amount || 0), 0);
-  
-  // Total billed = Proforma + Non-Tax Invoice (as per requirement)
-  const totalBilled = proAmt + invoiceAmt;
-  
-  // Total balance = Total received - (expenses + salary + purchases)
-  const totalBalance = totalReceived - (totalExpenses + totalSalary + totalPurchases);
-  
-  // Outstanding = Total billed - payment received
-  const outstanding = Math.max(0, totalBilled - totalReceived);
+  const totalSalary   = salaryPaid + salaryPending;
+  const totalReceived = filtPay.reduce((s,p)=>s+(p.amount||0),0);
+  const totalBilled   = proAmt + invoiceAmt;
+  const totalBalance  = totalReceived - (totalExpenses + totalSalary + totalPurchases);
+  const outstanding   = Math.max(0, totalBilled - totalReceived);
 
-  document.getElementById('stat-tax').textContent = tax.length;
+  document.getElementById('stat-tax').textContent = tax.length + ' documents';
   document.getElementById('stat-tax-amt').textContent = '₹' + taxAmt.toLocaleString('en-IN', { maximumFractionDigits: 0 });
   
-  document.getElementById('stat-invoice').textContent = invoice.length;
+  document.getElementById('stat-invoice').textContent = invoice.length + ' documents';
   document.getElementById('stat-invoice-amt').textContent = '₹' + invoiceAmt.toLocaleString('en-IN', { maximumFractionDigits: 0 });
   
-  document.getElementById('stat-proforma').textContent = pro.length;
+  document.getElementById('stat-proforma').textContent = pro.length + ' documents';
   document.getElementById('stat-proforma-amt').textContent = '₹' + proAmt.toLocaleString('en-IN', { maximumFractionDigits: 0 });
   
-  document.getElementById('stat-quotation').textContent = quot.length;
+  document.getElementById('stat-quotation').textContent = quot.length + ' documents';
   document.getElementById('stat-quotation-amt').textContent = '₹' + quotAmt.toLocaleString('en-IN', { maximumFractionDigits: 0 });
   
   document.getElementById('stat-expenses').textContent = '₹' + totalExpenses.toLocaleString('en-IN', { maximumFractionDigits: 0 });
@@ -2848,6 +2926,9 @@ function listenToCustomers() {
     customers = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.name||'').localeCompare(b.name||''));
     renderCustomersTable();
     populateCustomerDropdowns();
+    // refresh dash dropdown
+    const dCust = document.getElementById('dash-filter-customer');
+    if (dCust) { const cur = dCust.value; dCust.innerHTML = '<option value="">All Customers</option>' + customers.map(c => `<option value="${c.name}">${c.name}</option>`).join(''); dCust.value = cur; }
   });
 }
 
@@ -2878,6 +2959,21 @@ function populateCustomerDropdowns() {
   if (sel) sel.innerHTML = opts;
   const lsel = document.getElementById('ledger-customer');
   if (lsel) lsel.innerHTML = '<option value="">— All Customers —</option>' + customers.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+}
+
+function populatePnLDropdowns() {
+  const cSel = document.getElementById('pnl-filter-customer');
+  if (cSel) {
+    const cur = cSel.value;
+    cSel.innerHTML = '<option value="">All Customers</option>' + customers.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+    cSel.value = cur;
+  }
+  const pSel = document.getElementById('pnl-filter-project');
+  if (pSel) {
+    const cur = pSel.value;
+    pSel.innerHTML = '<option value="">All Projects</option>' + projectsList.map(p => `<option value="${p.name}">${p.jobNo} – ${p.name}</option>`).join('');
+    pSel.value = cur;
+  }
 }
 
 function fillCustomerFromSelect() {
@@ -3018,11 +3114,12 @@ function populateProjectSelects() {
     docSel.value = cur;
   }
   // Other modules (expense, purchase, salary, payment)
-  ['exp-project', 'pur-project', 'sal-project', 'pay-project', 'exp-filter-proj'].forEach(id => {
+  ['exp-project', 'pur-project', 'sal-project', 'pay-project', 'exp-filter-proj', 'pur-filter-proj'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       const cur = el.value;
-      el.innerHTML = '<option value="">Select project</option>' + projectsList.map(p => `<option value="${p.name}">${p.jobNo} – ${p.name}</option>`).join('');
+      const allLabel = id.includes('filter') ? 'All Projects' : 'Select project';
+      el.innerHTML = `<option value="">${allLabel}</option>` + projectsList.map(p => `<option value="${p.name}">${p.jobNo} – ${p.name}</option>`).join('');
       el.value = cur;
     }
   });
@@ -3078,34 +3175,39 @@ function listenToExpenses() {
 function renderExpenses() {
   const tbody = document.getElementById('expenses-tbody');
   if (!tbody) return;
+  const projF = document.getElementById('exp-filter-proj')?.value || '';
   const catF = document.getElementById('exp-filter-cat')?.value || '';
   const monF = document.getElementById('exp-filter-month')?.value || '';
   let filtered = expenses;
+  if (projF) filtered = filtered.filter(e => e.project === projF);
   if (catF) filtered = filtered.filter(e => e.category === catF);
   if (monF) filtered = filtered.filter(e => (e.date || '').startsWith(monF));
-  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">💸</div><h3>No expenses found</h3></div></td></tr>'; return; }
-  tbody.innerHTML = filtered.map(e => `<tr>
-    <td style="font-size:13px">${e.date || '—'}</td>
-    <td><span style="background:var(--blue-light);color:var(--navy);padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700">${e.category || '—'}</span></td>
-    <td style="font-size:13px">${e.desc || '—'}${e.ref ? ` <span style="color:var(--gray400);font-size:11px">(${e.ref})</span>` : ''}</td>
-    <td class="amount-cell">₹${Number(e.amount||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
-    <td><div style="display:flex;gap:6px">
-      <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="editExpense('${e.id}')">✏</button>
-      <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteExpense('${e.id}')">🗑</button>
-    </div></td>
-  </tr>`).join('');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">💸</div><h3>No expenses found</h3></div></td></tr>'; }
+  else {
+    tbody.innerHTML = filtered.map(e => `<tr>
+      <td style="font-size:13px">${e.date || '—'}</td>
+      <td><span style="background:var(--blue-light);color:var(--navy);padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700">${e.category || '—'}</span></td>
+      <td style="font-size:13px">${e.desc || '—'}${e.ref ? ` <span style="color:var(--gray400);font-size:11px">(${e.ref})</span>` : ''}</td>
+      <td class="amount-cell">₹${Number(e.amount||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="editExpense('${e.id}')">✏</button>
+        <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteExpense('${e.id}')">🗑</button>
+      </div></td>
+    </tr>`).join('');
+  }
+  updateExpenseSummary(filtered);
 }
 
-function updateExpenseSummary() {
+function updateExpenseSummary(filteredExpenses) {
+  const list = filteredExpenses || expenses;
   const now = new Date();
-  const thisMonth = now.toISOString().slice(0,7);
   const thisYear = now.getFullYear().toString();
-  const monthTotal = expenses.filter(e => (e.date||'').startsWith(thisMonth)).reduce((s,e)=>s+(e.amount||0),0);
-  const yearTotal = expenses.filter(e => (e.date||'').startsWith(thisYear)).reduce((s,e)=>s+(e.amount||0),0);
-  const me = document.getElementById('exp-month'); if(me) me.textContent = '₹'+monthTotal.toLocaleString('en-IN',{maximumFractionDigits:0});
+  const totalAmount = list.reduce((s,e)=>s+(e.amount||0),0);
+  const yearTotal = list.filter(e => (e.date||'').startsWith(thisYear)).reduce((s,e)=>s+(e.amount||0),0);
+  const me = document.getElementById('exp-month'); if(me) me.textContent = '₹'+totalAmount.toLocaleString('en-IN',{maximumFractionDigits:0});
   const ye = document.getElementById('exp-year'); if(ye) ye.textContent = '₹'+yearTotal.toLocaleString('en-IN',{maximumFractionDigits:0});
   const ce = document.getElementById('exp-cats'); if(ce) ce.textContent = expenseCategories.length;
-  const cnt = document.getElementById('exp-count'); if(cnt) cnt.textContent = expenses.length;
+  const cnt = document.getElementById('exp-count'); if(cnt) cnt.textContent = list.length;
 }
 
 function renderCategories() {
@@ -3157,6 +3259,7 @@ function editExpense(id) {
   document.getElementById('exp-desc').value = e.desc || '';
   document.getElementById('exp-amount').value = e.amount || '';
   document.getElementById('exp-ref').value = e.ref || '';
+  if (document.getElementById('exp-project')) document.getElementById('exp-project').value = e.project || '';
   document.getElementById('expense-modal').classList.add('open');
 }
 
@@ -3166,7 +3269,7 @@ function saveExpense() {
   const desc = document.getElementById('exp-desc').value.trim();
   const amount = parseFloat(document.getElementById('exp-amount').value) || 0;
   if (!date || !category || !amount) { toast('Date, category and amount required', 'error'); return; }
-  const data = { date, category, desc, amount, ref: document.getElementById('exp-ref').value };
+  const data = { date, category, desc, amount, ref: document.getElementById('exp-ref').value, project: document.getElementById('exp-project')?.value || '' };
   const editId = document.getElementById('exp-edit-id').value;
   const op = editId ? db.collection(EXP_COL).doc(editId).set(data) : db.collection(EXP_COL).add(data);
   op.then(() => { closeMiniModal('expense-modal'); toast('Expense saved! ✓', 'success'); }).catch(e => toast('Error: ' + e.message, 'error'));
@@ -3197,7 +3300,7 @@ function switchReportTab(tab) {
   if (tab === 'ledger') renderLedger();
   if (tab === 'summary') renderSummary();
   if (tab === 'expenses') renderExpenseReport();
-  if (tab === 'pnl') renderPnL();
+  if (tab === 'pnl') { populatePnLDropdowns(); renderPnL(); }
 }
 
 function renderLedger() {
@@ -3341,15 +3444,36 @@ function printReport() {
 function renderPnL() {
   const from = document.getElementById('pnl-from')?.value || '';
   const to = document.getElementById('pnl-to')?.value || '';
+  const custF = document.getElementById('pnl-filter-customer')?.value || '';
+  const projF = document.getElementById('pnl-filter-project')?.value || '';
   const inRange = d => (!from || (d||'') >= from) && (!to || (d||'') <= to);
 
-  const revenue = documents.filter(d => d.type === 'Tax Invoice' && d.status !== 'draft' && inRange(d.date)).reduce((s,d) => s + (d.grand||0), 0);
-  const expTotal = expenses.filter(e => inRange(e.date)).reduce((s,e) => s + (e.amount||0), 0);
-  const salTotal = salaryPayments.filter(p => inRange(p.date)).reduce((s,p) => s + (p.amount||0), 0);
-  const purTotal = purchases.filter(p => inRange(p.date)).reduce((s,p) => s + (p.amount||0), 0);
+  // Revenue: Tax Invoices filtered by customer and/or project
+  let revDocs = documents.filter(d => d.type === 'Tax Invoice' && d.status !== 'draft' && inRange(d.date));
+  if (custF) revDocs = revDocs.filter(d => d.clientName === custF);
+  if (projF) revDocs = revDocs.filter(d => (d.project || d.workSite || '') === projF);
+  const revenue = revDocs.reduce((s,d) => s + (d.grand||0), 0);
+
+  // Expenses filtered by project
+  let filteredExp = expenses.filter(e => inRange(e.date));
+  if (projF) filteredExp = filteredExp.filter(e => (e.project||'') === projF);
+  const expTotal = filteredExp.reduce((s,e) => s + (e.amount||0), 0);
+
+  // Salary / Labour filtered by project
+  let filteredSal = salaryPayments.filter(p => inRange(p.date));
+  if (projF) filteredSal = filteredSal.filter(p => (p.project||'') === projF);
+  const salTotal = filteredSal.reduce((s,p) => s + (p.amount||0), 0);
+
+  // Purchases filtered by project
+  let filteredPur = purchases.filter(p => inRange(p.date));
+  if (projF) filteredPur = filteredPur.filter(p => (p.project||'') === projF);
+  const purTotal = filteredPur.reduce((s,p) => s + (p.amount||0), 0);
+
   const totalCosts = expTotal + salTotal + purTotal;
   const profit = revenue - totalCosts;
   const margin = revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : '0.0';
+
+  const filterLabel = projF ? `Project: ${projF}` : custF ? `Customer: ${custF}` : (from || to) ? `${from || '…'} → ${to || '…'}` : 'All time';
 
   const fmt = n => '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2 });
   const el = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
@@ -3359,15 +3483,18 @@ function renderPnL() {
   el('pnl-margin', margin + '% margin');
   const profitEl = document.getElementById('pnl-profit');
   if (profitEl) profitEl.style.color = profit >= 0 ? 'var(--green)' : 'var(--red)';
-  el('pnl-period', (from || to) ? `${from || '…'} → ${to || '…'}` : 'All time');
+  el('pnl-period', filterLabel);
 
   const tbody = document.getElementById('pnl-tbody');
   if (tbody) {
+    const labourTotal = filteredSal.filter(p => p.type === 'Daily Labour').reduce((s,p)=>s+(p.amount||0),0);
+    const salaryOnly = salTotal - labourTotal;
     tbody.innerHTML = `
-      <tr><td style="font-weight:700;color:var(--navy)">Revenue (Tax Invoices)</td><td class="amount-cell" style="color:var(--green)">+${fmt(revenue)}</td></tr>
-      <tr><td style="padding-left:28px;color:var(--gray600)">Expenses</td><td class="amount-cell" style="color:var(--red)">-${fmt(expTotal)}</td></tr>
-      <tr><td style="padding-left:28px;color:var(--gray600)">Salary Paid</td><td class="amount-cell" style="color:var(--red)">-${fmt(salTotal)}</td></tr>
-      <tr><td style="padding-left:28px;color:var(--gray600)">Purchases</td><td class="amount-cell" style="color:var(--red)">-${fmt(purTotal)}</td></tr>
+      <tr><td style="font-weight:700;color:var(--navy)">Revenue (Tax Invoices${custF ? ' — '+custF : ''}${projF ? ' — '+projF : ''})</td><td class="amount-cell" style="color:var(--green)">+${fmt(revenue)}</td></tr>
+      <tr><td style="padding-left:28px;color:var(--gray600)">Expenses${projF ? ' ('+projF+')' : ''}</td><td class="amount-cell" style="color:var(--red)">-${fmt(expTotal)}</td></tr>
+      <tr><td style="padding-left:28px;color:var(--gray600)">Salary Paid${projF ? ' ('+projF+')' : ''}</td><td class="amount-cell" style="color:var(--red)">-${fmt(salaryOnly)}</td></tr>
+      <tr><td style="padding-left:28px;color:var(--gray600)">Daily Labour${projF ? ' ('+projF+')' : ''}</td><td class="amount-cell" style="color:var(--red)">-${fmt(labourTotal)}</td></tr>
+      <tr><td style="padding-left:28px;color:var(--gray600)">Material Purchases${projF ? ' ('+projF+')' : ''}</td><td class="amount-cell" style="color:var(--red)">-${fmt(purTotal)}</td></tr>
       <tr style="background:var(--navy)"><td style="color:var(--gold);font-weight:800;padding:12px 16px">NET PROFIT / LOSS</td><td style="color:white;font-weight:800;padding:12px 16px;text-align:right">${fmt(profit)}</td></tr>
     `;
   }
@@ -3418,7 +3545,6 @@ function listenToPurchases() {
   db.collection(PUR_COL).onSnapshot(snap => {
     purchases = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.date||'').localeCompare(a.date||''));
     renderPurchases();
-    updatePurchaseSummary();
   });
 }
 
@@ -3426,38 +3552,43 @@ function renderPurchases() {
   const tbody = document.getElementById('purchases-tbody');
   if (!tbody) return;
   const supF = (document.getElementById('pur-filter-supplier')?.value || '').toLowerCase();
+  const projF = document.getElementById('pur-filter-proj')?.value || '';
   const monF = document.getElementById('pur-filter-month')?.value || '';
   let filtered = purchases;
   if (supF) filtered = filtered.filter(p => (p.supplier||'').toLowerCase().includes(supF));
+  if (projF) filtered = filtered.filter(p => p.project === projF);
   if (monF) filtered = filtered.filter(p => (p.date||'').startsWith(monF));
-  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📦</div><h3>No purchases found</h3></div></td></tr>'; return; }
-  const statusColor = s => s === 'Paid' ? 'var(--green)' : s === 'Pending' ? 'var(--red)' : 'var(--gold)';
-  tbody.innerHTML = filtered.map(p => `<tr>
-    <td style="font-size:13px">${p.date || '—'}</td>
-    <td style="font-weight:600;color:var(--navy)">${p.supplier || '—'}</td>
-    <td style="font-size:12px">${p.bill || '—'}</td>
-    <td style="font-size:13px">${p.desc || '—'}</td>
-    <td class="amount-cell">₹${Number(p.amount||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
-    <td><span style="color:${statusColor(p.status)};font-weight:700;font-size:12px">${p.status || 'Paid'}</span></td>
-    <td><div style="display:flex;gap:6px">
-      <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="editPurchase('${p.id}')">✏</button>
-      <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deletePurchase('${p.id}')">🗑</button>
-    </div></td>
-  </tr>`).join('');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📦</div><h3>No purchases found</h3></div></td></tr>'; }
+  else {
+    const statusColor = s => s === 'Paid' ? 'var(--green)' : s === 'Pending' ? 'var(--red)' : 'var(--gold)';
+    tbody.innerHTML = filtered.map(p => `<tr>
+      <td style="font-size:13px">${p.date || '—'}</td>
+      <td style="font-weight:600;color:var(--navy)">${p.supplier || '—'}</td>
+      <td style="font-size:12px">${p.bill || '—'}</td>
+      <td style="font-size:13px">${p.desc || '—'}</td>
+      <td class="amount-cell">₹${Number(p.amount||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+      <td><span style="color:${statusColor(p.status)};font-weight:700;font-size:12px">${p.status || 'Paid'}</span></td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="editPurchase('${p.id}')">✏</button>
+        <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deletePurchase('${p.id}')">🗑</button>
+      </div></td>
+    </tr>`).join('');
+  }
+  updatePurchaseSummary(filtered);
 }
 
-function updatePurchaseSummary() {
+function updatePurchaseSummary(filteredPurchases) {
+  const list = filteredPurchases || purchases;
   const now = new Date();
-  const thisMonth = now.toISOString().slice(0,7);
   const thisYear = now.getFullYear().toString();
-  const monthTotal = purchases.filter(p => (p.date||'').startsWith(thisMonth)).reduce((s,p)=>s+(p.amount||0),0);
-  const yearTotal = purchases.filter(p => (p.date||'').startsWith(thisYear)).reduce((s,p)=>s+(p.amount||0),0);
-  const suppliers = new Set(purchases.map(p => p.supplier).filter(Boolean));
+  const totalAmount = list.reduce((s,p)=>s+(p.amount||0),0);
+  const yearTotal = list.filter(p => (p.date||'').startsWith(thisYear)).reduce((s,p)=>s+(p.amount||0),0);
+  const suppliers = new Set(list.map(p => p.supplier).filter(Boolean));
   const el = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
-  el('pur-month', '₹'+monthTotal.toLocaleString('en-IN',{maximumFractionDigits:0}));
+  el('pur-month', '₹'+totalAmount.toLocaleString('en-IN',{maximumFractionDigits:0}));
   el('pur-year', '₹'+yearTotal.toLocaleString('en-IN',{maximumFractionDigits:0}));
   el('pur-suppliers', suppliers.size);
-  el('pur-count', purchases.length);
+  el('pur-count', list.length);
 }
 
 function openPurchaseModal() {
@@ -3481,6 +3612,7 @@ function editPurchase(id) {
   document.getElementById('pur-amount').value = p.amount || '';
   document.getElementById('pur-desc').value = p.desc || '';
   document.getElementById('pur-status').value = p.status || 'Paid';
+  if (document.getElementById('pur-project')) document.getElementById('pur-project').value = p.project || '';
   document.getElementById('purchase-modal').classList.add('open');
 }
 
@@ -3489,7 +3621,7 @@ function savePurchase() {
   const supplier = document.getElementById('pur-supplier').value.trim();
   const amount = parseFloat(document.getElementById('pur-amount').value) || 0;
   if (!date || !supplier || !amount) { toast('Date, supplier and amount required', 'error'); return; }
-  const data = { date, supplier, bill: document.getElementById('pur-bill').value, amount, desc: document.getElementById('pur-desc').value, status: document.getElementById('pur-status').value };
+  const data = { date, supplier, bill: document.getElementById('pur-bill').value, amount, desc: document.getElementById('pur-desc').value, status: document.getElementById('pur-status').value, project: document.getElementById('pur-project')?.value || '' };
   const editId = document.getElementById('pur-edit-id').value;
   const op = editId ? db.collection(PUR_COL).doc(editId).set(data) : db.collection(PUR_COL).add(data);
   op.then(() => { closeMiniModal('purchase-modal'); toast('Purchase saved! ✓', 'success'); }).catch(e => toast('Error: ' + e.message, 'error'));
@@ -3594,7 +3726,7 @@ function renderSalaryPayments() {
   if (typeF) filtered = filtered.filter(p => p.type === typeF);
   if (empF) filtered = filtered.filter(p => p.employeeName === empF || p.labourName === empF);
   if (monF) filtered = filtered.filter(p => p.forMonth === monF);
-  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">💼</div><h3>No salary/labour payments found</h3></div></td></tr>'; return; }
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">💼</div><h3>No salary/labour payments found</h3></div></td></tr>'; updateSalarySummary([]); return; }
   tbody.innerHTML = filtered.map(p => {
     const name = p.type === 'Daily Labour' ? (p.labourName || '—') : (p.employeeName || '—');
     const details = p.type === 'Daily Labour' ? `${p.workDetails || '—'} (${p.days || 0} days @ ₹${p.rate || 0}/day)` : (p.forMonth || '—');
@@ -3639,6 +3771,7 @@ function renderSalaryPayments() {
       <td style="font-size:12px;white-space:nowrap">${actionsBtns}</td>
     </tr>`;
   }).join('');
+  updateSalarySummary(filtered);
 }
 
 function toggleMenu(menuId) {
@@ -3648,38 +3781,34 @@ function toggleMenu(menuId) {
   }
 }
 
-function updateSalarySummary() {
-  const now = new Date();
-  const thisMonth = now.toISOString().slice(0,7);
-  const thisYear = now.getFullYear().toString();
-  
-  let monthPaid = 0;
-  let monthPending = 0;
-  
-  salaryPayments.filter(p => (p.date||'').startsWith(thisMonth)).forEach(p => {
+function updateSalarySummary(filteredPayments) {
+  const list = filteredPayments || salaryPayments;
+
+  let totalPaid = 0;
+  let totalPending = 0;
+
+  list.forEach(p => {
     const totalAmt = p.type === 'Daily Labour' ? ((p.days || 0) * (p.rate || 0)) : (p.totalAmount || p.amount || 0);
     const paidAmt = p.paidAmount || p.amount || 0;
-    
+
     if (paidAmt >= totalAmt) {
-      monthPaid += totalAmt;
+      totalPaid += totalAmt;
     } else if (paidAmt === 0) {
-      monthPending += totalAmt;
+      totalPending += totalAmt;
     } else {
-      monthPaid += paidAmt;
-      monthPending += (totalAmt - paidAmt);
+      totalPaid += paidAmt;
+      totalPending += (totalAmt - paidAmt);
     }
   });
-  
-  const yearTotal = salaryPayments.filter(p => (p.date||'').startsWith(thisYear)).reduce((s,p)=>{
-    return s + (p.amount || 0);
-  },0);
-  
+
+  const yearTotal = list.reduce((s,p)=> s + (p.amount || 0), 0);
+
   const el = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
   el('sal-emp-count', employees.length);
-  el('sal-month-paid', '₹'+monthPaid.toLocaleString('en-IN',{maximumFractionDigits:0}));
-  el('sal-month-pending-txt', 'Pending: ₹'+monthPending.toLocaleString('en-IN',{maximumFractionDigits:0}));
+  el('sal-month-paid', '₹'+totalPaid.toLocaleString('en-IN',{maximumFractionDigits:0}));
+  el('sal-month-pending-txt', 'Pending: ₹'+totalPending.toLocaleString('en-IN',{maximumFractionDigits:0}));
   el('sal-year', '₹'+yearTotal.toLocaleString('en-IN',{maximumFractionDigits:0}));
-  el('sal-count', salaryPayments.length);
+  el('sal-count', list.length);
 }
 
 function openSalaryModal() {
@@ -3854,32 +3983,34 @@ function renderPayments() {
   let filtered = payments;
   if (custF) filtered = filtered.filter(p => p.customer === custF);
   if (monF) filtered = filtered.filter(p => (p.date||'').startsWith(monF));
-  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">💳</div><h3>No payments found</h3></div></td></tr>'; return; }
-  tbody.innerHTML = filtered.map(p => `<tr>
-    <td style="font-size:13px">${p.date || '—'}</td>
-    <td style="font-weight:600;color:var(--navy)">${p.customer || '—'}</td>
-    <td style="font-size:12px">${p.invoice || '—'}</td>
-    <td class="amount-cell">₹${Number(p.amount||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
-    <td style="font-size:12px">${p.mode || '—'}</td>
-    <td style="font-size:12px">${p.ref || '—'}</td>
-    <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deletePayment('${p.id}')">🗑</button></td>
-  </tr>`).join('');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">💳</div><h3>No payments found</h3></div></td></tr>'; }
+  else {
+    tbody.innerHTML = filtered.map(p => `<tr>
+      <td style="font-size:13px">${p.date || '—'}</td>
+      <td style="font-weight:600;color:var(--navy)">${p.customer || '—'}</td>
+      <td style="font-size:12px">${p.invoice || '—'}</td>
+      <td class="amount-cell">₹${Number(p.amount||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+      <td style="font-size:12px">${p.mode || '—'}</td>
+      <td style="font-size:12px">${p.ref || '—'}</td>
+      <td><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deletePayment('${p.id}')">🗑</button></td>
+    </tr>`).join('');
+  }
+  updatePaymentSummary(filtered, custF);
 }
 
-function updatePaymentSummary() {
-  const now = new Date();
-  const thisMonth = now.toISOString().slice(0,7);
-  const thisYear = now.getFullYear().toString();
-  const monthTotal = payments.filter(p => (p.date||'').startsWith(thisMonth)).reduce((s,p)=>s+(p.amount||0),0);
-  const yearTotal = payments.filter(p => (p.date||'').startsWith(thisYear)).reduce((s,p)=>s+(p.amount||0),0);
-  const totalBilled = documents.filter(d => d.type === 'Tax Invoice').reduce((s,d)=>s+(d.grand||0),0);
-  const totalReceived = payments.reduce((s,p)=>s+(p.amount||0),0);
+function updatePaymentSummary(filteredPayments, custF) {
+  const list = filteredPayments || payments;
+  const customer = custF !== undefined ? custF : (document.getElementById('pay-filter-customer')?.value || '');
+  const totalReceived = list.reduce((s,p)=>s+(p.amount||0),0);
+  let billedDocs = documents.filter(d => d.type === 'Tax Invoice');
+  if (customer) billedDocs = billedDocs.filter(d => d.clientName === customer);
+  const totalBilled = billedDocs.reduce((s,d)=>s+(d.grand||0),0);
   const outstanding = Math.max(0, totalBilled - totalReceived);
   const el = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
-  el('pay-month', '₹'+monthTotal.toLocaleString('en-IN',{maximumFractionDigits:0}));
-  el('pay-year', '₹'+yearTotal.toLocaleString('en-IN',{maximumFractionDigits:0}));
+  el('pay-month', '₹'+totalReceived.toLocaleString('en-IN',{maximumFractionDigits:0}));
+  el('pay-year', '₹'+totalBilled.toLocaleString('en-IN',{maximumFractionDigits:0}));
   el('pay-outstanding', '₹'+outstanding.toLocaleString('en-IN',{maximumFractionDigits:0}));
-  el('pay-count', payments.length);
+  el('pay-count', list.length);
 }
 
 function openPaymentModal() {
@@ -3908,8 +4039,115 @@ function deletePayment(id) {
   db.collection(PAY_COL).doc(id).delete().then(() => toast('Payment deleted'));
 }
 
-window.addEventListener('click', e => {
-  ['customer-modal','expense-modal','category-modal','purchase-modal','employee-modal','salary-modal','payment-modal'].forEach(id => {
+// ═══════════════════════════════════════════════════════
+// SECURITY DEPOSITS
+// ═══════════════════════════════════════════════════════
+let deposits = [];
+const DEP_COL = 'securityDeposits';
+
+function listenToDeposits() {
+  db.collection(DEP_COL).orderBy('date', 'desc').onSnapshot(snap => {
+    deposits = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderDeposits();
+  }, () => {
+    db.collection(DEP_COL).onSnapshot(snap => {
+      deposits = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+      renderDeposits();
+    });
+  });
+}
+
+function renderDeposits() {
+  const tbody = document.getElementById('deposits-tbody');
+  if (!tbody) return;
+  const partyF  = (document.getElementById('dep-filter-party')?.value || '').toLowerCase();
+  const statusF = document.getElementById('dep-filter-status')?.value || '';
+  const monF    = document.getElementById('dep-filter-month')?.value || '';
+  let filtered = deposits;
+  if (partyF)  filtered = filtered.filter(d => (d.party||'').toLowerCase().includes(partyF));
+  if (statusF) filtered = filtered.filter(d => d.status === statusF);
+  if (monF)    filtered = filtered.filter(d => (d.date||'').startsWith(monF));
+
+  // Summary cards (always from full deposits list)
+  const totalDeposited = deposits.filter(d=>d.status!=='Refunded').reduce((s,d)=>s+(d.amount||0),0);
+  const totalRefunded  = deposits.filter(d=>d.status==='Refunded').reduce((s,d)=>s+(d.amount||0),0);
+  const totalPending   = deposits.filter(d=>d.status==='Pending').reduce((s,d)=>s+(d.amount||0),0);
+  const el = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+  el('dep-total',    '₹'+totalDeposited.toLocaleString('en-IN',{maximumFractionDigits:0}));
+  el('dep-refunded', '₹'+totalRefunded.toLocaleString('en-IN',{maximumFractionDigits:0}));
+  el('dep-pending',  '₹'+totalPending.toLocaleString('en-IN',{maximumFractionDigits:0}));
+  el('dep-count',    deposits.length);
+
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔐</div><h3>No deposits found</h3></div></td></tr>'; return; }
+
+  const statusBadge = s => {
+    if (s === 'Refunded') return '<span style="background:var(--green);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Refunded</span>';
+    if (s === 'Forfeited') return '<span style="background:var(--red);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Forfeited</span>';
+    return '<span style="background:#ffa500;color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Pending</span>';
+  };
+  tbody.innerHTML = filtered.map(d => `<tr>
+    <td style="font-size:13px">${d.date||'—'}</td>
+    <td style="font-weight:600;color:var(--navy)">${d.party||'—'}</td>
+    <td style="font-size:12px">${d.purpose||'—'}</td>
+    <td class="amount-cell">₹${Number(d.amount||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+    <td style="font-size:12px">${d.refundDate||'—'}</td>
+    <td>${statusBadge(d.status||'Pending')}</td>
+    <td style="font-size:12px;color:var(--gray600)">${d.notes||'—'}</td>
+    <td><div style="display:flex;gap:6px">
+      <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="editDeposit('${d.id}')">✏</button>
+      <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteDeposit('${d.id}')">🗑</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+function openDepositModal() {
+  document.getElementById('dep-edit-id').value = '';
+  document.getElementById('dep-modal-title').textContent = 'Add Security Deposit';
+  document.getElementById('dep-date').valueAsDate = new Date();
+  ['dep-amount','dep-party','dep-purpose','dep-refund-date','dep-notes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('dep-status').value = 'Pending';
+  document.getElementById('deposit-modal').classList.add('open');
+}
+
+function editDeposit(id) {
+  const d = deposits.find(x => x.id === id);
+  if (!d) return;
+  document.getElementById('dep-edit-id').value = id;
+  document.getElementById('dep-modal-title').textContent = 'Edit Security Deposit';
+  document.getElementById('dep-date').value = d.date || '';
+  document.getElementById('dep-amount').value = d.amount || '';
+  document.getElementById('dep-party').value = d.party || '';
+  document.getElementById('dep-purpose').value = d.purpose || '';
+  document.getElementById('dep-refund-date').value = d.refundDate || '';
+  document.getElementById('dep-status').value = d.status || 'Pending';
+  document.getElementById('dep-notes').value = d.notes || '';
+  document.getElementById('deposit-modal').classList.add('open');
+}
+
+function saveDeposit() {
+  const date   = document.getElementById('dep-date').value;
+  const amount = parseFloat(document.getElementById('dep-amount').value) || 0;
+  const party  = document.getElementById('dep-party').value.trim();
+  if (!date || !amount || !party) { toast('Date, party and amount required', 'error'); return; }
+  const data = {
+    date, amount, party,
+    purpose:    document.getElementById('dep-purpose').value,
+    refundDate: document.getElementById('dep-refund-date').value,
+    status:     document.getElementById('dep-status').value,
+    notes:      document.getElementById('dep-notes').value
+  };
+  const editId = document.getElementById('dep-edit-id').value;
+  const op = editId ? db.collection(DEP_COL).doc(editId).set(data) : db.collection(DEP_COL).add(data);
+  op.then(() => { closeMiniModal('deposit-modal'); toast('Deposit saved! ✓', 'success'); })
+    .catch(e => toast('Error: ' + e.message, 'error'));
+}
+
+function deleteDeposit(id) {
+  if (!confirm('Delete this deposit record?')) return;
+  db.collection(DEP_COL).doc(id).delete().then(() => toast('Deposit deleted'));
+}
+
+
     const el = document.getElementById(id);
     if (el && e.target === el) el.classList.remove('open');
   });
