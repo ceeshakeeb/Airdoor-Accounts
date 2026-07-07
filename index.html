@@ -658,6 +658,11 @@
           <div class="stat-value" id="stat-received">₹0</div>
           <div class="stat-sub">All payments received</div>
         </div>
+        <div class="stat-card gold" data-icon="🤝">
+          <div class="stat-label">Partner Credit Outstanding</div>
+          <div class="stat-value" id="stat-partner-credit">₹0</div>
+          <div class="stat-sub">Owed back to partners</div>
+        </div>
       </div>
 
       <!-- SPLIT: PIE CHART & RECENT DOCS -->
@@ -1262,37 +1267,55 @@
         <div class="section-title">Salary / Labour Payment</div>
         <div style="display:flex;gap:10px">
           <button class="btn btn-outline" onclick="openEmployeeModal()">👤 Add Employee</button>
-          <button class="btn btn-gold" onclick="openSalaryModal()">＋ Pay Salary / Labour</button>
+          <button class="btn btn-gold" onclick="openSalaryModal()">＋ Pay Labour</button>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
-        <div class="stat-card blue" data-icon="👥"><div class="stat-label">Employees</div><div class="stat-value" id="sal-emp-count">0</div><div class="stat-sub">Active staff</div></div>
-        <div class="stat-card gold" data-icon="💼"><div class="stat-label">Paid / Pending</div><div style="margin-top:8px"><div style="font-size:14px;font-weight:700;color:var(--green)" id="sal-month-paid">₹0</div><div style="font-size:12px;color:var(--red);margin-top:4px" id="sal-month-pending-txt">Pending: ₹0</div></div></div>
-        <div class="stat-card green" data-icon="📅"><div class="stat-label">Total Paid</div><div class="stat-value" id="sal-year">₹0</div><div class="stat-sub">Based on current filter</div></div>
-        <div class="stat-card red" data-icon="🧾"><div class="stat-label">Total Entries</div><div class="stat-value" id="sal-count">0</div><div class="stat-sub">Based on current filter</div></div>
-      </div>
-      <!-- Employee list -->
-      <div class="module-card">
-        <div class="module-card-title" style="margin-bottom:14px">Employees</div>
+
+      <!-- SALARIED EMPLOYEES (auto-synced from Attendance Portal) -->
+      <div class="module-card" style="margin-bottom:24px">
+        <div class="module-card-title" style="margin-bottom:14px">💼 Salaried Employees — Auto-synced from Attendance Portal</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px">
+          <div class="stat-card blue" data-icon="👥"><div class="stat-label">Employees</div><div class="stat-value" id="sal-emp-count">0</div><div class="stat-sub">Active staff</div></div>
+          <div class="stat-card gold" data-icon="💰"><div class="stat-label">Total Payable</div><div class="stat-value" id="sal-payable">₹0</div><div class="stat-sub">All approved payroll</div></div>
+          <div class="stat-card green" data-icon="✅"><div class="stat-label">Total Paid</div><div class="stat-value" id="sal-paid">₹0</div><div class="stat-sub">Marked paid in Attendance</div></div>
+          <div class="stat-card red" data-icon="⏳"><div class="stat-label">Outstanding</div><div class="stat-value" id="sal-outstanding">₹0</div><div class="stat-sub">Payable − Paid</div></div>
+        </div>
         <div class="table-wrap" style="box-shadow:none">
           <table>
-            <thead><tr><th>Name</th><th>Role</th><th>Monthly Salary</th><th>Contact</th><th>Actions</th></tr></thead>
-            <tbody id="employees-tbody"><tr><td colspan="5"><div class="empty-state"><div class="empty-icon">👤</div><h3>No employees yet</h3></div></td></tr></tbody>
+            <thead><tr><th>Name</th><th>Month</th><th>Net Salary</th><th>Status</th><th>Source</th></tr></thead>
+            <tbody id="synced-salary-tbody"><tr><td colspan="5"><div class="empty-state"><div class="empty-icon">💼</div><h3>No synced payroll yet</h3></div></td></tr></tbody>
           </table>
         </div>
       </div>
-      <!-- Salary & Labour payments log -->
-      <div style="margin-top:24px">
+
+      <!-- Employee master list -->
+      <div class="module-card" style="margin-bottom:24px">
+        <div class="module-card-title" style="margin-bottom:14px">Employee Master</div>
+        <div class="table-wrap" style="box-shadow:none">
+          <table>
+            <thead><tr><th>Name</th><th>Type</th><th>Role</th><th>Salary / Contract</th><th>Paid / Balance</th><th>Actions</th></tr></thead>
+            <tbody id="employees-tbody"><tr><td colspan="6"><div class="empty-state"><div class="empty-icon">👤</div><h3>No employees yet</h3></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DAILY LABOUR -->
+      <div class="module-card">
+        <div class="module-card-title" style="margin-bottom:14px">👷 Daily / Contract Labour</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px">
+          <div class="stat-card blue" data-icon="🧾"><div class="stat-label">Total Labour Amount</div><div class="stat-value" id="lab-total">₹0</div><div class="stat-sub">All entries</div></div>
+          <div class="stat-card green" data-icon="✅"><div class="stat-label">Total Paid</div><div class="stat-value" id="lab-paid">₹0</div><div class="stat-sub">Contract labour</div></div>
+          <div class="stat-card red" data-icon="⏳"><div class="stat-label">Outstanding</div><div class="stat-value" id="lab-outstanding">₹0</div><div class="stat-sub">Total − Paid</div></div>
+        </div>
         <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
-          <select id="sal-filter-type" onchange="renderSalaryPayments()" style="font-size:13px;padding:8px 12px;min-width:160px"><option value="">All Types</option><option value="Regular">Salary</option><option value="Daily Labour">Labour</option></select>
-          <select id="sal-filter-emp" onchange="renderSalaryPayments()" style="font-size:13px;padding:8px 12px;min-width:160px"><option value="">All Employees</option></select>
+          <select id="sal-filter-emp" onchange="renderSalaryPayments()" style="font-size:13px;padding:8px 12px;min-width:160px"><option value="">All Labour</option></select>
           <input type="month" id="sal-filter-month" onchange="renderSalaryPayments()" style="font-size:13px;padding:8px 12px" />
-          <button class="btn btn-outline" onclick="document.getElementById('sal-filter-type').value='';document.getElementById('sal-filter-emp').value='';document.getElementById('sal-filter-month').value='';renderSalaryPayments()">Clear</button>
+          <button class="btn btn-outline" onclick="document.getElementById('sal-filter-emp').value='';document.getElementById('sal-filter-month').value='';renderSalaryPayments()">Clear</button>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Date</th><th>Type</th><th>Name</th><th>Details</th><th>Amount</th><th>Status</th><th>Mode</th><th>Actions</th></tr></thead>
-            <tbody id="salary-tbody"><tr><td colspan="8"><div class="empty-state"><div class="empty-icon">💼</div><h3>No salary/labour payments yet</h3></div></td></tr></tbody>
+            <thead><tr><th>Date</th><th>Name</th><th>Contract</th><th>Amount Paid</th><th>Status</th><th>Mode</th><th>Actions</th></tr></thead>
+            <tbody id="salary-tbody"><tr><td colspan="7"><div class="empty-state"><div class="empty-icon">💼</div><h3>No labour payments yet</h3></div></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1320,6 +1343,39 @@
           <thead><tr><th>Date</th><th>Customer</th><th>Against Invoice</th><th>Amount Received</th><th>Mode</th><th>Reference</th><th>Actions</th></tr></thead>
           <tbody id="payments-tbody"><tr><td colspan="7"><div class="empty-state"><div class="empty-icon">💳</div><h3>No payments recorded yet</h3></div></td></tr></tbody>
         </table>
+      </div>
+
+      <!-- PARTNER CREDIT SUB-SECTION -->
+      <div style="margin-top:40px">
+        <div class="section-header" style="margin-bottom:16px">
+          <div>
+            <div class="section-title" style="font-size:18px">🤝 Partner Credit / Advance</div>
+            <div style="color:var(--gray600);font-size:13px;margin-top:4px">Money partners send to cover monthly expenses, and the amount taken back once client payments come in</div>
+          </div>
+          <button class="btn btn-blue" onclick="openPartnerCreditModal()">＋ Add Partner Credit Entry</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px">
+          <div class="stat-card blue" data-icon="🤝"><div class="stat-label">Total Credit Received</div><div class="stat-value" id="pc-total-in">₹0</div><div class="stat-sub">From partners</div></div>
+          <div class="stat-card green" data-icon="↩️"><div class="stat-label">Total Recovered</div><div class="stat-value" id="pc-total-recovered">₹0</div><div class="stat-sub">Taken back / repaid</div></div>
+          <div class="stat-card gold" data-icon="⏳"><div class="stat-label">Outstanding Credit</div><div class="stat-value" id="pc-outstanding">₹0</div><div class="stat-sub">Company owes partners</div></div>
+          <div class="stat-card red" data-icon="🧾"><div class="stat-label">Total Entries</div><div class="stat-value" id="pc-count">0</div><div class="stat-sub">All entries</div></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
+          <select id="pc-filter-partner" onchange="renderPartnerCredits()" style="font-size:13px;padding:8px 12px;min-width:180px"><option value="">All Partners</option></select>
+          <select id="pc-filter-type" onchange="renderPartnerCredits()" style="font-size:13px;padding:8px 12px">
+            <option value="">All Types</option>
+            <option value="Credit In">Credit In</option>
+            <option value="Credit Recovered">Credit Recovered</option>
+          </select>
+          <input type="month" id="pc-filter-month" onchange="renderPartnerCredits()" style="font-size:13px;padding:8px 12px" />
+          <button class="btn btn-outline" onclick="document.getElementById('pc-filter-partner').value='';document.getElementById('pc-filter-type').value='';document.getElementById('pc-filter-month').value='';renderPartnerCredits()">Clear</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Partner</th><th>Type</th><th>Amount</th><th>Mode</th><th>Linked / Reference</th><th>Balance After</th><th>Notes</th><th>Actions</th></tr></thead>
+            <tbody id="pcredits-tbody"><tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🤝</div><h3>No partner credit entries yet</h3></div></td></tr></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -1498,8 +1554,15 @@
     <input type="hidden" id="emp-edit-id" />
     <div class="form-grid">
       <div class="form-group"><label>Name</label><input type="text" id="emp-name" placeholder="Employee name" /></div>
+      <div class="form-group"><label>Type</label>
+        <select id="emp-type" onchange="updateEmployeeType()" style="font-size:14px">
+          <option value="Salaried">Salaried Employee (via Attendance)</option>
+          <option value="Daily Labour">Daily Labour (Contract)</option>
+        </select>
+      </div>
       <div class="form-group"><label>Role</label><input type="text" id="emp-role" placeholder="e.g. Technician" /></div>
-      <div class="form-group"><label>Monthly Salary (₹)</label><input type="number" id="emp-salary" placeholder="0.00" min="0" step="0.01" /></div>
+      <div class="form-group" id="emp-salary-field"><label>Monthly Salary (₹)</label><input type="number" id="emp-salary" placeholder="0.00" min="0" step="0.01" /></div>
+      <div class="form-group" id="emp-contract-field" style="display:none"><label>Contract Amount (₹)</label><input type="number" id="emp-contract" placeholder="0.00" min="0" step="0.01" /></div>
       <div class="form-group"><label>Contact</label><input type="text" id="emp-contact" placeholder="Phone / Email" /></div>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
@@ -1512,38 +1575,18 @@
 <!-- SALARY PAYMENT MODAL -->
 <div class="mini-modal-overlay" id="salary-modal">
   <div class="mini-modal">
-    <h3 id="sal-modal-title">Pay Salary / Labour</h3>
+    <h3 id="sal-modal-title">Pay Labour</h3>
     <input type="hidden" id="sal-edit-id" />
-    <input type="hidden" id="sal-total-amount" />
+    <input type="hidden" id="sal-type" value="Daily Labour" />
     <div class="form-grid">
-      <div class="form-group" id="sal-type-field"><label>Type</label>
-        <select id="sal-type" onchange="updateSalaryType()" style="font-size:14px">
-          <option value="Regular">Regular Salary</option>
-          <option value="Daily Labour">Daily Labour</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Project/Party</label>
-        <select id="sal-project" style="font-size:14px"><option value="">Select project</option></select>
-      </div>
-      <div class="form-group" id="emp-field"><label>Employee</label>
-        <select id="sal-employee" onchange="autofillSalaryAmount()"><option value="">Select employee</option></select>
-      </div>
-      <div class="form-group" id="labour-field" style="display:none"><label>Labour Name</label>
-        <input type="text" id="sal-labour-name" placeholder="Labour person name" />
-      </div>
-      <div class="form-group" id="labour-work-field" style="display:none"><label>Work Details</label>
-        <input type="text" id="sal-labour-work" placeholder="e.g., Installation, Maintenance" />
-      </div>
-      <div class="form-group" id="labour-days-field" style="display:none"><label>Number of Days</label>
-        <input type="number" id="sal-labour-days" placeholder="0" min="0" step="0.5" onchange="calcLabourAmount()" />
-      </div>
-      <div class="form-group" id="labour-rate-field" style="display:none"><label>Per Day Rate (₹)</label>
-        <input type="number" id="sal-labour-rate" placeholder="0.00" min="0" step="0.01" onchange="calcLabourAmount()" />
+      <div class="form-group"><label>Labour Employee</label>
+        <select id="sal-employee" onchange="autofillSalaryAmount()"><option value="">Select labour employee</option></select>
       </div>
       <div class="form-group"><label>Date</label><input type="date" id="sal-date" /></div>
       <div class="form-group"><label>For Month / Period</label><input type="month" id="sal-for-month" /></div>
-      <div class="form-group"><label>Total Amount Due (₹)</label><input type="number" id="sal-total-due" placeholder="0.00" min="0" step="0.01" readonly style="background:var(--gray50)" /></div>
-      <div class="form-group"><label>Amount Paid (₹)</label><input type="number" id="sal-amount" placeholder="0.00" min="0" step="0.01" /></div>
+      <div class="form-group"><label>Contract Amount (₹)</label><input type="number" id="sal-total-due" placeholder="0.00" readonly style="background:var(--gray50)" /></div>
+      <div class="form-group"><label>Balance Remaining (₹)</label><input type="number" id="sal-balance-due" placeholder="0.00" readonly style="background:var(--gray50)" /></div>
+      <div class="form-group"><label>Amount Paid Now (₹)</label><input type="number" id="sal-amount" placeholder="0.00" min="0" step="0.01" /></div>
       <div class="form-group"><label>Payment Mode</label>
         <select id="sal-mode"><option>Cash</option><option>Bank Transfer</option><option>UPI</option><option>Cheque</option></select>
       </div>
@@ -1580,6 +1623,40 @@
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
       <button class="btn btn-outline" onclick="closeMiniModal('payment-modal')">Cancel</button>
       <button class="btn btn-gold" onclick="savePayment()">💾 Save Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- PARTNER CREDIT MODAL -->
+<div class="mini-modal-overlay" id="pcredit-modal">
+  <div class="mini-modal">
+    <h3 id="pc-modal-title">Add Partner Credit Entry</h3>
+    <input type="hidden" id="pc-edit-id" />
+    <div class="form-grid">
+      <div class="form-group"><label>Partner Name</label>
+        <input type="text" id="pc-partner" list="pc-partner-list" placeholder="e.g. Rahul (Partner)" oninput="updatePartnerCreditBalancePreview()" />
+        <datalist id="pc-partner-list"></datalist>
+      </div>
+      <div class="form-group"><label>Type</label>
+        <select id="pc-type" onchange="togglePartnerCreditLinkField()">
+          <option value="Credit In">Credit In (partner → company)</option>
+          <option value="Credit Recovered">Credit Recovered (company → partner)</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Date</label><input type="date" id="pc-date" /></div>
+      <div class="form-group"><label>Amount (₹)</label><input type="number" id="pc-amount" placeholder="0.00" min="0" step="0.01" /></div>
+      <div class="form-group"><label>Payment Mode</label>
+        <select id="pc-mode"><option>Cash</option><option>Bank Transfer</option><option>UPI</option><option>Cheque</option></select>
+      </div>
+      <div class="form-group" id="pc-link-wrap"><label>Linked Client Payment (optional)</label>
+        <select id="pc-linked-payment"><option value="">— None —</option></select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1"><label>Notes</label><input type="text" id="pc-notes" placeholder="e.g. Advance for June expenses" /></div>
+    </div>
+    <div id="pc-balance-preview" style="margin-top:10px;font-size:12px;color:var(--gray600)"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-outline" onclick="closeMiniModal('pcredit-modal')">Cancel</button>
+      <button class="btn btn-gold" onclick="savePartnerCredit()">💾 Save Entry</button>
     </div>
   </div>
 </div>
@@ -1768,6 +1845,60 @@ const db = firebase.firestore();
 const storage = firebase.storage();
 const auth = firebase.auth();
 
+// ═══════════════════════════════════════════════════════
+// SECONDARY APP: Attendance Portal (read-only, project expense vouchers)
+// ═══════════════════════════════════════════════════════
+const attFirebaseConfig = {
+  apiKey: "AIzaSyB3NnzXWfDkDnLYFXY8J-dDT0aPoL8E2c0",
+  authDomain: "air-dashboard-217fc.firebaseapp.com",
+  projectId: "air-dashboard-217fc",
+  storageBucket: "air-dashboard-217fc.firebasestorage.app",
+  messagingSenderId: "463485097438",
+  appId: "1:463485097438:web:82544e30c4117b6f47394f"
+};
+const attApp = firebase.initializeApp(attFirebaseConfig, "attendanceApp");
+const attDb = attApp.firestore();
+
+let projectVoucherMap = {}; // jobNumber -> total approved/paid project-expense voucher amount
+let syncedSalaryRecords = []; // [{name, month, year, net, date}] approved salaried-employee payroll (never project-tied)
+
+function listenToProjectVouchers() {
+  attDb.doc('attendance_portal/hr_vouchers').onSnapshot(snap => {
+    const vouchers = (snap.exists && snap.data().value) || [];
+    projectVoucherMap = {};
+    vouchers.forEach(v => {
+      if (v.category === 'project_expense' && (v.status === 'approved' || v.status === 'paid') && v.jobNumber) {
+        projectVoucherMap[v.jobNumber] = (projectVoucherMap[v.jobNumber] || 0) + Number(v.amount || 0);
+      }
+    });
+    if (typeof renderPnL === 'function' && document.getElementById('report-pnl')) renderPnL();
+  }, err => console.warn('Attendance voucher sync fail:', err));
+}
+
+let _attUsersCache = [];
+function _rebuildSyncedSalary() {
+  attDb.doc('attendance_portal/hr_sal').get().then(salSnap => {
+    const salRecords = (salSnap.exists && salSnap.data().value) || [];
+    syncedSalaryRecords = salRecords
+      .filter(s => s.status === 'approved')
+      .map(s => {
+        const u = _attUsersCache.find(x => x.id === s.userId);
+        const pad = n => String(n).padStart(2, '0');
+        return { name: u ? u.name : 'Unknown', month: s.month, year: s.year, net: Number(s.net || 0), paid: !!s.paid, date: `${s.year}-${pad(s.month)}-01` };
+      });
+    updateSalaryDashboard();
+    if (typeof renderPnL === 'function' && document.getElementById('report-pnl')) renderPnL();
+  }).catch(err => console.warn('Attendance salary fetch fail:', err));
+}
+
+function listenToSyncedSalary() {
+  attDb.doc('attendance_portal/hr_users').onSnapshot(snap => {
+    _attUsersCache = (snap.exists && snap.data().value) || [];
+    _rebuildSyncedSalary();
+  }, err => console.warn('Attendance users sync fail:', err));
+  attDb.doc('attendance_portal/hr_sal').onSnapshot(() => _rebuildSyncedSalary(), err => console.warn('Attendance salary sync fail:', err));
+}
+
 const DOCS_COLLECTION = 'documents';
 const SETTINGS_REF = db.collection('settings').doc('main');
 
@@ -1829,6 +1960,9 @@ function listenToData() {
   listenToPayments();
   listenToDeposits();
   listenToVendorDeposits();
+  listenToPartnerCredits();
+  listenToProjectVouchers();
+  listenToSyncedSalary();
 }
 
 let currentUser = null;
@@ -2597,6 +2731,7 @@ function updateDashboard() {
   document.getElementById('stat-balance').textContent = '₹' + totalBalance.toLocaleString('en-IN', { maximumFractionDigits: 0 });
   document.getElementById('stat-outstanding').textContent = '₹' + outstanding.toLocaleString('en-IN', { maximumFractionDigits: 0 });
   document.getElementById('stat-received').textContent = '₹' + totalReceived.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  updatePartnerCreditDashboardStat();
 
   updateBadges();
   renderRecentTable();
@@ -3211,20 +3346,11 @@ function populateProjectSelects() {
 function openProjectsModal() { openProjectModal(); }
 
 function updateSalaryType() {
-  const type = document.getElementById('sal-type').value;
-  document.getElementById('emp-field').style.display = type === 'Regular' ? 'block' : 'none';
-  document.getElementById('labour-field').style.display = type === 'Daily Labour' ? 'block' : 'none';
-  document.getElementById('labour-work-field').style.display = type === 'Daily Labour' ? 'block' : 'none';
-  document.getElementById('labour-days-field').style.display = type === 'Daily Labour' ? 'block' : 'none';
-  document.getElementById('labour-rate-field').style.display = type === 'Daily Labour' ? 'block' : 'none';
+  // No-op: Pay Labour modal is now always contract-based Daily Labour, no field toggling needed.
 }
 
 function calcLabourAmount() {
-  const days = parseFloat(document.getElementById('sal-labour-days').value) || 0;
-  const rate = parseFloat(document.getElementById('sal-labour-rate').value) || 0;
-  const amount = days * rate;
-  document.getElementById('sal-amount').value = amount.toFixed(2);
-  document.getElementById('sal-total-due').value = amount.toFixed(2);
+  // No-op: legacy days*rate calc removed, contract amount comes from employee record.
 }
 
 function togglePartialPayment() {
@@ -3541,17 +3667,25 @@ function renderPnL() {
   if (projF) filteredExp = filteredExp.filter(e => (e.project||'') === projF);
   const expTotal = filteredExp.reduce((s,e) => s + (e.amount||0), 0);
 
-  // Salary / Labour filtered by project
-  let filteredSal = salaryPayments.filter(p => inRange(p.date));
+  // Daily Labour — manual entry, project-aware (unchanged)
+  let filteredSal = salaryPayments.filter(p => p.type === 'Daily Labour' && inRange(p.date));
   if (projF) filteredSal = filteredSal.filter(p => (p.project||'') === projF);
-  const salTotal = filteredSal.reduce((s,p) => s + (p.amount||0), 0);
+  const labourTotal = filteredSal.reduce((s,p) => s + (p.amount||0), 0);
+
+  // Salaried employees — auto-synced from Attendance Portal payroll, never project-tied
+  const syncedSalaryTotal = projF ? 0 : syncedSalaryRecords.filter(r => inRange(r.date)).reduce((s,r) => s + r.net, 0);
 
   // Purchases filtered by project
   let filteredPur = purchases.filter(p => inRange(p.date));
   if (projF) filteredPur = filteredPur.filter(p => (p.project||'') === projF);
   const purTotal = filteredPur.reduce((s,p) => s + (p.amount||0), 0);
 
-  const totalCosts = expTotal + salTotal + purTotal;
+  // Project Expense Vouchers (from Attendance Portal) filtered by project
+  const jobVoucherTotal = projF
+    ? (projectVoucherMap[projF] || 0)
+    : Object.values(projectVoucherMap).reduce((a, b) => a + b, 0);
+
+  const totalCosts = expTotal + syncedSalaryTotal + labourTotal + purTotal + jobVoucherTotal;
   const profit = revenue - totalCosts;
   const margin = revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : '0.0';
 
@@ -3569,14 +3703,13 @@ function renderPnL() {
 
   const tbody = document.getElementById('pnl-tbody');
   if (tbody) {
-    const labourTotal = filteredSal.filter(p => p.type === 'Daily Labour').reduce((s,p)=>s+(p.amount||0),0);
-    const salaryOnly = salTotal - labourTotal;
     tbody.innerHTML = `
       <tr><td style="font-weight:700;color:var(--navy)">Revenue (Non-Tax Invoice + Proforma${custF ? ' — '+custF : ''}${projF ? ' — '+projF : ''})</td><td class="amount-cell" style="color:var(--green)">+${fmt(revenue)}</td></tr>
       <tr><td style="padding-left:28px;color:var(--gray600)">Expenses${projF ? ' ('+projF+')' : ''}</td><td class="amount-cell" style="color:var(--red)">-${fmt(expTotal)}</td></tr>
-      <tr><td style="padding-left:28px;color:var(--gray600)">Salary Paid${projF ? ' ('+projF+')' : ''}</td><td class="amount-cell" style="color:var(--red)">-${fmt(salaryOnly)}</td></tr>
+      <tr><td style="padding-left:28px;color:var(--gray600)">Salary Paid (auto-synced${projF ? ' — excluded from project cost' : ''})</td><td class="amount-cell" style="color:var(--red)">-${fmt(syncedSalaryTotal)}</td></tr>
       <tr><td style="padding-left:28px;color:var(--gray600)">Daily Labour${projF ? ' ('+projF+')' : ''}</td><td class="amount-cell" style="color:var(--red)">-${fmt(labourTotal)}</td></tr>
       <tr><td style="padding-left:28px;color:var(--gray600)">Material Purchases${projF ? ' ('+projF+')' : ''}</td><td class="amount-cell" style="color:var(--red)">-${fmt(purTotal)}</td></tr>
+      <tr><td style="padding-left:28px;color:var(--gray600)">Project Expense Voucher${projF ? ' ('+projF+')' : ''}</td><td class="amount-cell" style="color:var(--red)">-${fmt(jobVoucherTotal)}</td></tr>
       <tr style="background:var(--navy)"><td style="color:var(--gold);font-weight:800;padding:12px 16px">NET PROFIT / LOSS</td><td style="color:white;font-weight:800;padding:12px 16px;text-align:right">${fmt(profit)}</td></tr>
     `;
   }
@@ -3901,41 +4034,75 @@ function listenToSalary() {
     employees = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.name||'').localeCompare(b.name||''));
     renderEmployees();
     populateEmployeeDropdowns();
-    updateSalarySummary();
+    updateSalaryDashboard();
   });
   db.collection(SAL_COL).onSnapshot(snap => {
     salaryPayments = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    populateEmployeeDropdowns();
     renderSalaryPayments();
-    updateSalarySummary();
+    updateSalaryDashboard();
   });
+}
+
+function updateEmployeeType() {
+  const type = document.getElementById('emp-type').value;
+  document.getElementById('emp-salary-field').style.display = type === 'Salaried' ? '' : 'none';
+  document.getElementById('emp-contract-field').style.display = type === 'Daily Labour' ? '' : 'none';
+}
+
+function labourPaidTotal(empId) {
+  return salaryPayments.filter(p => p.type === 'Daily Labour' && p.employeeId === empId).reduce((s,p) => s + (p.paidAmount || 0), 0);
 }
 
 function renderEmployees() {
   const tbody = document.getElementById('employees-tbody');
   if (!tbody) return;
-  if (!employees.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">👤</div><h3>No employees yet</h3></div></td></tr>'; return; }
-  tbody.innerHTML = employees.map(e => `<tr>
+  if (!employees.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">👤</div><h3>No employees yet</h3></div></td></tr>'; return; }
+  tbody.innerHTML = employees.map(e => {
+    const isLabour = e.type === 'Daily Labour';
+    const typeBadge = isLabour
+      ? '<span style="background:#ffa500;color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Daily Labour</span>'
+      : '<span style="background:var(--navy);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Salaried</span>';
+    let amountCell, extraCell;
+    if (isLabour) {
+      const paid = labourPaidTotal(e.id);
+      const balance = Math.max(0, (e.contractAmount||0) - paid);
+      amountCell = `₹${Number(e.contractAmount||0).toLocaleString('en-IN',{minimumFractionDigits:2})}`;
+      extraCell = `<span style="color:var(--green);font-size:12px">Paid ₹${paid.toLocaleString('en-IN',{maximumFractionDigits:0})}</span> / <span style="color:var(--red);font-size:12px">Bal ₹${balance.toLocaleString('en-IN',{maximumFractionDigits:0})}</span>`;
+    } else {
+      amountCell = `₹${Number(e.salary||0).toLocaleString('en-IN',{minimumFractionDigits:2})}`;
+      extraCell = '<span style="font-size:12px;color:var(--gray600)">Synced from Attendance</span>';
+    }
+    return `<tr>
     <td style="font-weight:700;color:var(--navy)">${e.name}</td>
+    <td>${typeBadge}</td>
     <td style="font-size:13px">${e.role || '—'}</td>
-    <td class="amount-cell">₹${Number(e.salary||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
-    <td style="font-size:12px">${e.contact || '—'}</td>
+    <td class="amount-cell">${amountCell}</td>
+    <td>${extraCell}</td>
     <td><div style="display:flex;gap:6px">
       <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="editEmployee('${e.id}')">✏</button>
       <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteEmployee('${e.id}')">🗑</button>
     </div></td>
-  </tr>`).join('');
+  </tr>`;
+  }).join('');
 }
 
 function populateEmployeeDropdowns() {
-  const opts = '<option value="">Select employee</option>' + employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+  const labourEmps = employees.filter(e => e.type === 'Daily Labour');
+  const opts = '<option value="">Select labour employee</option>' + labourEmps.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
   const s1 = document.getElementById('sal-employee'); if (s1) s1.innerHTML = opts;
-  const s2 = document.getElementById('sal-filter-emp'); if (s2) s2.innerHTML = '<option value="">All Employees</option>' + employees.map(e => `<option value="${e.name}">${e.name}</option>`).join('');
+  const s2 = document.getElementById('sal-filter-emp'); if (s2) s2.innerHTML = '<option value="">All Labour</option>' + labourEmps.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
 }
 
 function autofillSalaryAmount() {
   const id = document.getElementById('sal-employee').value;
   const e = employees.find(x => x.id === id);
-  if (e) document.getElementById('sal-amount').value = e.salary || '';
+  if (!e) { document.getElementById('sal-total-due').value = ''; return; }
+  const paid = labourPaidTotal(e.id);
+  const balance = Math.max(0, (e.contractAmount||0) - paid);
+  document.getElementById('sal-total-due').value = (e.contractAmount||0).toFixed(2);
+  document.getElementById('sal-balance-due').value = balance.toFixed(2);
+  document.getElementById('sal-amount').value = '';
 }
 
 function openEmployeeModal() {
@@ -3943,6 +4110,9 @@ function openEmployeeModal() {
   document.getElementById('emp-modal-title').textContent = 'Add Employee';
   ['emp-name','emp-role','emp-contact'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   document.getElementById('emp-salary').value = '';
+  document.getElementById('emp-contract').value = '';
+  document.getElementById('emp-type').value = 'Salaried';
+  updateEmployeeType();
   document.getElementById('employee-modal').classList.add('open');
 }
 
@@ -3952,8 +4122,11 @@ function editEmployee(id) {
   document.getElementById('emp-edit-id').value = id;
   document.getElementById('emp-modal-title').textContent = 'Edit Employee';
   document.getElementById('emp-name').value = e.name || '';
+  document.getElementById('emp-type').value = e.type || 'Salaried';
+  updateEmployeeType();
   document.getElementById('emp-role').value = e.role || '';
   document.getElementById('emp-salary').value = e.salary || '';
+  document.getElementById('emp-contract').value = e.contractAmount || '';
   document.getElementById('emp-contact').value = e.contact || '';
   document.getElementById('employee-modal').classList.add('open');
 }
@@ -3961,7 +4134,13 @@ function editEmployee(id) {
 function saveEmployee() {
   const name = document.getElementById('emp-name').value.trim();
   if (!name) { toast('Employee name required', 'error'); return; }
-  const data = { name, role: document.getElementById('emp-role').value, salary: parseFloat(document.getElementById('emp-salary').value) || 0, contact: document.getElementById('emp-contact').value };
+  const type = document.getElementById('emp-type').value;
+  const data = {
+    name, type, role: document.getElementById('emp-role').value,
+    salary: parseFloat(document.getElementById('emp-salary').value) || 0,
+    contractAmount: parseFloat(document.getElementById('emp-contract').value) || 0,
+    contact: document.getElementById('emp-contact').value
+  };
   const editId = document.getElementById('emp-edit-id').value;
   const op = editId ? db.collection(EMP_COL).doc(editId).set(data) : db.collection(EMP_COL).add(data);
   op.then(() => { closeMiniModal('employee-modal'); toast('Employee saved! ✓', 'success'); }).catch(e => toast('Error: ' + e.message, 'error'));
@@ -3975,59 +4154,47 @@ function deleteEmployee(id) {
 function renderSalaryPayments() {
   const tbody = document.getElementById('salary-tbody');
   if (!tbody) return;
-  const typeF = document.getElementById('sal-filter-type')?.value || '';
   const empF = document.getElementById('sal-filter-emp')?.value || '';
   const monF = document.getElementById('sal-filter-month')?.value || '';
-  let filtered = salaryPayments;
-  if (typeF) filtered = filtered.filter(p => p.type === typeF);
-  if (empF) filtered = filtered.filter(p => p.employeeName === empF || p.labourName === empF);
+  let filtered = salaryPayments.filter(p => p.type === 'Daily Labour');
+  if (empF) filtered = filtered.filter(p => p.employeeId === empF);
   if (monF) filtered = filtered.filter(p => p.forMonth === monF);
-  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">💼</div><h3>No salary/labour payments found</h3></div></td></tr>'; updateSalarySummary([]); return; }
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">💼</div><h3>No labour payments found</h3></div></td></tr>'; updateSalaryDashboard(); return; }
   tbody.innerHTML = filtered.map(p => {
-    const name = p.type === 'Daily Labour' ? (p.labourName || '—') : (p.employeeName || '—');
-    const details = p.type === 'Daily Labour' ? `${p.workDetails || '—'} (${p.days || 0} days @ ₹${p.rate || 0}/day)` : (p.forMonth || '—');
-    const totalAmt = p.type === 'Daily Labour' ? ((p.days || 0) * (p.rate || 0)) : (p.totalAmount || p.amount || 0);
-    const paidAmt = p.paidAmount || p.amount || 0;
-    const balanceAmt = Math.max(0, totalAmt - paidAmt);
-    
+    const emp = employees.find(x => x.id === p.employeeId);
+    const name = emp ? emp.name : (p.labourName || p.employeeName || '—');
+    const contractAmt = emp ? (emp.contractAmount||0) : (p.totalAmount || 0);
+    const paidTillNow = emp ? labourPaidTotal(emp.id) : (p.paidAmount || p.amount || 0);
+    const balanceAmt = Math.max(0, contractAmt - paidTillNow);
+    const thisPayment = p.paidAmount || p.amount || 0;
+
     let statusBadge = '';
-    if (paidAmt >= totalAmt) {
-      statusBadge = '<span style="background:var(--green);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Paid</span>';
-    } else if (paidAmt === 0) {
-      statusBadge = '<span style="background:var(--red);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Pending</span>';
+    if (balanceAmt <= 0.01) {
+      statusBadge = '<span style="background:var(--green);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Contract Paid</span>';
     } else {
-      statusBadge = `<span style="background:#ffa500;color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Partial (₹${paidAmt})</span>`;
+      statusBadge = `<span style="background:#ffa500;color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Bal ₹${balanceAmt.toFixed(0)}</span>`;
     }
-    
+
     const menuId = `sal-menu-${p.id}`;
-    const actionsBtns = balanceAmt > 0.01 ? 
-      `<button class="btn btn-gold" style="padding:4px 8px;font-size:11px" onclick="editSalaryPaymentBalance('${p.id}')">Pay Balance ₹${balanceAmt.toFixed(0)}</button>
-       <div style="position:relative;display:inline-block;margin-left:4px">
-         <button class="btn btn-outline" style="padding:4px 8px;font-size:14px" onclick="toggleMenu('${menuId}')">⋮</button>
-         <div id="${menuId}" style="display:none;position:absolute;right:0;background:var(--white);border:1px solid var(--gray200);border-radius:6px;box-shadow:var(--shadow);z-index:50;min-width:120px">
-           <div style="padding:8px 12px;cursor:pointer;font-size:12px;color:var(--red);hover:background:var(--gray50)" onclick="deleteSalaryPayment('${p.id}');toggleMenu('${menuId}')">🗑 Delete</div>
-         </div>
-       </div>` :
-      `<button class="btn btn-outline" style="padding:4px 8px;font-size:11px" onclick="editSalaryPayment('${p.id}')">✏️ Edit</button>
+    const actionsBtns = `<button class="btn btn-outline" style="padding:4px 8px;font-size:11px" onclick="editSalaryPayment('${p.id}')">✏️ Edit</button>
        <div style="position:relative;display:inline-block;margin-left:4px">
          <button class="btn btn-outline" style="padding:4px 8px;font-size:14px" onclick="toggleMenu('${menuId}')">⋮</button>
          <div id="${menuId}" style="display:none;position:absolute;right:0;background:var(--white);border:1px solid var(--gray200);border-radius:6px;box-shadow:var(--shadow);z-index:50;min-width:120px">
            <div style="padding:8px 12px;cursor:pointer;font-size:12px;color:var(--red);hover:background:var(--gray50)" onclick="deleteSalaryPayment('${p.id}');toggleMenu('${menuId}')">🗑 Delete</div>
          </div>
        </div>`;
-    
+
     return `<tr>
       <td style="font-size:13px">${p.date || '—'}</td>
-      <td style="font-size:12px;font-weight:600">${p.type === 'Daily Labour' ? '👷 Labour' : '💼 Salary'}</td>
       <td style="font-weight:600;color:var(--navy)">${name}</td>
-      <td style="font-size:12px">${details}</td>
-      <td class="amount-cell">₹${Number(totalAmt||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+      <td style="font-size:12px">Contract ₹${Number(contractAmt).toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
+      <td class="amount-cell">₹${Number(thisPayment||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
       <td>${statusBadge}</td>
       <td style="font-size:12px">${p.mode || '—'}</td>
       <td style="font-size:12px;white-space:nowrap">${actionsBtns}</td>
     </tr>`;
   }).join('');
-  updateSalarySummary(filtered);
+  updateSalaryDashboard();
 }
 
 function toggleMenu(menuId) {
@@ -4037,109 +4204,102 @@ function toggleMenu(menuId) {
   }
 }
 
-function updateSalarySummary(filteredPayments) {
-  const list = filteredPayments || salaryPayments;
+function updateSalaryDashboard() {
+  // Salaried employees — auto-synced from Attendance
+  const salariedPayable = syncedSalaryRecords.reduce((s,r) => s + r.net, 0);
+  const salariedPaid = syncedSalaryRecords.filter(r => r.paid).reduce((s,r) => s + r.net, 0);
+  const salariedOutstanding = Math.max(0, salariedPayable - salariedPaid);
 
-  let totalPaid = 0;
-  let totalPending = 0;
-
-  list.forEach(p => {
-    const totalAmt = p.type === 'Daily Labour' ? ((p.days || 0) * (p.rate || 0)) : (p.totalAmount || p.amount || 0);
-    const paidAmt = p.paidAmount || p.amount || 0;
-
-    if (paidAmt >= totalAmt) {
-      totalPaid += totalAmt;
-    } else if (paidAmt === 0) {
-      totalPending += totalAmt;
-    } else {
-      totalPaid += paidAmt;
-      totalPending += (totalAmt - paidAmt);
-    }
+  // Daily Labour — contract-based
+  const labourEmps = employees.filter(e => e.type === 'Daily Labour');
+  let totalLabourAmount = 0, totalLabourPaid = 0;
+  labourEmps.forEach(e => {
+    totalLabourAmount += (e.contractAmount || 0);
+    totalLabourPaid += Math.min(labourPaidTotal(e.id), e.contractAmount || 0);
   });
+  const labourOutstanding = Math.max(0, totalLabourAmount - totalLabourPaid);
 
-  const yearTotal = list.reduce((s,p)=> s + (p.amount || 0), 0);
+  const el = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  const fmt2 = n => '₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:0});
 
-  const el = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
   el('sal-emp-count', employees.length);
-  el('sal-month-paid', '₹'+totalPaid.toLocaleString('en-IN',{maximumFractionDigits:0}));
-  el('sal-month-pending-txt', 'Pending: ₹'+totalPending.toLocaleString('en-IN',{maximumFractionDigits:0}));
-  el('sal-year', '₹'+yearTotal.toLocaleString('en-IN',{maximumFractionDigits:0}));
-  el('sal-count', list.length);
+  el('sal-payable', fmt2(salariedPayable));
+  el('sal-paid', fmt2(salariedPaid));
+  el('sal-outstanding', fmt2(salariedOutstanding));
+
+  el('lab-total', fmt2(totalLabourAmount));
+  el('lab-paid', fmt2(totalLabourPaid));
+  el('lab-outstanding', fmt2(labourOutstanding));
+
+  renderSyncedSalaryTable();
 }
+
+function renderSyncedSalaryTable() {
+  const tbody = document.getElementById('synced-salary-tbody');
+  if (!tbody) return;
+  if (!syncedSalaryRecords.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">💼</div><h3>No synced payroll yet</h3><p>Approve payroll in Attendance Portal to see it here</p></div></td></tr>'; return; }
+  const monthNames = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const sorted = [...syncedSalaryRecords].sort((a,b) => (b.year - a.year) || (b.month - a.month));
+  tbody.innerHTML = sorted.map(r => `<tr>
+    <td style="font-weight:700;color:var(--navy)">${r.name}</td>
+    <td style="font-size:13px">${monthNames[r.month]||r.month} ${r.year}</td>
+    <td class="amount-cell">₹${r.net.toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+    <td>${r.paid ? '<span style="background:var(--green);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Paid</span>' : '<span style="background:var(--red);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Pending</span>'}</td>
+    <td style="font-size:11px;color:var(--gray600)">Synced from Attendance</td>
+  </tr>`).join('');
+}
+
+
 
 function openSalaryModal() {
   document.getElementById('sal-edit-id').value = '';
-  document.getElementById('sal-modal-title').textContent = 'Pay Salary / Labour';
+  document.getElementById('sal-modal-title').textContent = 'Pay Labour';
   document.getElementById('sal-date').valueAsDate = new Date();
   document.getElementById('sal-for-month').value = new Date().toISOString().slice(0,7);
-  document.getElementById('sal-type').value = 'Regular';
-  document.getElementById('sal-type-field').style.display = 'block';
-  updateSalaryType();
   document.getElementById('sal-employee').value = '';
-  document.getElementById('sal-labour-name').value = '';
-  document.getElementById('sal-labour-work').value = '';
-  document.getElementById('sal-labour-days').value = '';
-  document.getElementById('sal-labour-rate').value = '';
   document.getElementById('sal-amount').value = '';
   document.getElementById('sal-total-due').value = '';
+  document.getElementById('sal-balance-due').value = '';
   document.getElementById('salary-modal').classList.add('open');
 }
 
 function saveSalaryPayment() {
   const editId = document.getElementById('sal-edit-id').value;
-  const type = document.getElementById('sal-type').value;
   const date = document.getElementById('sal-date').value;
   const paidAmount = parseFloat(document.getElementById('sal-amount').value) || 0;
-  
+  const empId = document.getElementById('sal-employee').value;
+  const emp = employees.find(x => x.id === empId);
+
   if (!date || !paidAmount) { toast('Date and amount required', 'error'); return; }
-  
-  let totalAmount = paidAmount;
-  
-  if (type === 'Regular') {
-    const empId = document.getElementById('sal-employee').value;
-    const emp = employees.find(x => x.id === empId);
-    if (!emp) { toast('Employee required', 'error'); return; }
-  } else if (type === 'Daily Labour') {
-    const labourName = document.getElementById('sal-labour-name').value.trim();
-    const workDetails = document.getElementById('sal-labour-work').value.trim();
-    const days = parseFloat(document.getElementById('sal-labour-days').value) || 0;
-    const rate = parseFloat(document.getElementById('sal-labour-rate').value) || 0;
-    
-    if (!labourName || !workDetails || !days || !rate) { toast('Labour details required', 'error'); return; }
-    totalAmount = days * rate;
+  if (!emp) { toast('Labour employee required', 'error'); return; }
+
+  // Validate against remaining contract balance (excluding this record if editing)
+  const alreadyPaid = labourPaidTotal(emp.id) - (editId ? (salaryPayments.find(x=>x.id===editId)?.paidAmount || 0) : 0);
+  const balance = Math.max(0, (emp.contractAmount||0) - alreadyPaid);
+  if (paidAmount > balance + 0.01) {
+    toast(`Amount exceeds remaining contract balance (₹${balance.toFixed(2)})`, 'error');
+    return;
   }
-  
-  // Auto-detect status based on paid vs total
-  let status = 'Pending';
-  if (paidAmount >= totalAmount) status = 'Paid';
-  else if (paidAmount > 0) status = 'Partial';
-  
-  let data = { type, date, totalAmount, paidAmount, status, mode: document.getElementById('sal-mode').value, forMonth: document.getElementById('sal-for-month').value };
-  
-  if (type === 'Regular') {
-    const empId = document.getElementById('sal-employee').value;
-    const emp = employees.find(x => x.id === empId);
-    data.employeeId = empId;
-    data.employeeName = emp.name;
-  } else if (type === 'Daily Labour') {
-    data.labourName = document.getElementById('sal-labour-name').value.trim();
-    data.workDetails = document.getElementById('sal-labour-work').value.trim();
-    data.days = parseFloat(document.getElementById('sal-labour-days').value) || 0;
-    data.rate = parseFloat(document.getElementById('sal-labour-rate').value) || 0;
-  }
-  
-  const savePromise = editId 
+
+  const data = {
+    type: 'Daily Labour',
+    employeeId: emp.id,
+    employeeName: emp.name,
+    date,
+    paidAmount,
+    totalAmount: emp.contractAmount || 0,
+    mode: document.getElementById('sal-mode').value,
+    forMonth: document.getElementById('sal-for-month').value
+  };
+
+  const savePromise = editId
     ? db.collection(SAL_COL).doc(editId).update(data)
     : db.collection(SAL_COL).add(data);
-  
-  savePromise.then(() => { 
-    closeMiniModal('salary-modal'); 
-    toast(editId ? 'Payment updated! ✓' : 'Payment saved! ✓', 'success'); 
+
+  savePromise.then(() => {
+    closeMiniModal('salary-modal');
+    toast(editId ? 'Payment updated! ✓' : 'Payment saved! ✓', 'success');
     document.getElementById('sal-employee').value = '';
-    document.getElementById('sal-labour-name').value = '';
-    document.getElementById('sal-labour-work').value = '';
-    document.getElementById('sal-labour-days').value = '';
-    document.getElementById('sal-labour-rate').value = '';
     document.getElementById('sal-amount').value = '';
   }).catch(e => toast('Error: ' + e.message, 'error'));
 }
@@ -4147,59 +4307,15 @@ function saveSalaryPayment() {
 function editSalaryPayment(id) {
   const p = salaryPayments.find(x => x.id === id);
   if (!p) return;
-  
+
   document.getElementById('sal-edit-id').value = id;
   document.getElementById('sal-modal-title').textContent = 'Edit Payment';
-  document.getElementById('sal-type').value = p.type;
   document.getElementById('sal-date').value = p.date || '';
   document.getElementById('sal-for-month').value = p.forMonth || '';
-  
-  updateSalaryType();
-  
-  if (p.type === 'Regular') {
-    document.getElementById('sal-employee').value = p.employeeId || '';
-  } else {
-    document.getElementById('sal-labour-name').value = p.labourName || '';
-    document.getElementById('sal-labour-work').value = p.workDetails || '';
-    document.getElementById('sal-labour-days').value = p.days || '';
-    document.getElementById('sal-labour-rate').value = p.rate || '';
-    calcLabourAmount();
-  }
-  
+  document.getElementById('sal-employee').value = p.employeeId || '';
+  autofillSalaryAmount();
   document.getElementById('sal-mode').value = p.mode || 'Cash';
-  document.getElementById('sal-total-due').value = (p.totalAmount || p.amount || 0).toFixed(2);
   document.getElementById('sal-amount').value = (p.paidAmount || p.amount || 0).toFixed(2);
-  document.getElementById('salary-modal').classList.add('open');
-}
-
-function editSalaryPaymentBalance(id) {
-  const p = salaryPayments.find(x => x.id === id);
-  if (!p) return;
-  
-  const totalAmt = p.type === 'Daily Labour' ? ((p.days || 0) * (p.rate || 0)) : (p.totalAmount || p.amount || 0);
-  const paidAmt = p.paidAmount || p.amount || 0;
-  const balanceAmt = Math.max(0, totalAmt - paidAmt);
-  
-  document.getElementById('sal-edit-id').value = id;
-  document.getElementById('sal-modal-title').textContent = 'Pay Balance Amount';
-  document.getElementById('sal-type').value = p.type;
-  document.getElementById('sal-date').valueAsDate = new Date();
-  document.getElementById('sal-for-month').value = p.forMonth || '';
-  
-  updateSalaryType();
-  
-  if (p.type === 'Regular') {
-    document.getElementById('sal-employee').value = p.employeeId || '';
-  } else {
-    document.getElementById('sal-labour-name').value = p.labourName || '';
-    document.getElementById('sal-labour-work').value = p.workDetails || '';
-    document.getElementById('sal-labour-days').value = p.days || '';
-    document.getElementById('sal-labour-rate').value = p.rate || '';
-  }
-  
-  document.getElementById('sal-mode').value = p.mode || 'Cash';
-  document.getElementById('sal-total-due').value = totalAmt.toFixed(2);
-  document.getElementById('sal-amount').value = (paidAmt + balanceAmt).toFixed(2);
   document.getElementById('salary-modal').classList.add('open');
 }
 
@@ -4207,6 +4323,7 @@ function deleteSalaryPayment(id) {
   if (!confirm('Delete this payment record?')) return;
   db.collection(SAL_COL).doc(id).delete().then(() => toast('Payment deleted'));
 }
+
 
 // ═══════════════════════════════════════════════════════
 // PAYMENTS RECEIVED
@@ -4293,6 +4410,227 @@ function savePayment() {
 function deletePayment(id) {
   if (!confirm('Delete this payment record?')) return;
   db.collection(PAY_COL).doc(id).delete().then(() => toast('Payment deleted'));
+}
+
+// ═══════════════════════════════════════════════════════
+// PARTNER CREDIT / ADVANCE
+// Partners sometimes send money to the company to cover monthly
+// expenses ("Credit In"). Once client payments come in, that amount
+// is taken back by the partner ("Credit Recovered"). This tracks a
+// running per-partner balance (a liability the company owes back).
+// ═══════════════════════════════════════════════════════
+let partnerCredits = [];
+const PC_COL = 'partnerCredits';
+
+function listenToPartnerCredits() {
+  db.collection(PC_COL).onSnapshot(snap => {
+    partnerCredits = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a,b) => (a.date||'').localeCompare(b.date||'') || (a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+    renderPartnerCredits();
+    updatePartnerCreditDashboardStat();
+  });
+}
+
+// Map of partner name -> current outstanding balance (Credit In - Credit Recovered)
+function getPartnerCreditBalances() {
+  const balances = {};
+  partnerCredits.forEach(p => {
+    const name = p.partner || 'Unknown';
+    const amt = Number(p.amount || 0);
+    balances[name] = (balances[name] || 0) + (p.type === 'Credit Recovered' ? -amt : amt);
+  });
+  return balances;
+}
+
+function getTotalPartnerCreditOutstanding() {
+  const balances = getPartnerCreditBalances();
+  return Object.values(balances).reduce((s, b) => s + Math.max(0, b), 0);
+}
+
+function populatePartnerCreditDropdowns() {
+  const partnerNames = [...new Set(partnerCredits.map(p => p.partner).filter(Boolean))].sort();
+
+  const dl = document.getElementById('pc-partner-list');
+  if (dl) dl.innerHTML = partnerNames.map(n => `<option value="${n}"></option>`).join('');
+
+  const f = document.getElementById('pc-filter-partner');
+  if (f) {
+    const cur = f.value;
+    f.innerHTML = '<option value="">All Partners</option>' + partnerNames.map(n => `<option value="${n}">${n}</option>`).join('');
+    f.value = cur;
+  }
+
+  const link = document.getElementById('pc-linked-payment');
+  if (link) {
+    link.innerHTML = '<option value="">— None —</option>' + payments.map(p =>
+      `<option value="${p.id}">${p.date||'—'} · ${p.customer||'—'} · ₹${Number(p.amount||0).toLocaleString('en-IN',{maximumFractionDigits:0})}</option>`
+    ).join('');
+  }
+}
+
+function togglePartnerCreditLinkField() {
+  const type = document.getElementById('pc-type')?.value;
+  const wrap = document.getElementById('pc-link-wrap');
+  if (wrap) wrap.style.display = type === 'Credit Recovered' ? '' : 'none';
+  updatePartnerCreditBalancePreview();
+}
+
+function updatePartnerCreditBalancePreview() {
+  const el = document.getElementById('pc-balance-preview');
+  if (!el) return;
+  const name = document.getElementById('pc-partner')?.value.trim();
+  if (!name) { el.textContent = ''; return; }
+  const editId = document.getElementById('pc-edit-id')?.value;
+  const balances = getPartnerCreditBalances();
+  let current = balances[name] || 0;
+  if (editId) {
+    const existing = partnerCredits.find(p => p.id === editId);
+    if (existing && existing.partner === name) {
+      current -= (existing.type === 'Credit Recovered' ? -Number(existing.amount||0) : Number(existing.amount||0));
+    }
+  }
+  el.textContent = `Current outstanding balance for "${name}": ₹${current.toLocaleString('en-IN',{maximumFractionDigits:0})}`;
+}
+
+function renderPartnerCredits() {
+  const tbody = document.getElementById('pcredits-tbody');
+  if (!tbody) return;
+  populatePartnerCreditDropdowns();
+
+  const partnerF = document.getElementById('pc-filter-partner')?.value || '';
+  const typeF    = document.getElementById('pc-filter-type')?.value || '';
+  const monF     = document.getElementById('pc-filter-month')?.value || '';
+
+  let filtered = partnerCredits;
+  if (partnerF) filtered = filtered.filter(p => p.partner === partnerF);
+  if (typeF)    filtered = filtered.filter(p => p.type === typeF);
+  if (monF)     filtered = filtered.filter(p => (p.date||'').startsWith(monF));
+
+  // Running balance-after, computed per-partner in chronological order (unfiltered)
+  const running = {};
+  const balanceAfterMap = {};
+  partnerCredits.forEach(p => {
+    const name = p.partner || 'Unknown';
+    const amt = Number(p.amount || 0);
+    running[name] = (running[name] || 0) + (p.type === 'Credit Recovered' ? -amt : amt);
+    balanceAfterMap[p.id] = running[name];
+  });
+
+  const totalIn        = partnerCredits.filter(p => p.type === 'Credit In').reduce((s,p) => s+Number(p.amount||0), 0);
+  const totalRecovered = partnerCredits.filter(p => p.type === 'Credit Recovered').reduce((s,p) => s+Number(p.amount||0), 0);
+  const outstanding    = getTotalPartnerCreditOutstanding();
+  const el = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+  el('pc-total-in',        '₹'+totalIn.toLocaleString('en-IN',{maximumFractionDigits:0}));
+  el('pc-total-recovered', '₹'+totalRecovered.toLocaleString('en-IN',{maximumFractionDigits:0}));
+  el('pc-outstanding',     '₹'+outstanding.toLocaleString('en-IN',{maximumFractionDigits:0}));
+  el('pc-count',           partnerCredits.length);
+
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🤝</div><h3>No partner credit entries found</h3></div></td></tr>'; return; }
+
+  const typeBadge = t => t === 'Credit Recovered'
+    ? '<span style="background:var(--green);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Recovered</span>'
+    : '<span style="background:var(--san-marino);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Credit In</span>';
+
+  const sorted = [...filtered].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  tbody.innerHTML = sorted.map(p => {
+    const linkedPay = p.linkedPaymentId ? payments.find(pay => pay.id === p.linkedPaymentId) : null;
+    const linkedLabel = linkedPay ? `Payment: ${linkedPay.date||''} ₹${Number(linkedPay.amount||0).toLocaleString('en-IN',{maximumFractionDigits:0})}` : (p.mode||'—');
+    return `<tr>
+      <td style="font-size:13px">${p.date||'—'}</td>
+      <td style="font-weight:600;color:var(--navy)">${p.partner||'—'}</td>
+      <td>${typeBadge(p.type||'Credit In')}</td>
+      <td class="amount-cell">₹${Number(p.amount||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+      <td style="font-size:12px">${p.mode||'—'}</td>
+      <td style="font-size:12px">${linkedLabel}</td>
+      <td class="amount-cell" style="font-size:12px">₹${(balanceAfterMap[p.id]||0).toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
+      <td style="font-size:12px;color:var(--gray600)">${p.notes||'—'}</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="editPartnerCredit('${p.id}')">✏</button>
+        <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deletePartnerCredit('${p.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function openPartnerCreditModal() {
+  document.getElementById('pc-edit-id').value = '';
+  document.getElementById('pc-modal-title').textContent = 'Add Partner Credit Entry';
+  document.getElementById('pc-date').valueAsDate = new Date();
+  document.getElementById('pc-partner').value = '';
+  document.getElementById('pc-type').value = 'Credit In';
+  document.getElementById('pc-amount').value = '';
+  document.getElementById('pc-mode').value = 'Cash';
+  document.getElementById('pc-notes').value = '';
+  populatePartnerCreditDropdowns();
+  document.getElementById('pc-linked-payment').value = '';
+  togglePartnerCreditLinkField();
+  document.getElementById('pcredit-modal').classList.add('open');
+}
+
+function editPartnerCredit(id) {
+  const p = partnerCredits.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('pc-edit-id').value = id;
+  document.getElementById('pc-modal-title').textContent = 'Edit Partner Credit Entry';
+  document.getElementById('pc-date').value = p.date || '';
+  document.getElementById('pc-partner').value = p.partner || '';
+  document.getElementById('pc-type').value = p.type || 'Credit In';
+  document.getElementById('pc-amount').value = p.amount || '';
+  document.getElementById('pc-mode').value = p.mode || 'Cash';
+  document.getElementById('pc-notes').value = p.notes || '';
+  populatePartnerCreditDropdowns();
+  document.getElementById('pc-linked-payment').value = p.linkedPaymentId || '';
+  togglePartnerCreditLinkField();
+  updatePartnerCreditBalancePreview();
+  document.getElementById('pcredit-modal').classList.add('open');
+}
+
+function savePartnerCredit() {
+  const date    = document.getElementById('pc-date').value;
+  const partner = document.getElementById('pc-partner').value.trim();
+  const type    = document.getElementById('pc-type').value;
+  const amount  = parseFloat(document.getElementById('pc-amount').value) || 0;
+  if (!date || !partner || !amount) { toast('Date, partner and amount required', 'error'); return; }
+
+  if (type === 'Credit Recovered') {
+    const balances = getPartnerCreditBalances();
+    const editId = document.getElementById('pc-edit-id').value;
+    let available = balances[partner] || 0;
+    if (editId) {
+      const existing = partnerCredits.find(x => x.id === editId);
+      if (existing && existing.partner === partner) {
+        available -= (existing.type === 'Credit Recovered' ? -Number(existing.amount||0) : Number(existing.amount||0));
+      }
+    }
+    if (amount > available) {
+      toast(`Cannot recover ₹${amount.toLocaleString('en-IN')} — only ₹${available.toLocaleString('en-IN')} outstanding for ${partner}`, 'error');
+      return;
+    }
+  }
+
+  const data = {
+    date, partner, type, amount,
+    mode: document.getElementById('pc-mode').value,
+    linkedPaymentId: type === 'Credit Recovered' ? (document.getElementById('pc-linked-payment').value || null) : null,
+    notes: document.getElementById('pc-notes').value
+  };
+  const editId = document.getElementById('pc-edit-id').value;
+  const op = editId
+    ? db.collection(PC_COL).doc(editId).set(data, { merge: true })
+    : db.collection(PC_COL).add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  op.then(() => { closeMiniModal('pcredit-modal'); toast('Partner credit entry saved! ✓', 'success'); })
+    .catch(e => toast('Error: ' + e.message, 'error'));
+}
+
+function deletePartnerCredit(id) {
+  if (!confirm('Delete this partner credit entry?')) return;
+  db.collection(PC_COL).doc(id).delete().then(() => toast('Entry deleted'));
+}
+
+// Push the outstanding partner-credit liability onto the dashboard
+function updatePartnerCreditDashboardStat() {
+  const el = document.getElementById('stat-partner-credit');
+  if (el) el.textContent = '₹' + getTotalPartnerCreditOutstanding().toLocaleString('en-IN', { maximumFractionDigits: 0 });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -4497,7 +4835,7 @@ function deleteVendorDeposit(id) {
 }
 
 window.addEventListener('click', e => {
-  ['customer-modal','expense-modal','category-modal','purchase-modal','employee-modal','salary-modal','payment-modal','deposit-modal','vdeposit-modal','sign-picker-modal','profile-modal'].forEach(id => {
+  ['customer-modal','expense-modal','category-modal','purchase-modal','employee-modal','salary-modal','payment-modal','pcredit-modal','deposit-modal','vdeposit-modal','sign-picker-modal','profile-modal'].forEach(id => {
     const el = document.getElementById(id);
     if (el && e.target === el) el.classList.remove('open');
   });
