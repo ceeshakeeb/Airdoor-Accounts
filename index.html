@@ -2031,11 +2031,13 @@ function _rebuildSyncedSalary() {
   attDb.doc('attendance_portal/hr_sal').get().then(salSnap => {
     const salRecords = (salSnap.exists && salSnap.data().value) || [];
     syncedSalaryRecords = salRecords
-      .filter(s => s.status === 'approved')
+      .filter(s => s.status === 'approved' || s.status === 'paid')
       .map(s => {
         const u = _attUsersCache.find(x => x.id === s.userId);
         const pad = n => String(n).padStart(2, '0');
-        return { name: u ? u.name : 'Unknown', month: s.month, year: s.year, net: Number(s.net || 0), paid: !!s.paid, date: `${s.year}-${pad(s.month)}-01` };
+        const netWithBonus = Number(s.net || 0) + Number(s.bonus || 0);
+        const amount = s.status === 'paid' ? Number(s.paidAmount || netWithBonus) : netWithBonus;
+        return { name: u ? u.name : 'Unknown', month: s.month, year: s.year, net: amount, paid: s.status === 'paid', date: `${s.year}-${pad(s.month)}-01` };
       });
     updateSalaryDashboard();
     if (typeof renderPnL === 'function' && document.getElementById('report-pnl')) renderPnL();
@@ -2940,6 +2942,19 @@ function updateDashboard() {
     if (paidAmt >= totalAmt)      { salaryPaid += totalAmt; }
     else if (paidAmt === 0)       { salaryPending += totalAmt; }
     else { salaryPaid += paidAmt; salaryPending += (totalAmt - paidAmt); }
+  });
+
+  // Salaried employees synced from Attendance payroll: 'approved' = pending (owed, unpaid), 'paid' = paid
+  const syncedInRange = custF ? [] : syncedSalaryRecords.filter(r => inRange(r.date));
+  syncedInRange.forEach(r => { if (r.paid) salaryPaid += r.net; else salaryPending += r.net; });
+
+  // Daily Labour employees tracked in Accounts (contract-based)
+  const labourEmpsAll = custF ? [] : employees.filter(e => e.type === 'Daily Labour');
+  labourEmpsAll.forEach(e => {
+    const total = e.contractAmount || 0;
+    const paid  = Math.min(labourPaidTotal(e.id), total);
+    salaryPaid    += paid;
+    salaryPending += Math.max(0, total - paid);
   });
   
   const totalSalary   = salaryPaid + salaryPending;
