@@ -1238,6 +1238,22 @@
           <tbody id="expenses-tbody"><tr><td colspan="6"><div class="empty-state"><div class="empty-icon">💸</div><h3>No expenses yet</h3><p>Start tracking your expenses</p></div></td></tr></tbody>
         </table>
       </div>
+
+      <!-- EMPLOYEE VOUCHERS (auto-synced from Attendance Portal) -->
+      <div class="module-card" style="margin-top:24px">
+        <div class="module-card-title" style="margin-bottom:14px">🧾 Employee Vouchers — Auto-synced from Attendance Portal</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px">
+          <div class="stat-card gold" data-icon="💰"><div class="stat-label">Total Submitted</div><div class="stat-value" id="vch-total">₹0</div><div class="stat-sub">Approved + Paid</div></div>
+          <div class="stat-card green" data-icon="✅"><div class="stat-label">Paid</div><div class="stat-value" id="vch-paid">₹0</div><div class="stat-sub">Marked paid in Attendance</div></div>
+          <div class="stat-card red" data-icon="⏳"><div class="stat-label">Pending</div><div class="stat-value" id="vch-pending">₹0</div><div class="stat-sub">Approved, awaiting payment</div></div>
+        </div>
+        <div class="table-wrap" style="box-shadow:none">
+          <table>
+            <thead><tr><th>Employee</th><th>Category</th><th>Job No. / Project</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+            <tbody id="synced-voucher-tbody"><tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🧾</div><h3>No synced vouchers yet</h3></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- REPORTS PAGE -->
@@ -2010,20 +2026,61 @@ const attFirebaseConfig = {
 const attApp = firebase.initializeApp(attFirebaseConfig, "attendanceApp");
 const attDb = attApp.firestore();
 
-let projectVoucherMap = {}; // jobNumber -> total approved/paid project-expense voucher amount
+let projectVoucherMap = {}; // resolved projectName (or raw jobNumber if unmatched) -> total approved/paid project-expense voucher amount
+let syncedVoucherRecords = []; // all synced employee vouchers (any category), for the Expenses page table
 let syncedSalaryRecords = []; // [{name, month, year, net, date}] approved salaried-employee payroll (never project-tied)
 
 function listenToProjectVouchers() {
   attDb.doc('attendance_portal/hr_vouchers').onSnapshot(snap => {
     const vouchers = (snap.exists && snap.data().value) || [];
     projectVoucherMap = {};
-    vouchers.forEach(v => {
-      if (v.category === 'project_expense' && (v.status === 'approved' || v.status === 'paid') && v.jobNumber) {
-        projectVoucherMap[v.jobNumber] = (projectVoucherMap[v.jobNumber] || 0) + Number(v.amount || 0);
-      }
-    });
+    syncedVoucherRecords = vouchers
+      .filter(v => v.status === 'approved' || v.status === 'paid')
+      .map(v => {
+        const u = _attUsersCache.find(x => x.id === v.userId);
+        let projectName = null;
+        if (v.category === 'project_expense' && v.jobNumber) {
+          const matchedProj = (typeof projectsList !== 'undefined' ? projectsList : []).find(p => String(p.jobNo || '').trim() === String(v.jobNumber).trim());
+          projectName = matchedProj ? matchedProj.name : null;
+          const key = projectName || v.jobNumber;
+          projectVoucherMap[key] = (projectVoucherMap[key] || 0) + Number(v.amount || 0);
+        }
+        return {
+          employee: u ? u.name : 'Unknown',
+          category: v.category,
+          jobNumber: v.jobNumber || '',
+          projectName,
+          amount: Number(v.amount || 0),
+          paid: v.status === 'paid',
+          date: v.date || ''
+        };
+      });
+    renderSyncedVoucherTable();
     if (typeof renderPnL === 'function' && document.getElementById('report-pnl')) renderPnL();
   }, err => console.warn('Attendance voucher sync fail:', err));
+}
+
+function renderSyncedVoucherTable() {
+  const tbody = document.getElementById('synced-voucher-tbody');
+  const total = syncedVoucherRecords.reduce((s, r) => s + r.amount, 0);
+  const paid = syncedVoucherRecords.filter(r => r.paid).reduce((s, r) => s + r.amount, 0);
+  const pending = total - paid;
+  const fmt = n => '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  const elT = document.getElementById('vch-total'); if (elT) elT.textContent = fmt(total);
+  const elP = document.getElementById('vch-paid'); if (elP) elP.textContent = fmt(paid);
+  const elO = document.getElementById('vch-pending'); if (elO) elO.textContent = fmt(pending);
+  if (!tbody) return;
+  if (!syncedVoucherRecords.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🧾</div><h3>No synced vouchers yet</h3><p>Approve a voucher in Attendance Portal to see it here</p></div></td></tr>'; return; }
+  const catLabel = { cash_voucher: 'Cash Voucher', project_expense: 'Project Expense', travel_expense: 'Travel Expense' };
+  const sorted = [...syncedVoucherRecords].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  tbody.innerHTML = sorted.map(r => `<tr>
+    <td style="font-weight:700;color:var(--navy)">${r.employee}</td>
+    <td style="font-size:13px">${catLabel[r.category] || r.category}</td>
+    <td style="font-size:13px">${r.jobNumber ? (r.jobNumber + (r.projectName ? ' — ' + r.projectName : ' (no matching project)')) : '—'}</td>
+    <td style="font-size:13px">${r.date || '—'}</td>
+    <td class="amount-cell">₹${r.amount.toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+    <td>${r.paid ? '<span style="background:var(--green);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Paid</span>' : '<span style="background:var(--red);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Pending</span>'}</td>
+  </tr>`).join('');
 }
 
 let _attUsersCache = [];
@@ -2932,7 +2989,9 @@ function updateDashboard() {
   const proAmt     = pro.reduce((s,d)=>s+(d.grand||0),0);
   const quotAmt    = quot.reduce((s,d)=>s+(d.grand||0),0);
   
-  const totalExpenses  = filtExp.reduce((s,e)=>s+(e.amount||0),0);
+  const localExpenses  = filtExp.reduce((s,e)=>s+(e.amount||0),0);
+  const syncedVoucherTotal = custF ? 0 : syncedVoucherRecords.filter(r => inRange(r.date)).reduce((s,r)=>s+r.amount,0);
+  const totalExpenses  = localExpenses + syncedVoucherTotal;
   const totalPurchases = filtPur.reduce((s,p)=>s+(p.amount||0),0);
   
   let salaryPaid = 0, salaryPending = 0;
