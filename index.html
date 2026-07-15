@@ -198,7 +198,7 @@
   }
 
   /* ── CONTENT ── */
-  .content { flex: 1; padding: 32px; overflow-y: auto; }
+  .content { flex: 1; padding: 32px; overflow-y: auto; min-width: 0; }
   .page { display: none; }
   .page.active { display: block; }
   #page-dashboard {
@@ -422,6 +422,9 @@
     .modal { width: 92vw !important; max-width: 92vw !important; }
     .row-action-menu { min-width: 160px !important; }
     #financeDonutWrap svg { width: 100% !important; height: auto !important; max-width: 320px; }
+    .dash-split > *, .stat-grid > * { min-width: 0; }
+    [style*="display:grid"] > *, [style*="display: grid"] > * { min-width: 0; }
+    [style*="display:flex"] > *, [style*="display: flex"] > * { min-width: 0; }
   }
   @media (max-width: 560px) {
     .stat-grid,
@@ -3180,10 +3183,11 @@ function renderFinanceDonut(rawSegments) {
     return;
   }
   const iconMap = { Income: '💰', Purchases: '🛒', 'Salary Paid': '👥', Expenses: '🧾' };
+  const shortLabel = { 'Salary Paid': 'Salary' };
   const palette = ['#8bc34a', '#e74c5e', '#f5a623', '#2ec9c9'];
   const segments = [...rawSegments].sort((a, b) => (b.value || 0) - (a.value || 0)).map((s, i) => ({ ...s, color: palette[i % palette.length] }));
 
-  const cx = 210, cy = 210, rOuter = 118, rInner = 60;
+  const cx = 250, cy = 250, rOuter = 118, rInner = 60;
   const gapDeg = 3.6;
   const toXY = (r, angleDeg) => {
     const rad = (angleDeg - 90) * Math.PI / 180;
@@ -3231,7 +3235,7 @@ function renderFinanceDonut(rawSegments) {
     labels += `
       <text x="${iconPt.x}" y="${iconPt.y}" text-anchor="middle" dominant-baseline="middle" font-size="16">${iconMap[seg.label] || '●'}</text>
       <text x="${numPt.x}" y="${numPt.y}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="800" fill="${seg.color}" opacity="0.85">${String(i + 1).padStart(2, '0')}</text>
-      <text x="${textPt.x}" y="${textPt.y - 6}" text-anchor="${anchor}" font-size="12.5" font-weight="800" fill="#f1f5f9">${seg.label}</text>
+      <text x="${textPt.x}" y="${textPt.y - 6}" text-anchor="${anchor}" font-size="12.5" font-weight="800" fill="#f1f5f9">${shortLabel[seg.label] || seg.label}</text>
       <text x="${textPt.x}" y="${textPt.y + 9}" text-anchor="${anchor}" font-size="12.5" font-weight="700" fill="${seg.color}">${Math.round(pct)}%</text>
     `;
     angle += sweep;
@@ -3240,7 +3244,7 @@ function renderFinanceDonut(rawSegments) {
   wrap.innerHTML = `
     <div style="display:flex;align-items:center;gap:36px;flex-wrap:wrap;justify-content:center;width:100%">
       <div style="display:flex;flex-direction:column;gap:12px;min-width:150px;order:1">${legend}</div>
-      <svg viewBox="0 0 420 420" width="320" height="320" style="flex-shrink:0;order:2">
+      <svg viewBox="0 0 500 500" width="340" height="340" style="flex-shrink:0;order:2">
         <defs>${defs}</defs>
         ${paths}
         <circle cx="${cx}" cy="${cy}" r="${rInner - 2}" fill="#16233a" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"></circle>
@@ -5021,14 +5025,18 @@ function updatePaymentSummary(filteredPayments, custF) {
   const list = filteredPayments || payments;
   const customer = custF !== undefined ? custF : (document.getElementById('pay-filter-customer')?.value || '');
   const totalReceived = list.reduce((s,p)=>s+(p.amount||0),0);
-  let billedDocs = documents.filter(d => d.type === 'Tax Invoice');
+  let billedDocs = documents.filter(d => d.type === 'Proforma Invoice' || d.type === 'Invoice');
   if (customer) billedDocs = billedDocs.filter(d => d.clientName === customer);
   const totalBilled = billedDocs.reduce((s,d)=>s+(d.grand||0),0);
-  const outstanding = Math.max(0, totalBilled - totalReceived);
+  const outstanding = totalBilled - totalReceived;
   const el = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
   el('pay-month', '₹'+totalReceived.toLocaleString('en-IN',{maximumFractionDigits:0}));
   el('pay-year', '₹'+totalBilled.toLocaleString('en-IN',{maximumFractionDigits:0}));
-  el('pay-outstanding', '₹'+outstanding.toLocaleString('en-IN',{maximumFractionDigits:0}));
+  const outstandingEl = document.getElementById('pay-outstanding');
+  if (outstandingEl) {
+    outstandingEl.textContent = (outstanding < 0 ? '-₹' : '₹') + Math.abs(outstanding).toLocaleString('en-IN',{maximumFractionDigits:0});
+    outstandingEl.style.color = outstanding < 0 ? '#16a34a' : (outstanding > 0 ? '#e11d48' : '');
+  }
   el('pay-count', list.length);
 }
 
