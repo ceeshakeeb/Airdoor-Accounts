@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=1280, user-scalable=no, maximum-scale=1.0">
 <title>Airdoor Billing System</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -201,7 +201,7 @@
   .content { flex: 1; padding: 32px; overflow-y: auto; min-width: 0; }
   .page { display: none; }
   .page.active { display: block; }
-  #page-dashboard {
+  body.dark-mode #page-dashboard {
     background: radial-gradient(circle 420px at 12% -5%, rgba(255,159,67,0.16) 0%, transparent 65%),
                 radial-gradient(circle 380px at 95% 15%, rgba(147,90,255,0.18) 0%, transparent 60%),
                 radial-gradient(ellipse 70% 50% at 90% 100%, #2a1050 0%, transparent 55%),
@@ -213,13 +213,13 @@
     overflow: hidden;
   }
   /* Text & headings */
-  #page-dashboard .section-title,
-  #page-dashboard h3 { color: #f8fafc !important; letter-spacing: 0.2px; }
-  #page-dashboard .section-title { font-family: 'Playfair Display', serif; font-weight: 700; }
-  #page-dashboard > .section-header > div > div:last-child { color: #a5b4c8 !important; font-weight: 400; }
-  #page-dashboard label { color: #c9def5 !important; font-weight: 600; letter-spacing: 0.3px; }
+  body.dark-mode #page-dashboard .section-title,
+  body.dark-mode #page-dashboard h3 { color: #f8fafc !important; letter-spacing: 0.2px; }
+  body.dark-mode #page-dashboard .section-title { font-family: 'Playfair Display', serif; font-weight: 700; }
+  body.dark-mode #page-dashboard > .section-header > div > div:last-child { color: #a5b4c8 !important; font-weight: 400; }
+  body.dark-mode #page-dashboard label { color: #c9def5 !important; font-weight: 600; letter-spacing: 0.3px; }
   /* Filter bar: date/select/clear button - glass pills */
-  #page-dashboard input, #page-dashboard select {
+  body.dark-mode #page-dashboard input, body.dark-mode #page-dashboard select {
     background: rgba(255,255,255,0.07) !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -227,22 +227,22 @@
     color: #f5f7fa !important;
     border-radius: 12px !important;
   }
-  #page-dashboard input::placeholder { color: #7a8aa0 !important; }
-  #page-dashboard select option { background: #1a1440; color: #f1f5f9; }
-  #page-dashboard input:focus, #page-dashboard select:focus {
+  body.dark-mode #page-dashboard input::placeholder { color: #7a8aa0 !important; }
+  body.dark-mode #page-dashboard select option { background: #1a1440; color: #f1f5f9; }
+  body.dark-mode #page-dashboard input:focus, body.dark-mode #page-dashboard select:focus {
     border-color: rgba(255,159,67,0.55) !important;
     box-shadow: 0 0 0 3px rgba(255,159,67,0.15) !important;
   }
-  #page-dashboard .btn-outline {
+  body.dark-mode #page-dashboard .btn-outline {
     background: rgba(255,255,255,0.07) !important;
     color: #f0f3f8 !important;
     border: 1px solid rgba(255,255,255,0.18) !important;
     border-radius: 12px !important;
     backdrop-filter: blur(10px);
   }
-  #page-dashboard .btn-outline:hover { background: rgba(255,159,67,0.16) !important; border-color: rgba(255,159,67,0.5) !important; color: #fff !important; }
+  body.dark-mode #page-dashboard .btn-outline:hover { background: rgba(255,159,67,0.16) !important; border-color: rgba(255,159,67,0.5) !important; color: #fff !important; }
   /* Glass panels holding table/donut (not the colored stat cards) */
-  #page-dashboard .table-wrap {
+  body.dark-mode #page-dashboard .table-wrap {
     background: rgba(255,255,255,0.055) !important;
     backdrop-filter: blur(24px) saturate(160%);
     -webkit-backdrop-filter: blur(24px) saturate(160%);
@@ -251,23 +251,23 @@
     box-shadow: 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08) !important;
   }
   /* Stat cards get a glass frame + subtle lift, colors untouched */
-  #page-dashboard .stat-card {
+  body.dark-mode #page-dashboard .stat-card {
     border: 1px solid rgba(255,255,255,0.18) !important;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15) !important;
     border-radius: 18px !important;
   }
   /* Recent documents table */
-  #page-dashboard table th { background: rgba(255,255,255,0.06) !important; color: #c3d0e0 !important; font-weight: 700; letter-spacing: 0.4px; }
-  #page-dashboard table td { color: #e7ecf3 !important; border-bottom-color: rgba(255,255,255,0.07) !important; }
-  #page-dashboard tr:hover td { background: rgba(255,159,67,0.05) !important; }
-  #page-dashboard .amount-cell { color: #ffb877 !important; font-weight: 700; }
-  #page-dashboard .doc-type { filter: brightness(1.3) saturate(1.2); }
-  #page-dashboard .type-tax { background: rgba(52,211,153,0.16) !important; color: #34d399 !important; }
-  #page-dashboard .type-proforma { background: rgba(147,197,253,0.16) !important; color: #93c5fd !important; }
-  #page-dashboard .type-quotation { background: rgba(127,178,221,0.18) !important; color: #7fb2dd !important; }
-  #page-dashboard .empty-state h3 { color: #cbd5e1 !important; }
-  #page-dashboard .empty-state p { color: #94a3b8 !important; }
-  #page-dashboard .empty-icon { opacity: 0.55; }
+  body.dark-mode #page-dashboard table th { background: rgba(255,255,255,0.06) !important; color: #c3d0e0 !important; font-weight: 700; letter-spacing: 0.4px; }
+  body.dark-mode #page-dashboard table td { color: #e7ecf3 !important; border-bottom-color: rgba(255,255,255,0.07) !important; }
+  body.dark-mode #page-dashboard tr:hover td { background: rgba(255,159,67,0.05) !important; }
+  body.dark-mode #page-dashboard .amount-cell { color: #ffb877 !important; font-weight: 700; }
+  body.dark-mode #page-dashboard .doc-type { filter: brightness(1.3) saturate(1.2); }
+  body.dark-mode #page-dashboard .type-tax { background: rgba(52,211,153,0.16) !important; color: #34d399 !important; }
+  body.dark-mode #page-dashboard .type-proforma { background: rgba(147,197,253,0.16) !important; color: #93c5fd !important; }
+  body.dark-mode #page-dashboard .type-quotation { background: rgba(127,178,221,0.18) !important; color: #7fb2dd !important; }
+  body.dark-mode #page-dashboard .empty-state h3 { color: #cbd5e1 !important; }
+  body.dark-mode #page-dashboard .empty-state p { color: #94a3b8 !important; }
+  body.dark-mode #page-dashboard .empty-icon { opacity: 0.55; }
 
   /* ── DASHBOARD ── */
   .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
@@ -334,7 +334,11 @@
   .stat-grid .stat-card:nth-child(12) { background: var(--grad-amber);   box-shadow: 0 8px 28px rgba(245,158,11,0.4); }
 
   /* ── DARK MODE (OLED deeper variant) ── */
-  body.dark-mode {
+  /* Scoped with :has(#page-dashboard.active) so dark styling ONLY applies while the
+     Dashboard page is the active page. Every other page, the sidebar/topbar, and all
+     modals automatically fall back to the normal light theme — fixing unreadable
+     (dark-on-dark / light-on-light) fonts on document & other non-dashboard pages. */
+  body.dark-mode:has(#page-dashboard.active) {
     background: #080e1a;
     /* Re-point theme variables so every var()-based color (including inline JS-rendered
        table rows) stays readable against the deep dark background used in dark mode */
@@ -352,24 +356,63 @@
     --glass-bg: rgba(8,14,26,0.9);
     --glass-border: rgba(179,207,229,0.15);
     --glass-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    color: #e2e8f0;
   }
+  body.dark-mode:has(#page-dashboard.active) .section-title { color: #f1f5f9 !important; }
+  body.dark-mode:has(#page-dashboard.active) #page-dashboard td, body.dark-mode:has(#page-dashboard.active) #page-dashboard .totals-table td { color: #e2e8f0 !important; }
+  body.dark-mode:has(#page-dashboard.active) #page-dashboard th { color: #cbd5e1 !important; }
+  /* Invoice previews always stay light for print, regardless of dark mode / active page */
+  #invoice-preview, #modal-invoice-preview { background: #ffffff !important; color: #1e293b !important; }
+  body.dark-mode:has(#page-dashboard.active) .bank-box { background: rgba(10, 25, 49, 0.8); border-color: rgba(179, 207, 229, 0.2); }
+  body.dark-mode:has(#page-dashboard.active) .bank-box h4 { color: #93c5fd; }
+  body.dark-mode:has(#page-dashboard.active) .bank-item span:first-child { color: #cbd5e1; }
+  body.dark-mode:has(#page-dashboard.active) .bank-item span:last-child { color: #f1f5f9; }
+  body.dark-mode:has(#page-dashboard.active) .form-card, body.dark-mode:has(#page-dashboard.active) .table-wrap { color: #e2e8f0; }
+  body.dark-mode:has(#page-dashboard.active) .form-title { color: #f1f5f9 !important; }
+  body.dark-mode:has(#page-dashboard.active) .report-tab { color: #cbd5e1; border-color: rgba(203, 213, 225, 0.2); }
+  body.dark-mode:has(#page-dashboard.active) .report-tab.active { color: #f1f5f9; border-color: #4a7fa7; }
+  body.dark-mode:has(#page-dashboard.active) .items-header { color: #e2e8f0; border-bottom-color: rgba(203, 213, 225, 0.3); }
+  body.dark-mode:has(#page-dashboard.active) span, body.dark-mode:has(#page-dashboard.active) div { color: inherit; }
+  body.dark-mode:has(#page-dashboard.active) h3, body.dark-mode:has(#page-dashboard.active) h4 { color: #f1f5f9 !important; }
+  body.dark-mode:has(#page-dashboard.active) .empty-state h3 { color: #cbd5e1 !important; }
+  body.dark-mode:has(#page-dashboard.active) .empty-state p { color: #94a3b8 !important; }
+  body.dark-mode:has(#page-dashboard.active) .stat-label { color: #cbd5e1 !important; }
+  body.dark-mode:has(#page-dashboard.active) .stat-value { color: #f1f5f9 !important; }
+  body.dark-mode:has(#page-dashboard.active) .stat-sub { color: #94a3b8 !important; }
+  body.dark-mode:has(#page-dashboard.active) input, body.dark-mode:has(#page-dashboard.active) textarea { color: #e2e8f0 !important; }
+  body.dark-mode:has(#page-dashboard.active) input::placeholder, body.dark-mode:has(#page-dashboard.active) textarea::placeholder { color: #64748b !important; }
+  body.dark-mode:has(#page-dashboard.active) select option { background: #1e293b; color: #e2e8f0; }
+  body.dark-mode:has(#page-dashboard.active) .type-tax { background: rgba(52,211,153,0.16) !important; color: #34d399 !important; }
+  body.dark-mode:has(#page-dashboard.active) .type-proforma { background: rgba(147,197,253,0.16) !important; color: #93c5fd !important; }
+  body.dark-mode:has(#page-dashboard.active) .type-invoice { background: rgba(147,197,253,0.16) !important; color: #93c5fd !important; }
+  body.dark-mode:has(#page-dashboard.active) .type-quotation { background: rgba(127,178,221,0.18) !important; color: #7fb2dd !important; }
+  body.dark-mode:has(#page-dashboard.active) .doc-type { color: inherit !important; }
+  body.dark-mode:has(#page-dashboard.active) tr[style*="f0fdf4"] { background: #1e3a1a !important; }
+  body.dark-mode:has(#page-dashboard.active) tr[style*="f0fdf4"] td { color: #86efac !important; }
+  body.dark-mode:has(#page-dashboard.active) tr[style*="f0fdf4"] td[style*="navy"] { color: #86efac !important; }
+  body.dark-mode:has(#page-dashboard.active) tr[style*="f0fdf4"] td[style*="green"] { color: #86efac !important; }
+  body.dark-mode:has(#page-dashboard.active) tr[style*="f0fdf4"] span { color: #86efac !important; }
+  body.dark-mode:has(#page-dashboard.active) th { color: #cbd5e1; }
+  body.dark-mode:has(#page-dashboard.active) .items-header { color: #e2e8f0; border-bottom-color: #4A7FA7; }
+  body.dark-mode:has(#page-dashboard.active) .btn-outline:hover { color: #93c5fd; border-color: #93c5fd; }
+  body.dark-mode:has(#page-dashboard.active) label { color: #93c5fd; }
+  body.dark-mode:has(#page-dashboard.active) select option { background: #101c30; color: #e2e8f0; }
+  body.dark-mode:has(#page-dashboard.active) .form-card, body.dark-mode:has(#page-dashboard.active) .settings-card, body.dark-mode:has(#page-dashboard.active) .module-card, body.dark-mode:has(#page-dashboard.active) .table-wrap, body.dark-mode:has(#page-dashboard.active) .mini-modal { background: rgba(8,14,26,0.9); }
+  body.dark-mode:has(#page-dashboard.active) input, body.dark-mode:has(#page-dashboard.active) select, body.dark-mode:has(#page-dashboard.active) textarea { background: rgba(8,14,26,0.7); }
+  body.dark-mode:has(#page-dashboard.active) th { background: rgba(74,127,167,0.2); }
+  body.dark-mode:has(#page-dashboard.active) #hamburger-dropdown { background: rgba(8,14,26,0.95); }
+
+  /* ── LEFT NAV SIDEBAR: always dark in dark mode, regardless of active page ── */
+  body.dark-mode .sidebar { background: rgba(8,14,26,0.95); }
+  body.dark-mode .sidebar-section { color: #7a93ac; }
+  body.dark-mode .nav-item { color: #b8c6d6; }
+  body.dark-mode .nav-item:hover { background: rgba(127,178,221,0.1); color: #e2e8f0; }
   body.dark-mode .nav-item.active {
     background: linear-gradient(135deg, rgba(127,178,221,0.2), rgba(127,178,221,0.08));
     border-color: rgba(127,178,221,0.35);
     box-shadow: 0 2px 16px rgba(127,178,221,0.15);
+    color: #bfe0ff;
   }
-  body.dark-mode .nav-item:hover { background: rgba(127,178,221,0.1); }
-  body.dark-mode .nav-item.active { color: #bfe0ff; }
-  body.dark-mode th { color: #cbd5e1; }
-  body.dark-mode .items-header { color: #e2e8f0; border-bottom-color: #4A7FA7; }
-  body.dark-mode .btn-outline:hover { color: #93c5fd; border-color: #93c5fd; }
-  body.dark-mode label { color: #93c5fd; }
-  body.dark-mode select option { background: #101c30; color: #e2e8f0; }
-  body.dark-mode .sidebar { background: rgba(8,14,26,0.95); }
-  body.dark-mode .form-card, body.dark-mode .settings-card, body.dark-mode .module-card, body.dark-mode .table-wrap, body.dark-mode .mini-modal { background: rgba(8,14,26,0.9); }
-  body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background: rgba(8,14,26,0.7); }
-  body.dark-mode th { background: rgba(74,127,167,0.2); }
-  body.dark-mode #hamburger-dropdown { background: rgba(8,14,26,0.95); }
 
   /* ── PRINT STYLES ── */
   /* ═══════════════════════════════════════════════════════
@@ -419,6 +462,7 @@
     table { min-width: 620px; }
     .items-section { overflow-x: auto; max-width: 100%; }
     .items-header, .item-row { min-width: 560px; }
+    .items-section.show-hsn .items-header, .items-section.show-hsn .item-row { min-width: 650px; }
     .modal { width: 92vw !important; max-width: 92vw !important; }
     .row-action-menu { min-width: 160px !important; }
     #financeDonutWrap svg { width: 100% !important; height: auto !important; max-width: 320px; }
@@ -557,11 +601,6 @@
     text-align: center;
   }
   .type-btn:hover { border-color: var(--blue); background: var(--white); transform: translateY(-1px); }
-    background: var(--white);
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.2s;
-  }
   .type-btn .type-label { font-size: 14px; font-weight: 600; color: var(--gray600); margin-top: 4px; }
   .type-btn .type-icon { font-size: 22px; }
   .type-btn.selected-tax { border-color: var(--green); background: rgba(34,197,94,0.14); }
@@ -576,6 +615,10 @@
   .items-section { margin-top: 8px; }
   .items-header { display: grid; grid-template-columns: 40px 1fr 80px 100px 90px 110px 36px; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 2px solid var(--cello); font-size: 11px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.5px; }
   .item-row { display: grid; grid-template-columns: 40px 1fr 80px 100px 90px 110px 36px; gap: 8px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--gray100); }
+  .hsn-col { display: none; }
+  .items-section.show-hsn .items-header,
+  .items-section.show-hsn .item-row { grid-template-columns: 40px 1fr 90px 80px 100px 90px 110px 36px; }
+  .items-section.show-hsn .hsn-col { display: block; }
   .item-row input { font-size: 13px; padding: 8px 10px; }
   .item-row .item-num { display: flex; align-items: center; justify-content: center; height: 38px; font-size: 12px; color: var(--gray400); font-weight: 700; }
   .item-row .del-btn { display: flex; align-items: center; justify-content: center; height: 38px; cursor: pointer; color: var(--gray400); font-size: 16px; transition: color 0.2s; border: none; background: none; }
@@ -746,7 +789,7 @@
 <div class="topbar">
   <button class="btn btn-ghost" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Menu" style="display:none;margin-right:4px">☰</button>
   <div class="logo">
-    <div id="topbar-logo-plate" style="background:transparent;border-radius:8px;padding:5px 12px;display:none;align-items:center">
+    <div id="topbar-logo-plate" style="background:#F6FAFD;border-radius:8px;padding:5px 14px;display:none;align-items:center;box-shadow:0 1px 6px rgba(10,25,49,0.25)">
       <img id="topbar-logo-img" src="data:," alt="Airdoor" style="height:36px;max-width:150px;object-fit:contain;display:none" />
     </div>
     <div>
@@ -754,7 +797,7 @@
     </div>
   </div>
   <div class="topbar-actions">
-    <button class="btn btn-ghost" id="darkmode-toggle" onclick="toggleDarkMode()" title="Switch to dark mode">🌙</button>
+    <button class="btn btn-ghost" id="darkmode-toggle" onclick="toggleDarkMode()" title="Switch to light mode">☀️</button>
     <div style="position:relative">
       <button class="btn btn-ghost" onclick="toggleHamburgerMenu()" title="Menu" id="hamburger-btn">☰</button>
       <div id="hamburger-dropdown" style="display:none;position:absolute;top:48px;right:0;background:var(--white);border:1px solid var(--gray200);border-radius:14px;box-shadow:0 16px 48px rgba(26,61,99,0.2);min-width:220px;z-index:200;overflow:hidden">
@@ -767,7 +810,7 @@
         <div class="hamburger-item" onclick="logout()" style="padding:12px 16px;cursor:pointer;font-size:13px;color:var(--red);display:flex;align-items:center;gap:8px;border-top:1px solid var(--gray200)">🚪 Sign Out</div>
       </div>
     </div>
-    <button class="btn btn-gold" onclick="showPage('new')">＋ New Document</button>
+    <button class="btn btn-gold" onclick="startNewDocument()">＋ New Document</button>
   </div>
 </div>
 
@@ -777,13 +820,14 @@
   <div class="sidebar">
     <div class="sidebar-section">Navigation</div>
     <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')"><span class="icon">🏠</span> Dashboard</div>
-    <div class="nav-item" data-page="new" onclick="showPage('new')"><span class="icon">✏️</span> New Document</div>
+    <div class="nav-item" data-page="new" onclick="startNewDocument()"><span class="icon">✏️</span> New Document</div>
     <div class="sidebar-section" style="margin-top:12px">Documents</div>
     <div class="nav-item" data-page="list" onclick="showPage('list'); filterDocs('all')"><span class="icon">📄</span> All Documents <span class="badge" id="badge-all">0</span></div>
     <div class="nav-item" data-page="list" onclick="showPage('list'); filterDocs('Tax Invoice')"><span class="icon">🧾</span> Tax Invoices <span class="badge" id="badge-tax">0</span></div>
     <div class="nav-item" data-page="list" onclick="showPage('list'); filterDocs('Invoice')"><span class="icon">📄</span> Non-Tax Invoices <span class="badge" id="badge-invoice">0</span></div>
     <div class="nav-item" data-page="list" onclick="showPage('list'); filterDocs('Proforma Invoice')"><span class="icon">📋</span> Proforma <span class="badge" id="badge-proforma">0</span></div>
     <div class="nav-item" data-page="list" onclick="showPage('list'); filterDocs('Quotation')"><span class="icon">💬</span> Quotations <span class="badge" id="badge-quotation">0</span></div>
+    <div class="nav-item" data-page="invoiceHistory" onclick="showPage('invoiceHistory')"><span class="icon">📜</span> Invoice History</div>
     <div class="sidebar-section" style="margin-top:12px">Modules</div>
     <div class="nav-item" data-page="customers" onclick="showPage('customers')"><span class="icon">👥</span> Customers</div>
     <div class="nav-item" data-page="projects" onclick="showPage('projects')"><span class="icon">🏗️</span> Projects / Jobs</div>
@@ -811,9 +855,10 @@
       </div>
       <div style="display:flex;gap:10px;margin-bottom:18px;align-items:flex-end;flex-wrap:wrap">
         <div class="form-group" style="margin:0"><label style="font-size:11px">Customer</label><select id="dash-filter-customer" onchange="updateDashboard()" style="font-size:13px;padding:6px 10px;min-width:180px"><option value="">All Customers</option></select></div>
+        <div class="form-group" style="margin:0"><label style="font-size:11px">FY</label><select id="dash-filter-fy" onchange="updateDashboard()" style="font-size:13px;padding:6px 10px;min-width:110px"><option value="">All Years</option></select></div>
         <div class="form-group" style="margin:0"><label style="font-size:11px">From</label><input type="date" id="dash-filter-from" onchange="updateDashboard()" style="font-size:13px;padding:6px 10px" /></div>
         <div class="form-group" style="margin:0"><label style="font-size:11px">To</label><input type="date" id="dash-filter-to" onchange="updateDashboard()" style="font-size:13px;padding:6px 10px" /></div>
-        <button class="btn btn-outline" style="padding:6px 14px;font-size:12px" onclick="document.getElementById('dash-filter-customer').value='';document.getElementById('dash-filter-from').value='';document.getElementById('dash-filter-to').value='';updateDashboard()">Clear</button>
+        <button class="btn btn-outline" style="padding:6px 14px;font-size:12px" onclick="document.getElementById('dash-filter-customer').value='';document.getElementById('dash-filter-fy').value='';document.getElementById('dash-filter-from').value='';document.getElementById('dash-filter-to').value='';updateDashboard()">Clear</button>
       </div>
       <div class="stat-grid">
         <div class="stat-card blue" data-icon="🧾" onclick="showPage('list');filterDocs('Tax Invoice')" style="cursor:pointer"><span class="stat-nav-arrow">↗</span>
@@ -1039,10 +1084,11 @@
       <!-- ITEMS -->
       <div class="form-card">
         <div class="form-title"><span>📦</span> Line Items</div>
-        <div class="items-section">
+        <div class="items-section" id="items-section">
           <div class="items-header">
             <div>SL</div>
             <div>Description</div>
+            <div class="hsn-col">HSN/SAC</div>
             <div>Qty</div>
             <div>Unit</div>
             <div>Rate (₹)</div>
@@ -1095,9 +1141,12 @@
     <div class="page" id="page-list">
       <div class="section-header">
         <div class="section-title" id="list-title">All Documents</div>
-        <div style="display:flex;gap:10px">
-          <input type="text" id="search-box" placeholder="🔍 Search by name, number..." oninput="renderList()" style="width:220px" />
-          <button class="btn btn-gold" onclick="showPage('new')">＋ New Document</button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <input type="text" id="search-box" placeholder="🔍 Search by name, number..." oninput="renderList()" style="width:200px" />
+          <select id="list-filter-customer" onchange="renderList()" style="font-size:13px;padding:8px 12px;min-width:160px"><option value="">All Customers</option></select>
+          <select id="list-filter-fy" onchange="renderList()" style="font-size:13px;padding:8px 12px;min-width:130px"><option value="">All Years</option></select>
+          <button class="btn btn-outline" onclick="document.getElementById('search-box').value='';document.getElementById('list-filter-customer').value='';document.getElementById('list-filter-fy').value='';renderList()">Clear</button>
+          <button class="btn btn-gold" onclick="startNewDocument()">＋ New Document</button>
         </div>
       </div>
       <div class="table-wrap">
@@ -1691,6 +1740,57 @@
       </div>
     </div>
 
+    <div class="page" id="page-invoiceHistory">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Invoice History</div>
+          <div style="color:var(--gray600);font-size:13px;margin-top:4px">Add old invoices (e.g. from last year) so their amounts count toward the dashboard, reports and customer/project totals. This doesn't generate a PDF — it's just for record-keeping.</div>
+        </div>
+        <button class="btn btn-gold" onclick="openInvoiceHistoryModal()">＋ Add Invoice</button>
+      </div>
+      <div style="margin-top:12px;font-size:13px;color:var(--gray600);font-weight:600" id="invoice-history-summary"></div>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr>
+            <th>Type</th><th>Invoice No.</th><th>Date</th><th>Description</th><th>Project</th><th>Job No.</th><th>Proforma No.</th><th>Taxable</th><th>Tax</th><th>Total</th><th></th>
+          </tr></thead>
+          <tbody id="invoice-history-tbody">
+            <tr><td colspan="11"><div class="empty-state"><div class="empty-icon">📜</div><h3>No historical invoices yet</h3><p>Click "Add Invoice" to bring in old invoice totals</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+<div class="mini-modal-overlay" id="invoice-history-modal">
+  <div class="mini-modal">
+    <h3 id="ih-modal-title">Add Historical Invoice</h3>
+    <input type="hidden" id="ih-edit-id" />
+    <div class="form-grid">
+      <div class="form-group"><label>Document Type</label>
+        <select id="ih-type">
+          <option value="Tax Invoice">Tax Invoice</option>
+          <option value="Invoice">Invoice</option>
+          <option value="Proforma Invoice">Proforma Invoice</option>
+          <option value="Quotation">Quotation</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Invoice No. *</label><input type="text" id="ih-number" placeholder="e.g. ADMS/24-25/112" /></div>
+      <div class="form-group"><label>Date *</label><input type="date" id="ih-date" /></div>
+      <div class="form-group"><label>Customer <span style="font-size:11px;color:var(--gray400)">(optional — for ledger)</span></label><select id="ih-customer"><option value="">— None —</option></select></div>
+      <div class="form-group full"><label>Description</label><input type="text" id="ih-description" placeholder="e.g. HVAC installation — Phase 1" /></div>
+      <div class="form-group"><label>Project</label><input type="text" id="ih-project" list="ih-project-list" placeholder="e.g. Hi Lite Platino Maradu" /><datalist id="ih-project-list"></datalist></div>
+      <div class="form-group"><label>Job Number</label><input type="text" id="ih-jobno" /></div>
+      <div class="form-group"><label>Proforma No.</label><input type="text" id="ih-proforma" /></div>
+      <div class="form-group"><label>Taxable Amount *</label><input type="number" id="ih-taxable" step="0.01" oninput="ihRecalcTotal()" /></div>
+      <div class="form-group"><label>Tax</label><input type="number" id="ih-tax" step="0.01" oninput="ihRecalcTotal()" /></div>
+      <div class="form-group"><label>Total * <span style="font-size:11px;color:var(--gray400)">(auto = taxable + tax, editable)</span></label><input type="number" id="ih-total" step="0.01" /></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-outline" onclick="closeMiniModal('invoice-history-modal')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveInvoiceHistory()">💾 Save</button>
+    </div>
   </div>
 </div>
 <div class="modal-overlay" id="view-modal">
@@ -2245,6 +2345,122 @@ function deleteNote(id) {
   if (!confirm('Delete this note?')) return;
   db.collection(NOTES_COL).doc(id).delete().then(() => toast('Note deleted', 'error'));
 }
+
+// ═══════════════════════════════════════════════════════
+// INVOICE HISTORY (backfilling old invoices for reporting)
+// Stored in the same `documents` collection (tagged historical:true) so
+// their amounts automatically flow into the dashboard, ledgers, and P&L.
+// ═══════════════════════════════════════════════════════
+function openInvoiceHistoryModal(id) {
+  document.getElementById('ih-edit-id').value = id || '';
+  document.getElementById('ih-modal-title').textContent = id ? 'Edit Historical Invoice' : 'Add Historical Invoice';
+
+  const custSel = document.getElementById('ih-customer');
+  const curCust = custSel.value;
+  custSel.innerHTML = '<option value="">— None —</option>' + customers.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+
+  const projList = document.getElementById('ih-project-list');
+  if (projList) projList.innerHTML = projectsList.map(p => `<option value="${p.name}">`).join('');
+
+  if (id) {
+    const doc = documents.find(d => d.id === id);
+    if (!doc) return;
+    document.getElementById('ih-type').value = doc.type || 'Tax Invoice';
+    document.getElementById('ih-number').value = doc.number || '';
+    document.getElementById('ih-date').value = doc.date || '';
+    custSel.value = doc.clientName || '';
+    document.getElementById('ih-description').value = doc.notes || '';
+    document.getElementById('ih-project').value = doc.worksite || '';
+    document.getElementById('ih-jobno').value = doc.jobNo || '';
+    document.getElementById('ih-proforma').value = doc.againstProforma || '';
+    document.getElementById('ih-taxable').value = doc.subtotal || '';
+    document.getElementById('ih-tax').value = doc.igst || '';
+    document.getElementById('ih-total').value = doc.grand || '';
+  } else {
+    ['ih-number','ih-date','ih-description','ih-project','ih-jobno','ih-proforma','ih-taxable','ih-tax','ih-total'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('ih-type').value = 'Tax Invoice';
+    custSel.value = curCust || '';
+  }
+  document.getElementById('invoice-history-modal').classList.add('open');
+}
+
+function ihRecalcTotal() {
+  const taxable = parseFloat(document.getElementById('ih-taxable').value) || 0;
+  const tax = parseFloat(document.getElementById('ih-tax').value) || 0;
+  document.getElementById('ih-total').value = (taxable + tax).toFixed(2);
+}
+
+function saveInvoiceHistory() {
+  const id = document.getElementById('ih-edit-id').value;
+  const number = document.getElementById('ih-number').value.trim();
+  const date = document.getElementById('ih-date').value;
+  if (!number) { toast('Invoice number is required', 'error'); return; }
+  if (!date) { toast('Date is required', 'error'); return; }
+
+  const taxable = parseFloat(document.getElementById('ih-taxable').value) || 0;
+  const tax = parseFloat(document.getElementById('ih-tax').value) || 0;
+  const totalInput = document.getElementById('ih-total').value;
+  const total = totalInput !== '' ? (parseFloat(totalInput) || 0) : (taxable + tax);
+
+  const doc = {
+    type: document.getElementById('ih-type').value,
+    number, date,
+    clientName: document.getElementById('ih-customer').value,
+    notes: document.getElementById('ih-description').value,
+    worksite: document.getElementById('ih-project').value,
+    jobNo: document.getElementById('ih-jobno').value,
+    poNo: '',
+    againstProforma: document.getElementById('ih-proforma').value,
+    subtotal: taxable, discount: 0, discType: 'none', discVal: 0,
+    taxType: 'igst', cgst: 0, sgst: 0, igst: tax,
+    roundOff: total - (taxable + tax), grand: total,
+    items: [], status: 'final', historical: true
+  };
+
+  const op = id
+    ? db.collection(DOCS_COLLECTION).doc(id).set({ ...doc, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true })
+    : db.collection(DOCS_COLLECTION).add({ ...doc, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+  op.then(() => { closeMiniModal('invoice-history-modal'); toast('Historical invoice saved ✓', 'success'); })
+    .catch(err => toast('Save failed: ' + err.message, 'error'));
+}
+
+function renderInvoiceHistory() {
+  const tbody = document.getElementById('invoice-history-tbody');
+  if (!tbody) return;
+  const rows = documents.filter(d => d.historical).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+  const summaryEl = document.getElementById('invoice-history-summary');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><div class="empty-icon">📜</div><h3>No historical invoices yet</h3><p>Click "Add Invoice" to bring in old invoice totals</p></div></td></tr>';
+    if (summaryEl) summaryEl.textContent = '';
+    return;
+  }
+
+  const typeClass = t => t === 'Tax Invoice' ? 'type-tax' : t === 'Proforma Invoice' ? 'type-proforma' : 'type-quotation';
+  tbody.innerHTML = rows.map(d => `<tr>
+    <td><span class="doc-type ${typeClass(d.type)}">${d.type}</span></td>
+    <td style="font-weight:700;color:var(--navy);font-size:12px">${d.number || '—'}</td>
+    <td style="font-size:12px;color:var(--gray600)">${d.date || '—'}</td>
+    <td style="font-size:12px">${d.notes || '—'}</td>
+    <td style="font-size:12px;color:var(--gray600)">${d.worksite || '—'}</td>
+    <td style="font-size:12px;color:var(--gray600)">${d.jobNo || '—'}</td>
+    <td style="font-size:12px;color:var(--gray600)">${d.againstProforma || '—'}</td>
+    <td class="amount-cell">₹${Number(d.subtotal||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+    <td class="amount-cell">₹${Number(d.igst||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+    <td class="amount-cell">₹${Number(d.grand||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+    <td><div style="display:flex;gap:6px">
+      <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="openInvoiceHistoryModal('${d.id}')">✏ Edit</button>
+      ${rowDeleteMenu('ih-menu-'+d.id,'deleteDoc',d.id,'this historical invoice')}
+    </div></td>
+  </tr>`).join('');
+
+  const totalTaxable = rows.reduce((s,d)=>s+(d.subtotal||0),0);
+  const totalTax = rows.reduce((s,d)=>s+(d.igst||0),0);
+  const totalGrand = rows.reduce((s,d)=>s+(d.grand||0),0);
+  if (summaryEl) summaryEl.textContent = `${rows.length} invoice${rows.length===1?'':'s'} · Taxable ₹${totalTaxable.toLocaleString('en-IN',{minimumFractionDigits:2})} · Tax ₹${totalTax.toLocaleString('en-IN',{minimumFractionDigits:2})} · Total ₹${totalGrand.toLocaleString('en-IN',{minimumFractionDigits:2})}`;
+}
+
 const SETTINGS_REF = db.collection('settings').doc('main');
 
 /* Base64 Logo using new 2025 Blue Palette (#1A3D63 primary, #F6FAFD accent) */
@@ -2301,6 +2517,7 @@ function listenToData() {
     updateDashboard();
     renderList();
     renderCustomersTable();
+    if (document.getElementById('page-invoiceHistory')?.classList.contains('active')) renderInvoiceHistory();
   }));
 
   listenToCustomers();
@@ -2321,8 +2538,8 @@ let currentRole = 'viewer'; // admin | accountant | viewer
 
 // Role permission map: which nav pages each role can see
 const ROLE_PAGES = {
-  admin: ['dashboard','new','list','customers','projects','purchases','expenses','salary','payments','deposits','notes','reports','settings'],
-  accountant: ['dashboard','new','list','customers','projects','purchases','expenses','salary','payments','deposits','notes','reports'],
+  admin: ['dashboard','new','list','invoiceHistory','customers','projects','purchases','expenses','salary','payments','deposits','notes','reports','settings'],
+  accountant: ['dashboard','new','list','invoiceHistory','customers','projects','purchases','expenses','salary','payments','deposits','notes','reports'],
   viewer: ['dashboard','list','customers','projects','reports']
 };
 
@@ -2553,7 +2770,7 @@ function showPage(name) {
   closeSidebarIfMobile();
 
   if (name === 'dashboard') updateDashboard();
-  if (name === 'list') renderList();
+  if (name === 'list') { populateListFilters(); renderList(); }
   if (name === 'settings') loadSettings();
   if (name === 'customers') renderCustomersTable();
   if (name === 'projects') renderProjectsPage();
@@ -2564,6 +2781,7 @@ function showPage(name) {
   if (name === 'payments') { populatePaymentDropdowns(); renderPayments(); }
   if (name === 'deposits') { renderDeposits(); }
   if (name === 'notes') { renderNotes(); }
+  if (name === 'invoiceHistory') { renderInvoiceHistory(); }
 }
 
 function selectType(type) {
@@ -2581,6 +2799,7 @@ function selectType(type) {
   document.getElementById('sgst-row').style.display = showTax ? '' : 'none';
   document.getElementById('igst-row').style.display = 'none';
   document.getElementById('against-proforma-wrap').style.display = type === 'Tax Invoice' ? '' : 'none';
+  document.getElementById('items-section')?.classList.toggle('show-hsn', type === 'Tax Invoice');
   if (type === 'Tax Invoice') populateProformaDropdown();
   calcTotals();
 }
@@ -2605,7 +2824,7 @@ function autofillFromProforma() {
   document.getElementById('client-contact').value = proforma.clientContact || '';
   document.getElementById('doc-worksite').value = proforma.worksite || '';
   document.getElementById('items-container').innerHTML = '';
-  (proforma.items || []).forEach(item => addItem(item.desc, item.qty, item.unit, item.rate, item.amount));
+  (proforma.items || []).forEach(item => addItem(item.desc, item.hsn, item.qty, item.unit, item.rate, item.amount));
   if (!proforma.items || !proforma.items.length) addItem();
   calcTotals();
   toast('Copied from Proforma ✓', 'success');
@@ -2620,7 +2839,7 @@ function autoNumber() {
   document.getElementById('doc-number').value = prefix + num;
 }
 
-function addItem(desc = '', qty = '', unit = 'Lot', rate = '', amt = '') {
+function addItem(desc = '', hsn = '', qty = '', unit = 'Lot', rate = '', amt = '') {
   const cont = document.getElementById('items-container');
   const idx = cont.children.length + 1;
   const row = document.createElement('div');
@@ -2628,6 +2847,7 @@ function addItem(desc = '', qty = '', unit = 'Lot', rate = '', amt = '') {
   row.innerHTML = `
     <div class="item-num">${idx}</div>
     <input type="text" placeholder="Description of service / goods" value="${desc}" style="grid-column:auto" />
+    <input type="text" class="hsn-col" placeholder="HSN/SAC" value="${hsn}" />
     <input type="number" placeholder="1" value="${qty}" min="0" oninput="recalcRow(this)" />
     <input type="text" placeholder="Lot / Nos / Set" value="${unit}" />
     <input type="number" placeholder="0.00" value="${rate}" min="0" oninput="recalcRow(this)" />
@@ -2635,15 +2855,15 @@ function addItem(desc = '', qty = '', unit = 'Lot', rate = '', amt = '') {
     <button class="del-btn" onclick="removeItem(this)">✕</button>
   `;
   cont.appendChild(row);
-  if (qty && rate) recalcRow(row.querySelectorAll('input')[3]);
+  if (qty && rate) recalcRow(row.querySelectorAll('input')[4]);
 }
 
 function recalcRow(el) {
   const row = el.closest('.item-row');
   const inputs = row.querySelectorAll('input');
-  const qty = parseFloat(inputs[1].value) || 0;
-  const rate = parseFloat(inputs[3].value) || 0;
-  inputs[4].value = (qty * rate).toFixed(2);
+  const qty = parseFloat(inputs[2].value) || 0;
+  const rate = parseFloat(inputs[4].value) || 0;
+  inputs[5].value = (qty * rate).toFixed(2);
   calcTotals();
 }
 
@@ -2656,7 +2876,7 @@ function removeItem(btn) {
 function calcTotals() {
   let subtotal = 0;
   document.querySelectorAll('#items-container .item-row').forEach(row => {
-    subtotal += parseFloat(row.querySelectorAll('input')[4].value) || 0;
+    subtotal += parseFloat(row.querySelectorAll('input')[5].value) || 0;
   });
 
   const taxType = document.getElementById('tax-type').value;
@@ -2702,7 +2922,7 @@ function collectFormData() {
   const items = [];
   document.querySelectorAll('#items-container .item-row').forEach(row => {
     const inputs = row.querySelectorAll('input');
-    items.push({ desc: inputs[0].value, qty: parseFloat(inputs[1].value)||0, unit: inputs[2].value, rate: parseFloat(inputs[3].value)||0, amount: parseFloat(inputs[4].value)||0 });
+    items.push({ desc: inputs[0].value, hsn: inputs[1].value, qty: parseFloat(inputs[2].value)||0, unit: inputs[3].value, rate: parseFloat(inputs[4].value)||0, amount: parseFloat(inputs[5].value)||0 });
   });
 
   const subtotal = items.reduce((s, i) => s + i.amount, 0);
@@ -2755,7 +2975,8 @@ function generateInvoiceHTML(doc) {
   
   const itemRows = doc.items.map((item, i) => {
     const bg = i % 2 === 0 ? '#ffffff' : '#f0f6fc';
-    return `<tr style="background:${bg}"><td style="text-align:center;color:#4A7FA7;padding:7px 8px;font-size:11px;border-bottom:1px solid #e8f0f8">${i+1}</td><td style="padding:7px 8px;line-height:1.5;font-size:12px;color:#1e293b;border-bottom:1px solid #e8f0f8">${item.desc}</td><td style="text-align:right;padding:7px 8px;font-size:12px;color:#1e293b;border-bottom:1px solid #e8f0f8">${item.qty}</td><td style="text-align:center;padding:7px 8px;font-size:12px;color:#475569;border-bottom:1px solid #e8f0f8">${item.unit}</td><td style="text-align:right;padding:7px 8px;font-size:12px;color:#1e293b;border-bottom:1px solid #e8f0f8">${fmt(item.rate)}</td><td style="text-align:right;padding:7px 8px;font-size:12px;font-weight:600;color:#1A3D63;border-bottom:1px solid #e8f0f8">${fmt(item.amount)}</td></tr>`;
+    const hsnCell = doc.type === 'Tax Invoice' ? `<td style="text-align:center;padding:7px 8px;font-size:12px;color:#475569;border-bottom:1px solid #e8f0f8">${item.hsn || ''}</td>` : '';
+    return `<tr style="background:${bg}"><td style="text-align:center;color:#4A7FA7;padding:7px 8px;font-size:11px;border-bottom:1px solid #e8f0f8">${i+1}</td><td style="padding:7px 8px;line-height:1.5;font-size:12px;color:#1e293b;border-bottom:1px solid #e8f0f8">${item.desc}</td>${hsnCell}<td style="text-align:right;padding:7px 8px;font-size:12px;color:#1e293b;border-bottom:1px solid #e8f0f8">${item.qty}</td><td style="text-align:center;padding:7px 8px;font-size:12px;color:#475569;border-bottom:1px solid #e8f0f8">${item.unit}</td><td style="text-align:right;padding:7px 8px;font-size:12px;color:#1e293b;border-bottom:1px solid #e8f0f8">${fmt(item.rate)}</td><td style="text-align:right;padding:7px 8px;font-size:12px;font-weight:600;color:#1A3D63;border-bottom:1px solid #e8f0f8">${fmt(item.amount)}</td></tr>`;
   }).join('');
   const gstLine = s.gst ? `<div style="margin-top:3px;font-size:11px;color:#475569"><strong>GST:</strong> ${s.gst}</div>` : '';
   const docLabel = doc.type === 'Tax Invoice' ? 'TAX INVOICE' : doc.type === 'Invoice' ? 'INVOICE' : doc.type === 'Proforma Invoice' ? 'PROFORMA' : 'QUOTATION';
@@ -2841,6 +3062,7 @@ function generateInvoiceHTML(doc) {
         <thead><tr>
           <th style="background:${PRIMARY} !important;color:${ACCENT} !important;padding:8px 8px;font-size:11px;font-weight:700;text-align:center;width:36px">SL</th>
           <th style="background:${PRIMARY} !important;color:${ACCENT} !important;padding:8px;font-size:11px;font-weight:700;text-align:left">Description</th>
+          ${doc.type === 'Tax Invoice' ? `<th style="background:${PRIMARY} !important;color:${ACCENT} !important;padding:8px;font-size:11px;font-weight:700;text-align:center;width:70px">HSN/SAC</th>` : ''}
           <th style="background:${PRIMARY} !important;color:${ACCENT} !important;padding:8px;font-size:11px;font-weight:700;text-align:right;width:50px">Qty</th>
           <th style="background:${PRIMARY} !important;color:${ACCENT} !important;padding:8px;font-size:11px;font-weight:700;text-align:center;width:60px">Unit</th>
           <th style="background:${PRIMARY} !important;color:${ACCENT} !important;padding:8px;font-size:11px;font-weight:700;text-align:right;width:100px">Unit Price</th>
@@ -3022,7 +3244,7 @@ function editDraft(id) {
   }
 
   document.getElementById('items-container').innerHTML = '';
-  (doc.items || []).forEach(item => addItem(item.desc, item.qty, item.unit, item.rate, item.amount));
+  (doc.items || []).forEach(item => addItem(item.desc, item.hsn, item.qty, item.unit, item.rate, item.amount));
   if (!doc.items || !doc.items.length) addItem();
 
   selectType(doc.type);
@@ -3073,10 +3295,18 @@ function updateDashboard() {
     dCust.innerHTML = '<option value="">All Customers</option>' + customers.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
   }
 
+  const fySelEl = document.getElementById('dash-filter-fy');
+  if (fySelEl && fySelEl.options.length <= 1) {
+    const fySet = new Set(documents.map(d => fyOf(d.date)).filter(Boolean));
+    const fyList = [...fySet].sort().reverse();
+    fySelEl.innerHTML = '<option value="">All Years</option>' + fyList.map(fy => `<option value="${fy}">FY ${fy}</option>`).join('');
+  }
+
   const custF = document.getElementById('dash-filter-customer')?.value || '';
+  const fyF   = document.getElementById('dash-filter-fy')?.value || '';
   const fromF = document.getElementById('dash-filter-from')?.value || '';
   const toF   = document.getElementById('dash-filter-to')?.value || '';
-  const inRange = d => (!fromF || (d||'') >= fromF) && (!toF || (d||'') <= toF);
+  const inRange = d => (!fromF || (d||'') >= fromF) && (!toF || (d||'') <= toF) && (!fyF || fyOf(d) === fyF);
   const matchCust = d => !custF || d.clientName === custF;
 
   // When customer filtered → get their project names for expense/purchase/salary cross-filter
@@ -3177,6 +3407,7 @@ function updateDashboard() {
 function renderFinanceDonut(rawSegments) {
   const wrap = document.getElementById('financeDonutWrap');
   if (!wrap) return;
+  const isDark = document.body.classList.contains('dark-mode');
   const total = rawSegments.reduce((s, d) => s + (d.value || 0), 0);
   if (total <= 0) {
     wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><h3>No data yet</h3></div>';
@@ -3189,6 +3420,8 @@ function renderFinanceDonut(rawSegments) {
 
   const cx = 250, cy = 250, rOuter = 118, rInner = 60;
   const gapDeg = 3.6;
+  const centerCircleFill = isDark ? '#1e293b' : '#16233a';
+  const centerTextColor = isDark ? '#93c5fd' : '#f1f5f9';
   const toXY = (r, angleDeg) => {
     const rad = (angleDeg - 90) * Math.PI / 180;
     return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
@@ -3235,7 +3468,7 @@ function renderFinanceDonut(rawSegments) {
     labels += `
       <text x="${iconPt.x}" y="${iconPt.y}" text-anchor="middle" dominant-baseline="middle" font-size="16">${iconMap[seg.label] || '●'}</text>
       <text x="${numPt.x}" y="${numPt.y}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="800" fill="${seg.color}" opacity="0.85">${String(i + 1).padStart(2, '0')}</text>
-      <text x="${textPt.x}" y="${textPt.y - 6}" text-anchor="${anchor}" font-size="12.5" font-weight="800" fill="#f1f5f9">${shortLabel[seg.label] || seg.label}</text>
+      <text x="${textPt.x}" y="${textPt.y - 6}" text-anchor="${anchor}" font-size="12.5" font-weight="800" fill="var(--gray800)">${shortLabel[seg.label] || seg.label}</text>
       <text x="${textPt.x}" y="${textPt.y + 9}" text-anchor="${anchor}" font-size="12.5" font-weight="700" fill="${seg.color}">${Math.round(pct)}%</text>
     `;
     angle += sweep;
@@ -3247,11 +3480,10 @@ function renderFinanceDonut(rawSegments) {
       <svg viewBox="0 0 500 500" width="340" height="340" style="flex-shrink:0;order:2">
         <defs>${defs}</defs>
         ${paths}
-        <circle cx="${cx}" cy="${cy}" r="${rInner - 2}" fill="#16233a" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"></circle>
-        <text x="${cx}" y="${cy - 16}" text-anchor="middle" font-size="11" font-weight="700" fill="#94a3b8" letter-spacing="1">4 CATEGORIES</text>
-        <text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="15" font-weight="800" fill="#f1f5f9">Financial</text>
-        <text x="${cx}" y="${cy + 20}" text-anchor="middle" font-size="15" font-weight="800" fill="#f1f5f9">Overview</text>
-        ${labels}
+        <circle cx="${cx}" cy="${cy}" r="${rInner - 2}" fill="${centerCircleFill}" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"></circle>
+        <text x="${cx}" y="${cy - 16}" text-anchor="middle" font-size="11" font-weight="700" fill="${centerTextColor}" letter-spacing="1">4 CATEGORIES</text>
+        <text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="15" font-weight="800" fill="${centerTextColor}">Financial</text>
+        <text x="${cx}" y="${cy + 20}" text-anchor="middle" font-size="15" font-weight="800" fill="${centerTextColor}">Overview</text>        ${labels}
       </svg>
     </div>`;
 }
@@ -3259,7 +3491,7 @@ function renderFinanceDonut(rawSegments) {
 function legendRow(seg, pctText) {
   return `<div style="display:flex;align-items:center;gap:10px">
     <span style="width:11px;height:11px;border-radius:50%;background:${seg.color};flex-shrink:0"></span>
-    <span style="font-size:13px;font-weight:600;color:#f1f5f9">${seg.label} <span style="font-weight:700;color:#94a3b8">— ${pctText}</span></span>
+    <span style="font-size:13px;font-weight:600;color:var(--gray800)">${seg.label} <span style="font-weight:700;color:var(--gray600)">— ${pctText}</span></span>
   </div>`;
 }
 
@@ -3283,15 +3515,45 @@ function renderRecentTable() {
 
 function filterDocs(type) {
   currentFilter = type;
-  const titles = { all: 'All Documents', 'Tax Invoice': 'Tax Invoices', 'Proforma Invoice': 'Proforma Invoices', 'Quotation': 'Quotations' };
+  const titles = { all: 'All Documents', 'Tax Invoice': 'Tax Invoices', 'Invoice': 'Non-Tax Invoices', 'Proforma Invoice': 'Proforma Invoices', 'Quotation': 'Quotations' };
   document.getElementById('list-title').textContent = titles[type] || 'Documents';
   renderList();
 }
 
+function fyOf(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return '';
+  const y = d.getFullYear(), m = d.getMonth(); // 0=Jan
+  const startYear = m >= 3 ? y : y - 1; // FY starts April (month index 3)
+  return `${startYear}-${String((startYear + 1) % 100).padStart(2, '0')}`;
+}
+
+function populateListFilters() {
+  const cSel = document.getElementById('list-filter-customer');
+  if (cSel) {
+    const cur = cSel.value;
+    cSel.innerHTML = '<option value="">All Customers</option>' + customers.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+    cSel.value = cur;
+  }
+  const fySel = document.getElementById('list-filter-fy');
+  if (fySel) {
+    const cur = fySel.value;
+    const fySet = new Set(documents.map(d => fyOf(d.date)).filter(Boolean));
+    const fyList = [...fySet].sort().reverse();
+    fySel.innerHTML = '<option value="">All Years</option>' + fyList.map(fy => `<option value="${fy}">FY ${fy}</option>`).join('');
+    fySel.value = cur;
+  }
+}
+
 function renderList() {
   const q = (document.getElementById('search-box')?.value || '').toLowerCase();
+  const custF = document.getElementById('list-filter-customer')?.value || '';
+  const fyF = document.getElementById('list-filter-fy')?.value || '';
   let filtered = documents;
   if (currentFilter !== 'all') filtered = filtered.filter(d => d.type === currentFilter);
+  if (custF) filtered = filtered.filter(d => d.clientName === custF);
+  if (fyF) filtered = filtered.filter(d => fyOf(d.date) === fyF);
   if (q) filtered = filtered.filter(d => (d.clientName||'').toLowerCase().includes(q) || (d.number||'').toLowerCase().includes(q) || (d.worksite||'').toLowerCase().includes(q));
   const tbody = document.getElementById('list-tbody');
   if (filtered.length === 0) {
@@ -3306,9 +3568,10 @@ function docRow(doc, showWorksite = false) {
   const dateStr = doc.date ? new Date(doc.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—';
   const isDraft = doc.status === 'draft';
   const statusBadge = isDraft ? `<span style="background:#fff3cd;color:#92740a;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">DRAFT</span>` : `<span style="background:#e6f4ea;color:#1e7e34;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">FINAL 🔒</span>`;
+  const historicalBadge = doc.historical ? `<span title="Added via Invoice History" style="background:#eef2ff;color:#4338ca;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">📜 IMPORTED</span>` : '';
   const editBtn = `<button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="editDraft('${doc.id}')">✏ Edit</button>`;
   const reportIcon = doc.serviceReportUrl ? `<span title="Service report attached" style="font-size:13px">📎</span>` : '';
-  return `<tr><td><span style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600">${doc.number || '—'}</span>${statusBadge} ${reportIcon}</td><td><span class="doc-type ${typeClass}">${doc.type}</span></td><td style="font-weight:700; color:var(--navy);">${doc.clientName || '—'}</td>${showWorksite ? `<td style="font-size:12px;color:var(--gray600)">${doc.worksite || '—'}</td>` : ''}<td style="font-size:12px;color:var(--gray600)">${dateStr}</td><td class="amount-cell">₹${Number(doc.grand||0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap">${editBtn}<button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="viewDoc('${doc.id}')">👁 View</button><button class="btn btn-blue" style="padding:5px 10px;font-size:12px" onclick="downloadDocPDF('${doc.id}')">⬇ PDF</button><button class="btn btn-outline" style="padding:5px 8px;font-size:12px" title="Send via Email" onclick="sendViaEmail('${doc.id}')">📧</button><button class="btn btn-outline" style="padding:5px 8px;font-size:12px;color:#1ba94c" title="Send via WhatsApp" onclick="sendViaWhatsApp('${doc.id}')">💬</button>${rowDeleteMenu('doc-menu-'+doc.id,'deleteDoc',doc.id,'this document')}</div></td></tr>`;
+  return `<tr><td><span style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600">${doc.number || '—'}</span>${statusBadge}${historicalBadge} ${reportIcon}</td><td><span class="doc-type ${typeClass}">${doc.type}</span></td><td style="font-weight:700; color:var(--navy);">${doc.clientName || '—'}</td>${showWorksite ? `<td style="font-size:12px;color:var(--gray600)">${doc.worksite || '—'}</td>` : ''}<td style="font-size:12px;color:var(--gray600)">${dateStr}</td><td class="amount-cell">₹${Number(doc.grand||0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap">${editBtn}<button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="viewDoc('${doc.id}')">👁 View</button><button class="btn btn-blue" style="padding:5px 10px;font-size:12px" onclick="downloadDocPDF('${doc.id}')">⬇ PDF</button><button class="btn btn-outline" style="padding:5px 8px;font-size:12px" title="Send via Email" onclick="sendViaEmail('${doc.id}')">📧</button><button class="btn btn-outline" style="padding:5px 8px;font-size:12px;color:#1ba94c" title="Send via WhatsApp" onclick="sendViaWhatsApp('${doc.id}')">💬</button>${rowDeleteMenu('doc-menu-'+doc.id,'deleteDoc',doc.id,'this document')}</div></td></tr>`;
 }
 
 function sendViaEmail(id) {
@@ -3622,6 +3885,25 @@ function resetForm() {
   ['doc-number','doc-date','doc-job','doc-po','client-name','client-gst','client-address','client-contact','doc-worksite','doc-terms','doc-payment-terms','doc-notes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('items-container').innerHTML = ''; document.getElementById('discount-val').value = '0';
   calcTotals(); addItem();
+  autoNumber();
+}
+
+// Called whenever the user opens a blank "New Document" form (nav item / + New Document buttons).
+// Fixes the bug where a stale doc number (and a leftover editingDocId) from the previous invoice
+// stuck around, so the next invoice reused the old number instead of auto-generating a fresh one.
+function startNewDocument() {
+  editingDocId = null;
+  removeServiceReport();
+  currentServiceReportOnLoad = null;
+  pendingServiceReport = null;
+  ['doc-number','doc-date','doc-job','doc-po','client-name','client-gst','client-address','client-contact','doc-worksite','doc-terms','doc-payment-terms','doc-notes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('items-container').innerHTML = '';
+  document.getElementById('discount-val').value = '0';
+  addItem();
+  calcTotals();
+  selectType(currentDocType || 'Tax Invoice');
+  showPage('new');
+  autoNumber();
 }
 
 function toast(msg, type = '') {
@@ -3644,6 +3926,7 @@ function listenToCustomers() {
     // refresh dash dropdown
     const dCust = document.getElementById('dash-filter-customer');
     if (dCust) { const cur = dCust.value; dCust.innerHTML = '<option value="">All Customers</option>' + customers.map(c => `<option value="${c.name}">${c.name}</option>`).join(''); dCust.value = cur; }
+    populateListFilters();
   });
 }
 
@@ -5495,7 +5778,7 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('doc-date').valueAsDate = new Date();
   addItem();
   updateBankPreview();
-  if (localStorage.getItem('airdoor-dark-mode-v2') === '1') document.body.classList.add('dark-mode');
+  if (localStorage.getItem('airdoor-dark-mode-v2') === null || localStorage.getItem('airdoor-dark-mode-v2') === '1') document.body.classList.add('dark-mode');
   updateDarkModeToggleIcon();
 });
 
