@@ -831,9 +831,11 @@
     <div class="nav-item" data-page="list" onclick="showPage('list'); filterDocs('Invoice')"><span class="icon">📄</span> Non-Tax Invoices <span class="badge" id="badge-invoice">0</span></div>
     <div class="nav-item" data-page="list" onclick="showPage('list'); filterDocs('Proforma Invoice')"><span class="icon">📋</span> Proforma <span class="badge" id="badge-proforma">0</span></div>
     <div class="nav-item" data-page="list" onclick="showPage('list'); filterDocs('Quotation')"><span class="icon">💬</span> Quotations <span class="badge" id="badge-quotation">0</span></div>
+    <div class="nav-item" data-page="paymentAdvice" onclick="showPage('paymentAdvice')"><span class="icon">📑</span> Payment Advice <span class="badge" id="badge-pa">0</span></div>
     <div class="nav-item" data-page="invoiceHistory" onclick="showPage('invoiceHistory')"><span class="icon">📜</span> Invoice History</div>
     <div class="sidebar-section" style="margin-top:12px">Modules</div>
     <div class="nav-item" data-page="customers" onclick="showPage('customers')"><span class="icon">👥</span> Customers</div>
+    <div class="nav-item" data-page="amc" onclick="showPage('amc')"><span class="icon">🔧</span> AMC Contracts <span class="badge" id="badge-amc-expiring" style="background:var(--red);display:none">0</span></div>
     <div class="nav-item" data-page="projects" onclick="showPage('projects')"><span class="icon">🏗️</span> Projects / Jobs</div>
     <div class="nav-item" data-page="purchases" onclick="showPage('purchases')"><span class="icon">📦</span> Purchases</div>
     <div class="nav-item" data-page="expenses" onclick="showPage('expenses')"><span class="icon">💸</span> Expenses</div>
@@ -925,6 +927,18 @@
           <div class="stat-value" id="stat-partner-credit">₹0</div>
           <div class="stat-sub">Owed back to partners</div>
         </div>
+      </div>
+
+      <!-- AMC EXPIRY WIDGET -->
+      <div id="amc-dash-widget" style="display:none;background:linear-gradient(135deg,#fff7ed,#fef3c7);border:1px solid #fcd34d;border-radius:12px;padding:16px 20px;margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:20px">🧾</span>
+            <span style="font-weight:700;color:#92400e;font-size:14px" id="amc-dash-title">AMC invoices due</span>
+          </div>
+          <button class="btn btn-outline" style="font-size:12px;padding:5px 12px" onclick="showPage('amc')">View All →</button>
+        </div>
+        <div id="amc-dash-list" style="display:flex;flex-direction:column;gap:6px"></div>
       </div>
 
       <!-- SPLIT: PIE CHART & RECENT DOCS -->
@@ -1353,6 +1367,77 @@
       </div>
     </div>
 
+    <!-- AMC CONTRACTS PAGE -->
+    <div class="page" id="page-amc">
+      <div class="section-header">
+        <div>
+          <div class="section-title">AMC Contracts</div>
+          <div style="color:var(--gray600);font-size:13px;margin-top:4px">Annual Maintenance Contracts — periods, documents &amp; reminders</div>
+        </div>
+        <button class="btn btn-gold" onclick="openAmcModal()">＋ Add AMC Contract</button>
+      </div>
+
+      <!-- Expiry alert banner -->
+      <div id="amc-expiry-banner" style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:22px">⚠️</span>
+        <div>
+          <div style="font-weight:700;color:#b91c1c;font-size:14px" id="amc-banner-title">AMC contracts expiring soon</div>
+          <div style="font-size:12px;color:#b91c1c;margin-top:2px" id="amc-banner-sub"></div>
+        </div>
+      </div>
+
+      <!-- Summary cards -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px">
+        <div class="stat-card green" data-icon="🔧"><div class="stat-label">Active AMCs</div><div class="stat-value" id="amc-stat-active">0</div><div class="stat-sub">Currently running</div></div>
+        <div class="stat-card red" data-icon="🧾"><div class="stat-label">Invoices Due Now</div><div class="stat-value" id="amc-stat-inv-due">0</div><div class="stat-sub">Quarter reached, not billed</div></div>
+        <div class="stat-card gold" data-icon="⏳"><div class="stat-label">Quarters Pending</div><div class="stat-value" id="amc-stat-qtrs-pending">0</div><div class="stat-sub">Across all active contracts</div></div>
+        <div class="stat-card blue" data-icon="💰"><div class="stat-label">Total AMC Value</div><div class="stat-value" id="amc-stat-value">₹0</div><div class="stat-sub">Active contracts</div></div>
+      </div>
+
+      <!-- Filters -->
+      <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
+        <select id="amc-filter-customer" onchange="renderAmcTable()" style="font-size:13px;padding:8px 12px;min-width:180px"><option value="">All Customers</option></select>
+        <select id="amc-filter-project" onchange="renderAmcTable()" style="font-size:13px;padding:8px 12px;min-width:180px"><option value="">All Projects</option></select>
+        <select id="amc-filter-status" onchange="renderAmcTable()" style="font-size:13px;padding:8px 12px">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="expiring">Expiring Soon (≤30d)</option>
+          <option value="expired">Expired</option>
+          <option value="upcoming">Upcoming</option>
+        </select>
+        <select id="amc-filter-qtr" onchange="renderAmcTable()" style="font-size:13px;padding:8px 12px">
+          <option value="">All Quarters</option>
+          <option value="Q1">Q1 — Pending Invoice</option>
+          <option value="Q2">Q2 — Pending Invoice</option>
+          <option value="Q3">Q3 — Pending Invoice</option>
+          <option value="Q4">Q4 — Pending Invoice</option>
+        </select>
+        <button class="btn btn-outline" onclick="['amc-filter-customer','amc-filter-project','amc-filter-status','amc-filter-qtr'].forEach(id=>document.getElementById(id).value='');renderAmcTable()">Clear</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Project</th>
+              <th>Contract No.</th>
+              <th>Scope</th>
+              <th>Period</th>
+              <th>Value</th>
+              <th>Quarters Billed</th>
+              <th>Status</th>
+              <th>Docs</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="amc-tbody">
+            <tr><td colspan="10"><div class="empty-state"><div class="empty-icon">🔧</div><h3>No AMC contracts yet</h3><p>Click "Add AMC Contract" to get started</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- PROJECTS / JOBS PAGE -->
     <div class="page" id="page-projects">
       <div class="section-header">
@@ -1744,6 +1829,128 @@
       </div>
     </div>
 
+    <!-- PAYMENT ADVICE : LIST -->
+    <div class="page" id="page-paymentAdvice">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Payment Advice</div>
+          <div style="color:var(--gray600);font-size:13px;margin-top:4px">RA Bill certification &amp; payment advice notes for client-approved work done</div>
+        </div>
+        <button class="btn btn-gold" onclick="newPA()">＋ New Payment Advice</button>
+      </div>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr>
+            <th>Invoice No.</th><th>Project</th><th>Client</th><th>RA Bill No.</th><th>Invoice Date</th><th>This Bill (Net Certified)</th><th>Status</th><th></th>
+          </tr></thead>
+          <tbody id="pa-tbody">
+            <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📑</div><h3>No payment advices yet</h3><p>Click "New Payment Advice" to certify an RA bill</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAYMENT ADVICE : FORM -->
+    <div class="page" id="page-paymentAdviceForm">
+      <div class="section-header">
+        <div class="section-title" id="pa-form-title">New Payment Advice</div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-outline" onclick="showPage('paymentAdvice')">← Back</button>
+          <button class="btn btn-blue" onclick="previewPA()">👁 Preview</button>
+          <button class="btn btn-outline" onclick="savePADraft()">📝 Save as Draft</button>
+          <button class="btn btn-gold" onclick="finalizePA()">✅ Generate</button>
+        </div>
+      </div>
+      <input type="hidden" id="pa-edit-id" />
+      <input type="hidden" id="pa-linked-doc-id" />
+
+      <div class="form-card">
+        <div class="form-title"><span>📋</span> Project &amp; Bill Details</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Project</label><input type="text" id="pa-project" list="pa-project-list" placeholder="e.g. OEN &amp; NHRIMS" /><datalist id="pa-project-list"></datalist></div>
+          <div class="form-group"><label>Client</label><input type="text" id="pa-client" list="pa-client-list" placeholder="e.g. Vertair Systems" /><datalist id="pa-client-list"></datalist></div>
+          <div class="form-group"><label>RA Bill No.</label><input type="text" id="pa-rabillno" placeholder="e.g. RAB01 &amp; Final Bill" /></div>
+          <div class="form-group full"><label>Work Description</label><input type="text" id="pa-work" placeholder="e.g. Installation and copper piping of VRF Systems" /></div>
+          <div class="form-group"><label>WO Ref</label><input type="text" id="pa-woref" /></div>
+          <div class="form-group"><label>WO Date</label><input type="date" id="pa-wodate" /></div>
+          <div class="form-group full"><label>Invoice No. <span style="font-size:10px;color:var(--gray400);font-weight:400">(pick an existing invoice, or type a new number manually)</span></label>
+            <select id="pa-invoice-select" onchange="selectPAInvoice()" style="margin-bottom:6px">
+              <option value="">— Select Existing Invoice —</option>
+            </select>
+            <input type="text" id="pa-invoiceno" placeholder="e.g. ADMS/INV/07 (or type manually)" oninput="onPAInvoiceNoChange()" />
+          </div>
+          <div class="form-group"><label>Invoice Date</label><input type="date" id="pa-invoicedate" /></div>
+          <div class="form-group"><label>Terms of Payment</label><input type="text" id="pa-terms" value="Within 7 Days" /></div>
+          <div class="form-group"><label>Valuation Date</label><input type="date" id="pa-valuationdate" /></div>
+          <div class="form-group"><label>Work Period</label><input type="text" id="pa-workperiod" placeholder="e.g. Apr 2025" /></div>
+        </div>
+        <div class="form-grid" style="margin-top:4px">
+          <div class="form-group"><label>Accepted / Original Contract Amount (Incl. GST)</label><input type="number" id="pa-originalamount" step="0.01" oninput="recalcPA()" /></div>
+          <div class="form-group"><label>Authorised Change Orders Amount (Incl. GST)</label><input type="number" id="pa-changeorders" step="0.01" value="0" oninput="recalcPA()" /></div>
+          <div class="form-group"><label>Items Paid On-account <span style="font-size:10px;color:var(--gray400);font-weight:400">(auto-credited from Record Payment)</span></label><input type="number" id="pa-onaccount" step="0.01" value="0" readonly style="background:var(--gray50);font-weight:600" /></div>
+          <div class="form-group"><label>Revised Contract Amount (Incl. GST)</label><input type="number" id="pa-revisedamount" step="0.01" readonly style="background:var(--gray50);font-weight:600" /></div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-title"><span>🏦</span> Bank Guarantee Details</div>
+        <div id="pa-bg-container"></div>
+        <button class="btn btn-outline" style="margin-top:10px" onclick="addPABGRow()">＋ Add Bank Guarantee</button>
+      </div>
+
+      <div class="form-card">
+        <div class="form-title"><span>💰</span> A. Mobilisation Advance Payment</div>
+        <div id="pa-sectionA-container"></div>
+        <button class="btn btn-outline" style="margin-top:10px" onclick="addPASectionRow('pa-sectionA-container')">＋ Add Row</button>
+      </div>
+
+      <div class="form-card">
+        <div class="form-title"><span>💵</span> B. Adhoc Payment - RA Bills</div>
+        <div id="pa-sectionB-container"></div>
+        <button class="btn btn-outline" style="margin-top:10px" onclick="addPASectionRow('pa-sectionB-container')">＋ Add Row</button>
+      </div>
+
+      <div class="form-card">
+        <div class="form-title"><span>🧱</span> C. Work Done as per Contracts &amp; Change Orders</div>
+        <div id="pa-workitems-container"></div>
+        <button class="btn btn-outline" style="margin-top:10px" onclick="addPAWorkItem()">＋ Add Work Item</button>
+        <div style="display:flex;gap:24px;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--gray100)">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--gray800)"><input type="checkbox" id="pa-apply-gst" onchange="recalcPA()" style="width:16px;height:16px" /> Apply GST</label>
+          <div class="form-group" style="max-width:140px;margin:0"><label>GST %</label><input type="number" id="pa-gst-pct" value="18" step="0.01" oninput="recalcPA()" /></div>
+          <div style="margin-left:auto;text-align:right;font-size:13px;color:var(--gray600)">
+            Total (This Bill, Excl. GST): <strong id="pa-c-total-excl">₹0.00</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-title"><span>➖</span> D. Deductions / Withheld</div>
+        <div id="pa-deductions-container"></div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-title"><span>✅</span> Net Certified Amount</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--gray50);border-radius:10px;padding:16px 20px">
+          <div style="font-size:13px;color:var(--gray600)">This Bill Amount, after GST &amp; deductions</div>
+          <div style="font-size:22px;font-weight:800;color:var(--navy)" id="pa-net-certified">₹0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAYMENT ADVICE : PREVIEW -->
+    <div class="page" id="page-paPreview">
+      <div class="section-header">
+        <div class="section-title">Payment Advice Preview</div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-outline" onclick="showPage('paymentAdviceForm')">← Edit</button>
+          <button class="btn btn-blue" onclick="downloadPAPDF()">⬇ Download PDF</button>
+        </div>
+      </div>
+      <div class="table-wrap" style="padding:0;overflow:visible">
+        <div id="pa-preview"></div>
+      </div>
+    </div>
+
     <div class="page" id="page-invoiceHistory">
       <div class="section-header">
         <div>
@@ -1811,6 +2018,89 @@
     <div id="modal-service-report-note" style="display:none;margin-bottom:12px;background:var(--blue-light);border-radius:8px;padding:10px 16px;font-size:13px"></div>
     <div class="preview-container">
       <div id="modal-invoice-preview"></div>
+    </div>
+  </div>
+</div>
+
+<!-- AMC CONTRACT MODAL -->
+<div class="mini-modal-overlay" id="amc-modal">
+  <div class="mini-modal" style="max-width:640px">
+    <h3 id="amc-modal-title">Add AMC Contract</h3>
+    <input type="hidden" id="amc-edit-id" />
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Customer *</label>
+        <select id="amc-customer" style="font-size:14px"><option value="">— Select customer —</option></select>
+      </div>
+      <div class="form-group">
+        <label>Project / Job</label>
+        <select id="amc-project" style="font-size:14px"><option value="">— Select project (optional) —</option></select>
+      </div>
+      <div class="form-group">
+        <label>Contract No.</label>
+        <input type="text" id="amc-contract-no" placeholder="e.g. AMC/2025/001" />
+      </div>
+      <div class="form-group full">
+        <label>Scope / Description</label>
+        <input type="text" id="amc-scope" placeholder="e.g. Annual maintenance of 5 ACs at Mitera Hospital" />
+      </div>
+      <div class="form-group">
+        <label>Start Date *</label>
+        <input type="date" id="amc-start" onchange="amcAutoEnd()" />
+      </div>
+      <div class="form-group">
+        <label>End Date *</label>
+        <input type="date" id="amc-end" />
+      </div>
+      <div class="form-group">
+        <label>Duration Shortcut</label>
+        <select onchange="amcSetDuration(this.value)" style="font-size:14px">
+          <option value="">— Quick set end date —</option>
+          <option value="3">3 Months</option>
+          <option value="6">6 Months</option>
+          <option value="12">12 Months (1 Year)</option>
+          <option value="24">24 Months (2 Years)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Contract Value (₹)</label>
+        <input type="number" id="amc-value" placeholder="0.00" min="0" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label>Visit Frequency</label>
+        <select id="amc-frequency" style="font-size:14px">
+          <option value="">— Select —</option>
+          <option value="monthly">Monthly</option>
+          <option value="quarterly">Quarterly</option>
+          <option value="biannual">Bi-Annual (6 months)</option>
+          <option value="annual">Annual</option>
+          <option value="as-needed">As Needed</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>Notes / Remarks</label>
+        <textarea id="amc-notes" rows="2" placeholder="Units covered, special terms, etc."></textarea>
+      </div>
+      <div class="form-group full">
+        <label>📎 Attach Documents <span style="font-size:10px;color:var(--gray400);font-weight:400">(contract PDF, signed agreement — multiple files OK)</span></label>
+        <input type="file" id="amc-docs-input" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="font-size:13px" />
+        <div id="amc-existing-docs" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-outline" onclick="closeMiniModal('amc-modal')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveAmc()">💾 Save Contract</button>
+    </div>
+  </div>
+</div>
+
+<!-- AMC DOCUMENT VIEWER MODAL -->
+<div class="mini-modal-overlay" id="amc-docs-modal">
+  <div class="mini-modal" style="max-width:560px">
+    <h3 id="amc-docs-modal-title">Contract Documents</h3>
+    <div id="amc-docs-list" style="display:flex;flex-direction:column;gap:10px;margin-top:8px;max-height:400px;overflow-y:auto"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-outline" onclick="closeMiniModal('amc-docs-modal')">Close</button>
     </div>
   </div>
 </div>
@@ -2524,6 +2814,7 @@ function listenToData() {
   }));
 
   listenToCustomers();
+  listenToAmc();
   listenToProjects();
   listenToExpenses();
   listenToPurchases();
@@ -2534,6 +2825,7 @@ function listenToData() {
   listenToPartnerCredits();
   listenToProjectVouchers();
   listenToSyncedSalary();
+  listenToPaymentAdvices();
 }
 
 let currentUser = null;
@@ -2541,8 +2833,8 @@ let currentRole = 'accountant'; // admin | accountant
 
 // Role permission map: which nav pages each role can see
 const ROLE_PAGES = {
-  admin: ['dashboard','new','list','invoiceHistory','customers','projects','purchases','expenses','salary','payments','deposits','notes','reports','settings'],
-  accountant: ['dashboard','new','list','invoiceHistory','customers','projects','purchases','expenses','salary','payments','deposits','notes','reports']
+  admin: ['dashboard','new','list','invoiceHistory','customers','amc','projects','purchases','expenses','salary','payments','deposits','notes','reports','settings','paymentAdvice','paymentAdviceForm','paPreview'],
+  accountant: ['dashboard','new','list','invoiceHistory','customers','amc','projects','purchases','expenses','salary','payments','deposits','notes','reports','paymentAdvice','paymentAdviceForm','paPreview']
 };
 
 function authSubmit() {
@@ -2772,6 +3064,7 @@ function showPage(name) {
   if (name === 'list') { populateListFilters(); renderList(); }
   if (name === 'settings') loadSettings();
   if (name === 'customers') renderCustomersTable();
+  if (name === 'amc') renderAmcTable();
   if (name === 'projects') renderProjectsPage();
   if (name === 'expenses') { renderExpenses(); }
   if (name === 'reports') { populateCustomerDropdowns(); renderLedger(); }
@@ -2781,6 +3074,8 @@ function showPage(name) {
   if (name === 'deposits') { renderDeposits(); }
   if (name === 'notes') { renderNotes(); }
   if (name === 'invoiceHistory') { renderInvoiceHistory(); }
+  if (name === 'paymentAdvice') { renderPaymentAdvices(); }
+  if (name === 'paymentAdviceForm') { populatePADropdowns(); }
 }
 
 function selectType(type) {
@@ -3136,24 +3431,28 @@ function _persistDoc(doc, status, successMsg) {
     delete doc.id;
     doc.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
     return db.collection(DOCS_COLLECTION).doc(id).set(doc, { merge: true })
-      .then(() => { toast(successMsg, 'success'); editingDocId = null; showPage('list'); filterDocs('all'); });
+      .then(() => { toast(successMsg, 'success'); editingDocId = null; showPage('list'); filterDocs('all'); return id; });
   } else {
     delete doc.id;
     doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
     return db.collection(DOCS_COLLECTION).add(doc)
-      .then(() => {
+      .then(ref => {
         if (status === 'final') {
           const updates = {};
           if (doc.type === 'Tax Invoice') updates.taxNext = (settings.taxNext || 1) + 1;
           else if (doc.type === 'Invoice') updates.invoiceNext = (settings.invoiceNext || 1) + 1;
           else if (doc.type === 'Proforma Invoice') updates.proNext = (settings.proNext || 1) + 1;
           else updates.quotNext = (settings.quotNext || 1) + 1;
-          return SETTINGS_REF.set(updates, { merge: true });
+          return SETTINGS_REF.set(updates, { merge: true }).then(() => ref.id);
         }
+        return ref.id;
       })
-      .then(() => { toast(successMsg, 'success'); showPage('list'); filterDocs('all'); });
+      .then(id => { toast(successMsg, 'success'); showPage('list'); filterDocs('all'); return id; });
   }
 }
+
+// Pending AMC quarter context — set by amcIssueInvoice, consumed after invoice saved
+let pendingAmcQtr = null; // { amcId, qtrLabel }
 
 function saveDraft() {
   const doc = collectFormData();
@@ -3161,17 +3460,38 @@ function saveDraft() {
   _persistDoc(doc, 'draft', 'Draft saved! You can edit it later. ✓').then(() => { pendingServiceReport = null; currentServiceReportOnLoad = null; }).catch(err => toast('Save failed: ' + err.message, 'error'));
 }
 
+function _finalizeGenerate(doc, signatureUrl) {
+  if (!confirm(editingDocId ? 'Save changes to this document?' : 'Once generated, this document is FINAL. You can still edit it later via the Edit button. Continue?')) return;
+  if (signatureUrl) doc.selectedSignature = signatureUrl;
+  const capturedAmcQtr = pendingAmcQtr;
+  pendingAmcQtr = null;
+  _persistDoc(doc, 'final', editingDocId ? 'Document updated ✓' : 'Document generated ✓')
+    .then(invoiceId => {
+      pendingServiceReport = null; currentServiceReportOnLoad = null;
+      if (capturedAmcQtr && invoiceId) {
+        _amcMarkQtrPending(capturedAmcQtr.amcId, capturedAmcQtr.qtrLabel, invoiceId);
+      }
+    })
+    .catch(err => toast('Generate failed: ' + err.message, 'error'));
+}
+
 function generateDoc() {
   const doc = collectFormData();
   if (!doc.clientName) { toast('Please enter client name', 'error'); return; }
   if (!doc.number) { autoNumber(); doc.number = document.getElementById('doc-number').value; }
   if (doc.items.length === 0) { toast('Add at least one line item', 'error'); return; }
-  // Only show sig picker for Invoice, Tax Invoice, Proforma Invoice (not Quotation)
   if (doc.type !== 'Quotation') {
     openSignaturePicker(doc);
   } else {
     if (!confirm(editingDocId ? 'Save changes to this document?' : 'Once generated, this document is FINAL. You can still edit it later via the Edit button. Continue?')) return;
-    _persistDoc(doc, 'final', editingDocId ? 'Document updated ✓' : 'Document generated ✓').then(() => { pendingServiceReport = null; currentServiceReportOnLoad = null; }).catch(err => toast('Generate failed: ' + err.message, 'error'));
+    const capturedAmcQtr = pendingAmcQtr;
+    pendingAmcQtr = null;
+    _persistDoc(doc, 'final', editingDocId ? 'Document updated ✓' : 'Document generated ✓')
+      .then(invoiceId => {
+        pendingServiceReport = null; currentServiceReportOnLoad = null;
+        if (capturedAmcQtr && invoiceId) _amcMarkQtrPending(capturedAmcQtr.amcId, capturedAmcQtr.qtrLabel, invoiceId);
+      })
+      .catch(err => toast('Generate failed: ' + err.message, 'error'));
   }
 }
 
@@ -3204,11 +3524,6 @@ function openSignaturePicker(doc) {
   document.getElementById('sign-picker-modal').classList.add('open');
 }
 
-function _finalizeGenerate(doc, signatureUrl) {
-  if (!confirm(editingDocId ? 'Save changes to this document?' : 'Once generated, this document is FINAL. You can still edit it later via the Edit button. Continue?')) return;
-  if (signatureUrl) doc.selectedSignature = signatureUrl;
-  _persistDoc(doc, 'final', editingDocId ? 'Document updated ✓' : 'Document generated ✓').then(() => { pendingServiceReport = null; currentServiceReportOnLoad = null; }).catch(err => toast('Generate failed: ' + err.message, 'error'));
-}
 
 function editDraft(id) {
   const doc = documents.find(d => d.id === id);
@@ -3570,7 +3885,7 @@ function docRow(doc, showWorksite = false) {
   const historicalBadge = doc.historical ? `<span title="Added via Invoice History" style="background:#eef2ff;color:#4338ca;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">📜 IMPORTED</span>` : '';
   const editBtn = `<button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="editDraft('${doc.id}')">✏ Edit</button>`;
   const reportIcon = doc.serviceReportUrl ? `<span title="Service report attached" style="font-size:13px">📎</span>` : '';
-  return `<tr><td><span style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600">${doc.number || '—'}</span>${statusBadge}${historicalBadge} ${reportIcon}</td><td><span class="doc-type ${typeClass}">${doc.type}</span></td><td style="font-weight:700; color:var(--navy);">${doc.clientName || '—'}</td>${showWorksite ? `<td style="font-size:12px;color:var(--gray600)">${doc.worksite || '—'}</td>` : ''}<td style="font-size:12px;color:var(--gray600)">${dateStr}</td><td class="amount-cell">₹${Number(doc.grand||0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap">${editBtn}<button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="viewDoc('${doc.id}')">👁 View</button><button class="btn btn-blue" style="padding:5px 10px;font-size:12px" onclick="downloadDocPDF('${doc.id}')">⬇ PDF</button><button class="btn btn-outline" style="padding:5px 8px;font-size:12px" title="Send via Email" onclick="sendViaEmail('${doc.id}')">📧</button><button class="btn btn-outline" style="padding:5px 8px;font-size:12px;color:#1ba94c" title="Send via WhatsApp" onclick="sendViaWhatsApp('${doc.id}')">💬</button>${rowDeleteMenu('doc-menu-'+doc.id,'deleteDoc',doc.id,'this document')}</div></td></tr>`;
+  return `<tr data-doc-id="${doc.id}"><td><span style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600">${doc.number || '—'}</span>${statusBadge}${historicalBadge} ${reportIcon}</td><td><span class="doc-type ${typeClass}">${doc.type}</span></td><td style="font-weight:700; color:var(--navy);">${doc.clientName || '—'}</td>${showWorksite ? `<td style="font-size:12px;color:var(--gray600)">${doc.worksite || '—'}</td>` : ''}<td style="font-size:12px;color:var(--gray600)">${dateStr}</td><td class="amount-cell">₹${Number(doc.grand||0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap">${editBtn}<button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="viewDoc('${doc.id}')">👁 View</button><button class="btn btn-blue" style="padding:5px 10px;font-size:12px" onclick="downloadDocPDF('${doc.id}')">⬇ PDF</button><button class="btn btn-outline" style="padding:5px 8px;font-size:12px" title="Send via Email" onclick="sendViaEmail('${doc.id}')">📧</button><button class="btn btn-outline" style="padding:5px 8px;font-size:12px;color:#1ba94c" title="Send via WhatsApp" onclick="sendViaWhatsApp('${doc.id}')">💬</button>${rowDeleteMenu('doc-menu-'+doc.id,'deleteDoc',doc.id,'this document')}</div></td></tr>`;
 }
 
 function sendViaEmail(id) {
@@ -5268,6 +5583,8 @@ function listenToPayments() {
     renderPayments();
     updatePaymentSummary();
     updateDashboard();
+    if (document.getElementById('page-paymentAdviceForm')?.classList.contains('active')) onPAInvoiceNoChange();
+    if (document.getElementById('page-paymentAdvice')?.classList.contains('active')) renderPaymentAdvices();
   });
 }
 
@@ -5277,7 +5594,7 @@ function populatePaymentDropdowns() {
   const c2 = document.getElementById('pay-filter-customer');
   if (c2) c2.innerHTML = '<option value="">All Customers</option>' + customers.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
   const inv = document.getElementById('pay-invoice');
-  if (inv) inv.innerHTML = '<option value="">— None / General —</option>' + documents.filter(d => d.type === 'Tax Invoice').map(d => `<option value="${d.number}">${d.number} — ${d.clientName} (₹${Number(d.grand||0).toLocaleString('en-IN',{maximumFractionDigits:0})})</option>`).join('');
+  if (inv) inv.innerHTML = '<option value="">— None / General —</option>' + documents.filter(d => d.type === 'Tax Invoice' || d.type === 'Invoice' || d.type === 'Proforma Invoice').map(d => `<option value="${d.number}">${d.number} (${d.type}) — ${d.clientName} (₹${Number(d.grand||0).toLocaleString('en-IN',{maximumFractionDigits:0})})</option>`).join('');
 }
 
 function renderPayments() {
@@ -5766,8 +6083,661 @@ function deleteVendorDeposit(id) {
   db.collection(VDEP_COL).doc(id).delete().then(() => toast('Deleted'));
 }
 
+// ═══════════════════════════════════════════════════════
+// PAYMENT ADVICE MODULE
+// ═══════════════════════════════════════════════════════
+let paymentAdvices = [];
+const PA_COLLECTION = 'paymentAdvices';
+let editingPAId = null;
+
+const PA_DEDUCTION_LABELS = [
+  'Mobilization Advance Recovery',
+  'Retention',
+  'Adhoc Payment Recovery',
+  'Hold - Instructed by PM if any',
+  'Debits if any',
+  'Penalty if Any'
+];
+
+function listenToPaymentAdvices() {
+  _firestoreUnsubs.push(db.collection(PA_COLLECTION).orderBy('createdAt', 'desc').onSnapshot(snap => {
+    paymentAdvices = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    updatePABadge();
+    if (document.getElementById('page-paymentAdvice')?.classList.contains('active')) renderPaymentAdvices();
+  }, () => {
+    db.collection(PA_COLLECTION).onSnapshot(snap => {
+      paymentAdvices = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      updatePABadge();
+      renderPaymentAdvices();
+    });
+  }));
+}
+
+function updatePABadge() {
+  const el = document.getElementById('badge-pa');
+  if (el) el.textContent = paymentAdvices.length;
+}
+
+function populatePADropdowns() {
+  const projList = document.getElementById('pa-project-list');
+  const custList = document.getElementById('pa-client-list');
+  if (projList) projList.innerHTML = (projectsList || []).map(p => `<option value="${p.name}">`).join('');
+  if (custList) custList.innerHTML = (customers || []).map(c => `<option value="${c.name}">`).join('');
+  populatePAInvoiceOptions();
+}
+
+// ── Invoice picker: select an already-generated invoice, or type one manually ──
+function populatePAInvoiceOptions() {
+  const sel = document.getElementById('pa-invoice-select');
+  if (!sel) return;
+  const prev = sel.value;
+  const eligible = documents.filter(d => d.type === 'Tax Invoice' || d.type === 'Invoice' || d.type === 'Proforma Invoice');
+  sel.innerHTML = '<option value="">— Select Existing Invoice —</option>' +
+    eligible.map(d => `<option value="${d.id}">${d.number} (${d.type}) — ${d.clientName || ''} (₹${Number(d.grand || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })})</option>`).join('');
+  if (prev && eligible.some(d => d.id === prev)) sel.value = prev;
+}
+
+// Fires when an existing invoice is picked from the dropdown — auto-fills the form from that invoice
+function selectPAInvoice() {
+  const sel = document.getElementById('pa-invoice-select');
+  const id = sel.value;
+  if (!id) { document.getElementById('pa-linked-doc-id').value = ''; return; }
+  const doc = documents.find(d => d.id === id);
+  if (!doc) return;
+  document.getElementById('pa-linked-doc-id').value = doc.id;
+  document.getElementById('pa-invoiceno').value = doc.number || '';
+  if (doc.date) document.getElementById('pa-invoicedate').value = doc.date;
+  if (doc.clientName) document.getElementById('pa-client').value = doc.clientName;
+  if (doc.worksite) document.getElementById('pa-project').value = doc.worksite;
+  if (doc.jobNo) document.getElementById('pa-woref').value = doc.jobNo;
+  if (doc.items && doc.items.length) document.getElementById('pa-work').value = doc.items.map(i => i.desc).filter(Boolean).join(', ');
+  if (doc.grand) document.getElementById('pa-originalamount').value = doc.grand;
+  onPAInvoiceNoChange();
+}
+
+// Auto-credits "Items Paid On-account" from any Record Payment entries logged against this invoice number
+function onPAInvoiceNoChange() {
+  const invNo = document.getElementById('pa-invoiceno')?.value || '';
+  const total = invNo ? (payments || []).filter(p => p.invoice === invNo).reduce((s, p) => s + (p.amount || 0), 0) : 0;
+  const el = document.getElementById('pa-onaccount');
+  if (el) el.value = total.toFixed(2);
+  recalcPA();
+}
+
+// ── Bank Guarantee rows ──
+function addPABGRow(type = '', bgNumber = '', startDate = '', expiryDate = '', remarks = '') {
+  const cont = document.getElementById('pa-bg-container');
+  const row = document.createElement('div');
+  row.className = 'item-row pa-bg-row';
+  row.style.gridTemplateColumns = '1.2fr 1fr 0.8fr 0.8fr 1fr 36px';
+  row.innerHTML = `
+    <input type="text" placeholder="e.g. Advance BG / Performance Bond" value="${type}" />
+    <input type="text" placeholder="BG Number" value="${bgNumber}" />
+    <input type="date" value="${startDate}" />
+    <input type="date" value="${expiryDate}" />
+    <input type="text" placeholder="Remarks" value="${remarks}" />
+    <button class="del-btn" onclick="this.closest('.pa-bg-row').remove()">✕</button>
+  `;
+  cont.appendChild(row);
+}
+
+// ── Section A / B rows (Mobilisation Advance / Adhoc Payment) ──
+function addPASectionRow(containerId, label = '', uptoPrevious = '', thisBill = '') {
+  const cont = document.getElementById(containerId);
+  const row = document.createElement('div');
+  row.className = 'item-row pa-section-row';
+  row.style.gridTemplateColumns = '1.6fr 1fr 1fr 1fr 36px';
+  row.innerHTML = `
+    <input type="text" placeholder="Description" value="${label}" />
+    <input type="number" step="0.01" placeholder="Upto Previous" value="${uptoPrevious}" oninput="recalcPA()" />
+    <input type="number" step="0.01" placeholder="This Bill" value="${thisBill}" oninput="recalcPA()" />
+    <input type="text" placeholder="Cumulative" readonly style="background:var(--gray50);font-weight:600" />
+    <button class="del-btn" onclick="this.closest('.pa-section-row').remove();recalcPA()">✕</button>
+  `;
+  cont.appendChild(row);
+  recalcPA();
+}
+
+// ── Section C: Work Done items ──
+function addPAWorkItem(desc = '', boqAmount = '', uptoPrevious = '', thisBill = '', remarks = '') {
+  const cont = document.getElementById('pa-workitems-container');
+  const row = document.createElement('div');
+  row.className = 'item-row pa-work-row';
+  row.style.gridTemplateColumns = '1.6fr 0.9fr 0.9fr 0.9fr 0.9fr 1fr 36px';
+  row.innerHTML = `
+    <input type="text" placeholder="Description of work" value="${desc}" />
+    <input type="number" step="0.01" placeholder="BoQ Amount" value="${boqAmount}" oninput="recalcPA()" />
+    <input type="number" step="0.01" placeholder="Upto Previous" value="${uptoPrevious}" oninput="recalcPA()" />
+    <input type="number" step="0.01" placeholder="This Bill" value="${thisBill}" oninput="recalcPA()" />
+    <input type="text" placeholder="Cumulative" readonly style="background:var(--gray50);font-weight:600" />
+    <input type="text" placeholder="Remarks" value="${remarks}" />
+    <button class="del-btn" onclick="this.closest('.pa-work-row').remove();recalcPA()">✕</button>
+  `;
+  cont.appendChild(row);
+  recalcPA();
+}
+
+// ── Section D: Deductions (fixed labels, always 6 rows) ──
+function buildPADeductionRows(values = []) {
+  const cont = document.getElementById('pa-deductions-container');
+  cont.innerHTML = '';
+  PA_DEDUCTION_LABELS.forEach((label, i) => {
+    const v = values[i] || {};
+    const row = document.createElement('div');
+    row.className = 'item-row pa-deduction-row';
+    row.style.gridTemplateColumns = '1.8fr 1fr 1fr 1fr';
+    const isRetention = label === 'Retention';
+    row.innerHTML = `
+      <div style="display:flex;align-items:center;font-size:13px;font-weight:600;color:var(--gray800)">D${i + 1}. ${label}${isRetention ? ' <span style="font-weight:400;color:var(--gray400);margin-left:4px">(%: <input type="number" step="0.01" style="width:50px;display:inline-block;padding:2px 4px;margin-left:2px" value="' + (v.pct != null ? v.pct : 5) + '" id="pa-retention-pct" oninput="applyPARetention()" />)</span>' : ''}</div>
+      <input type="number" step="0.01" placeholder="Upto Previous" value="${v.uptoPrevious || ''}" oninput="recalcPA()" />
+      <input type="number" step="0.01" placeholder="This Bill" value="${v.thisBill || ''}" oninput="recalcPA()" />
+      <input type="text" placeholder="Cumulative" readonly style="background:var(--gray50);font-weight:600" />
+    `;
+    cont.appendChild(row);
+  });
+  recalcPA();
+}
+
+// Auto-fill Retention "This Bill" amount as % of this-bill work-done total (excl GST)
+function applyPARetention() {
+  const pct = parseFloat(document.getElementById('pa-retention-pct')?.value) || 0;
+  const cTotal = getPAWorkItems().reduce((s, i) => s + i.thisBill, 0);
+  const rows = document.querySelectorAll('#pa-deductions-container .pa-deduction-row');
+  if (rows[1]) rows[1].querySelectorAll('input[type="number"]')[1].value = (cTotal * pct / 100).toFixed(2);
+  recalcPA();
+}
+
+function getPARowVals(selector, keys) {
+  return Array.from(document.querySelectorAll(selector)).map(row => {
+    const inputs = row.querySelectorAll('input');
+    const obj = {};
+    keys.forEach((k, i) => { obj[k] = inputs[i] ? inputs[i].value : ''; });
+    return obj;
+  });
+}
+
+function getPAWorkItems() {
+  return Array.from(document.querySelectorAll('#pa-workitems-container .pa-work-row')).map(row => {
+    const inputs = row.querySelectorAll('input');
+    return {
+      desc: inputs[0].value,
+      boqAmount: parseFloat(inputs[1].value) || 0,
+      uptoPrevious: parseFloat(inputs[2].value) || 0,
+      thisBill: parseFloat(inputs[3].value) || 0,
+      remarks: inputs[5].value
+    };
+  });
+}
+
+function getPASectionRows(containerId) {
+  return Array.from(document.querySelectorAll('#' + containerId + ' .pa-section-row')).map(row => {
+    const inputs = row.querySelectorAll('input');
+    return { label: inputs[0].value, uptoPrevious: parseFloat(inputs[1].value) || 0, thisBill: parseFloat(inputs[2].value) || 0 };
+  });
+}
+
+function getPABGRows() {
+  return Array.from(document.querySelectorAll('#pa-bg-container .pa-bg-row')).map(row => {
+    const inputs = row.querySelectorAll('input');
+    return { type: inputs[0].value, bgNumber: inputs[1].value, startDate: inputs[2].value, expiryDate: inputs[3].value, remarks: inputs[4].value };
+  });
+}
+
+function getPADeductions() {
+  const pct = parseFloat(document.getElementById('pa-retention-pct')?.value) || 0;
+  return Array.from(document.querySelectorAll('#pa-deductions-container .pa-deduction-row')).map((row, i) => {
+    const inputs = row.querySelectorAll('input[type="number"]');
+    const obj = { label: PA_DEDUCTION_LABELS[i], uptoPrevious: parseFloat(inputs[0].value) || 0, thisBill: parseFloat(inputs[1].value) || 0 };
+    if (PA_DEDUCTION_LABELS[i] === 'Retention') obj.pct = pct;
+    return obj;
+  });
+}
+
+// Recalculate cumulative columns + all footer totals live in the form
+function recalcPA() {
+  // Section A / B cumulative columns
+  ['pa-sectionA-container', 'pa-sectionB-container'].forEach(id => {
+    document.querySelectorAll('#' + id + ' .pa-section-row').forEach(row => {
+      const inputs = row.querySelectorAll('input');
+      const up = parseFloat(inputs[1].value) || 0, tb = parseFloat(inputs[2].value) || 0;
+      inputs[3].value = (up + tb).toFixed(2);
+    });
+  });
+  // Work item cumulative columns
+  document.querySelectorAll('#pa-workitems-container .pa-work-row').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const up = parseFloat(inputs[2].value) || 0, tb = parseFloat(inputs[3].value) || 0;
+    inputs[4].value = (up + tb).toFixed(2);
+  });
+  // Deduction cumulative columns
+  document.querySelectorAll('#pa-deductions-container .pa-deduction-row').forEach(row => {
+    const inputs = row.querySelectorAll('input[type="number"]');
+    const up = parseFloat(inputs[0].value) || 0, tb = parseFloat(inputs[1].value) || 0;
+    const cumEl = row.querySelectorAll('input[type="text"]')[0];
+    if (cumEl) cumEl.value = (up + tb).toFixed(2);
+  });
+
+  const workItems = getPAWorkItems();
+  const thisBillTotal = workItems.reduce((s, i) => s + i.thisBill, 0);
+  document.getElementById('pa-c-total-excl').textContent = '₹' + thisBillTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+  const applyGST = document.getElementById('pa-apply-gst')?.checked;
+  const gstPct = parseFloat(document.getElementById('pa-gst-pct')?.value) || 0;
+  const gstThisBill = applyGST ? thisBillTotal * gstPct / 100 : 0;
+  const totalInclGSTThisBill = thisBillTotal + gstThisBill;
+
+  const deductions = getPADeductions();
+  const deductionThisBillTotal = deductions.reduce((s, d) => s + d.thisBill, 0);
+  const netCertified = totalInclGSTThisBill - deductionThisBillTotal;
+  const netEl = document.getElementById('pa-net-certified');
+  if (netEl) netEl.textContent = '₹' + netCertified.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+  const original = parseFloat(document.getElementById('pa-originalamount')?.value) || 0;
+  const change = parseFloat(document.getElementById('pa-changeorders')?.value) || 0;
+  const revisedEl = document.getElementById('pa-revisedamount');
+  if (revisedEl) revisedEl.value = (original + change).toFixed(2);
+}
+
+function newPA() {
+  editingPAId = null;
+  document.getElementById('pa-form-title').textContent = 'New Payment Advice';
+  document.getElementById('pa-edit-id').value = '';
+  document.getElementById('pa-linked-doc-id').value = '';
+  const invSel = document.getElementById('pa-invoice-select');
+  if (invSel) invSel.value = '';
+  ['pa-project','pa-client','pa-rabillno','pa-work','pa-woref','pa-invoiceno'].forEach(id => document.getElementById(id).value = '');
+  ['pa-wodate','pa-invoicedate','pa-valuationdate'].forEach(id => document.getElementById(id).valueAsDate = new Date());
+  document.getElementById('pa-terms').value = 'Within 7 Days';
+  document.getElementById('pa-workperiod').value = '';
+  document.getElementById('pa-originalamount').value = '';
+  document.getElementById('pa-changeorders').value = '0';
+  document.getElementById('pa-onaccount').value = '0';
+  document.getElementById('pa-apply-gst').checked = false;
+  document.getElementById('pa-gst-pct').value = '18';
+  document.getElementById('pa-bg-container').innerHTML = '';
+  document.getElementById('pa-sectionA-container').innerHTML = '';
+  document.getElementById('pa-sectionB-container').innerHTML = '';
+  document.getElementById('pa-workitems-container').innerHTML = '';
+  addPABGRow('Advance BG', '', '', '', 'NA');
+  addPABGRow('Performance Bond', '', '', '', 'NA');
+  addPASectionRow('pa-sectionA-container', 'Advance Amount against BG');
+  addPASectionRow('pa-sectionA-container', 'Basic rate material Advance');
+  addPASectionRow('pa-sectionB-container', 'Adhoc Payment');
+  addPAWorkItem();
+  buildPADeductionRows();
+  populatePADropdowns();
+  onPAInvoiceNoChange();
+  showPage('paymentAdviceForm');
+}
+
+function editPA(id) {
+  const doc = paymentAdvices.find(d => d.id === id);
+  if (!doc) return;
+  editingPAId = id;
+  document.getElementById('pa-form-title').textContent = 'Edit Payment Advice';
+  document.getElementById('pa-edit-id').value = id;
+  document.getElementById('pa-project').value = doc.project || '';
+  document.getElementById('pa-client').value = doc.client || '';
+  document.getElementById('pa-rabillno').value = doc.raBillNo || '';
+  document.getElementById('pa-work').value = doc.work || '';
+  document.getElementById('pa-woref').value = doc.woRef || '';
+  document.getElementById('pa-wodate').value = doc.woDate || '';
+  document.getElementById('pa-invoiceno').value = doc.invoiceNo || '';
+  document.getElementById('pa-linked-doc-id').value = doc.linkedInvoiceId || '';
+  document.getElementById('pa-invoicedate').value = doc.invoiceDate || '';
+  document.getElementById('pa-terms').value = doc.termsOfPayment || 'Within 7 Days';
+  document.getElementById('pa-valuationdate').value = doc.valuationDate || '';
+  document.getElementById('pa-workperiod').value = doc.workPeriod || '';
+  document.getElementById('pa-originalamount').value = doc.originalContractAmount || '';
+  document.getElementById('pa-changeorders').value = doc.changeOrdersAmount || 0;
+  document.getElementById('pa-apply-gst').checked = !!doc.applyGST;
+  document.getElementById('pa-gst-pct').value = doc.gstPercent != null ? doc.gstPercent : 18;
+
+  document.getElementById('pa-bg-container').innerHTML = '';
+  (doc.bankGuarantees || []).forEach(bg => addPABGRow(bg.type, bg.bgNumber, bg.startDate, bg.expiryDate, bg.remarks));
+  document.getElementById('pa-sectionA-container').innerHTML = '';
+  (doc.sectionA || []).forEach(r => addPASectionRow('pa-sectionA-container', r.label, r.uptoPrevious, r.thisBill));
+  document.getElementById('pa-sectionB-container').innerHTML = '';
+  (doc.sectionB || []).forEach(r => addPASectionRow('pa-sectionB-container', r.label, r.uptoPrevious, r.thisBill));
+  document.getElementById('pa-workitems-container').innerHTML = '';
+  (doc.workItems && doc.workItems.length ? doc.workItems : [{}]).forEach(w => addPAWorkItem(w.desc, w.boqAmount, w.uptoPrevious, w.thisBill, w.remarks));
+  buildPADeductionRows(doc.deductions || []);
+  populatePADropdowns();
+  const invSel = document.getElementById('pa-invoice-select');
+  if (invSel && doc.linkedInvoiceId) invSel.value = doc.linkedInvoiceId;
+  onPAInvoiceNoChange();
+  showPage('paymentAdviceForm');
+}
+
+function collectPAFormData() {
+  const applyGST = document.getElementById('pa-apply-gst').checked;
+  const gstPercent = parseFloat(document.getElementById('pa-gst-pct').value) || 0;
+  const workItems = getPAWorkItems();
+  const deductions = getPADeductions();
+  const original = parseFloat(document.getElementById('pa-originalamount').value) || 0;
+  const change = parseFloat(document.getElementById('pa-changeorders').value) || 0;
+
+  return {
+    project: document.getElementById('pa-project').value,
+    client: document.getElementById('pa-client').value,
+    raBillNo: document.getElementById('pa-rabillno').value,
+    work: document.getElementById('pa-work').value,
+    woRef: document.getElementById('pa-woref').value,
+    woDate: document.getElementById('pa-wodate').value,
+    invoiceNo: document.getElementById('pa-invoiceno').value,
+    linkedInvoiceId: document.getElementById('pa-linked-doc-id').value || '',
+    invoiceDate: document.getElementById('pa-invoicedate').value,
+    termsOfPayment: document.getElementById('pa-terms').value,
+    valuationDate: document.getElementById('pa-valuationdate').value,
+    workPeriod: document.getElementById('pa-workperiod').value,
+    originalContractAmount: original,
+    changeOrdersAmount: change,
+    itemsPaidOnAccount: parseFloat(document.getElementById('pa-onaccount').value) || 0,
+    revisedContractAmount: original + change,
+    bankGuarantees: getPABGRows(),
+    sectionA: getPASectionRows('pa-sectionA-container'),
+    sectionB: getPASectionRows('pa-sectionB-container'),
+    workItems, applyGST, gstPercent, deductions,
+    settings: { ...settings }
+  };
+}
+
+function _persistPA(doc, status, successMsg) {
+  doc.status = status;
+  if (editingPAId) {
+    const id = editingPAId;
+    doc.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    return db.collection(PA_COLLECTION).doc(id).set(doc, { merge: true })
+      .then(() => { toast(successMsg, 'success'); editingPAId = null; showPage('paymentAdvice'); });
+  } else {
+    doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    return db.collection(PA_COLLECTION).add(doc)
+      .then(() => { toast(successMsg, 'success'); showPage('paymentAdvice'); });
+  }
+}
+
+function savePADraft() {
+  const doc = collectPAFormData();
+  if (!doc.project && !doc.client) { toast('Please enter project or client', 'error'); return; }
+  _persistPA(doc, 'draft', 'Draft saved! ✓').catch(err => toast('Save failed: ' + err.message, 'error'));
+}
+
+function finalizePA() {
+  const doc = collectPAFormData();
+  if (!doc.invoiceNo) { toast('Please enter Invoice No.', 'error'); return; }
+  _persistPA(doc, 'final', 'Payment Advice generated ✓').catch(err => toast('Save failed: ' + err.message, 'error'));
+}
+
+function deletePA(id) {
+  if (!confirm('Delete this payment advice?')) return;
+  db.collection(PA_COLLECTION).doc(id).delete().then(() => toast('Payment advice deleted', 'error')).catch(err => toast('Delete failed: ' + err.message, 'error'));
+}
+
+function paComputed(doc) {
+  const workItems = doc.workItems || [];
+  const boqTotal = workItems.reduce((s, i) => s + (i.boqAmount || 0), 0);
+  const upToPrevTotal = workItems.reduce((s, i) => s + (i.uptoPrevious || 0), 0);
+  const thisBillTotal = workItems.reduce((s, i) => s + (i.thisBill || 0), 0);
+  const cumulativeTotal = upToPrevTotal + thisBillTotal;
+  const pctComplete = boqTotal ? (cumulativeTotal / boqTotal * 100) : 0;
+
+  const gstPct = doc.applyGST ? (doc.gstPercent || 0) : 0;
+  const gstThisBill = thisBillTotal * gstPct / 100;
+  const gstCumulative = cumulativeTotal * gstPct / 100;
+
+  const totalInclGSTThisBill = thisBillTotal + gstThisBill;
+  const totalInclGSTCumulative = cumulativeTotal + gstCumulative;
+
+  const deductions = doc.deductions || [];
+  const dedUpToPrevTotal = deductions.reduce((s, d) => s + (d.uptoPrevious || 0), 0);
+  const dedThisBillTotal = deductions.reduce((s, d) => s + (d.thisBill || 0), 0);
+  const dedCumulativeTotal = dedUpToPrevTotal + dedThisBillTotal;
+
+  const netCertifiedThisBill = totalInclGSTThisBill - dedThisBillTotal;
+  const netCertifiedCumulative = totalInclGSTCumulative - dedCumulativeTotal;
+
+  return { boqTotal, upToPrevTotal, thisBillTotal, cumulativeTotal, pctComplete, gstPct, gstThisBill, gstCumulative,
+    totalInclGSTThisBill, totalInclGSTCumulative, dedUpToPrevTotal, dedThisBillTotal, dedCumulativeTotal,
+    netCertifiedThisBill, netCertifiedCumulative };
+}
+
+function renderPaymentAdvices() {
+  const tbody = document.getElementById('pa-tbody');
+  if (!tbody) return;
+  updatePABadge();
+  if (!paymentAdvices.length) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📑</div><h3>No payment advices yet</h3><p>Click "New Payment Advice" to certify an RA bill</p></div></td></tr>';
+    return;
+  }
+  const fmt = n => '₹' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+  tbody.innerHTML = paymentAdvices.map(doc => {
+    const c = paComputed(doc);
+    const statusBadge = doc.status === 'final'
+      ? '<span style="background:var(--green);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Final</span>'
+      : '<span style="background:var(--gray400);color:white;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600">Draft</span>';
+    return `<tr>
+      <td style="font-weight:600">${doc.invoiceNo || '—'}</td>
+      <td>${doc.project || '—'}</td>
+      <td>${doc.client || '—'}</td>
+      <td>${doc.raBillNo || '—'}</td>
+      <td style="font-size:12px">${doc.invoiceDate || '—'}</td>
+      <td class="amount-cell">${fmt(c.netCertifiedThisBill)}</td>
+      <td>${statusBadge}</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="editPA('${doc.id}')">✏</button>
+        <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="downloadDocPAPDF('${doc.id}')">⬇</button>
+        <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="deletePA('${doc.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// PAYMENT ADVICE : HTML GENERATION (matches client PDF layout)
+// ═══════════════════════════════════════════════════════
+function generatePaymentAdviceHTML(doc) {
+  const s = doc.settings || settings;
+  const fmt = n => (n < 0 ? '(' + Math.abs(n).toLocaleString('en-IN', { minimumFractionDigits: 2 }) + ')' : Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }));
+  const dateStr = d => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+  const c = paComputed(doc);
+
+  const PRIMARY = '#1A3D63';
+  const ACCENT = '#F6FAFD';
+  const LIGHT_BLUE = '#B3CFE5';
+
+  const bgRows = (doc.bankGuarantees || []).map((bg, i) => `
+    <tr><td style="padding:6px 8px;font-size:11px;text-align:center">${i + 1}</td>
+      <td style="padding:6px 8px;font-size:11px">${bg.type || '—'}</td>
+      <td style="padding:6px 8px;font-size:11px">${bg.bgNumber || '—'}</td>
+      <td style="padding:6px 8px;font-size:11px">${bg.startDate ? dateStr(bg.startDate) : '—'}</td>
+      <td style="padding:6px 8px;font-size:11px">${bg.expiryDate ? dateStr(bg.expiryDate) : '—'}</td>
+      <td style="padding:6px 8px;font-size:11px">${bg.remarks || '—'}</td></tr>`).join('');
+
+  const sectionRow = (r, isTotal) => `<tr style="${isTotal ? 'background:' + ACCENT + ';font-weight:700' : ''}">
+      <td style="padding:6px 10px;font-size:11px">${r.label}</td>
+      <td style="padding:6px 10px;font-size:11px;text-align:right">${r.uptoPrevious ? fmt(r.uptoPrevious) : '-'}</td>
+      <td style="padding:6px 10px;font-size:11px;text-align:right">${r.thisBill ? fmt(r.thisBill) : '-'}</td>
+      <td style="padding:6px 10px;font-size:11px;text-align:right">${(r.uptoPrevious || r.thisBill) ? fmt((r.uptoPrevious || 0) + (r.thisBill || 0)) : '-'}</td></tr>`;
+
+  const sectionATotal = (doc.sectionA || []).reduce((a, r) => a + (r.thisBill || 0), 0);
+  const sectionBTotal = (doc.sectionB || []).reduce((a, r) => a + (r.thisBill || 0), 0);
+
+  const workRows = (doc.workItems || []).map((w, i) => `
+    <tr style="background:${i % 2 === 0 ? '#ffffff' : '#f0f6fc'}">
+      <td style="padding:7px 8px;font-size:11px;text-align:center;color:${PRIMARY}">${i + 1}</td>
+      <td style="padding:7px 8px;font-size:12px">${w.desc || '—'}</td>
+      <td style="padding:7px 8px;font-size:12px;text-align:right">${fmt(w.boqAmount)}</td>
+      <td style="padding:7px 8px;font-size:12px;text-align:right">${w.uptoPrevious ? fmt(w.uptoPrevious) : '-'}</td>
+      <td style="padding:7px 8px;font-size:12px;text-align:right;font-weight:600">${fmt(w.thisBill)}</td>
+      <td style="padding:7px 8px;font-size:12px;text-align:right">${fmt((w.uptoPrevious || 0) + (w.thisBill || 0))}</td>
+      <td style="padding:7px 8px;font-size:11px">${w.remarks || ''}</td>
+    </tr>`).join('');
+
+  const deductionRows = (doc.deductions || []).map((d, i) => `
+    <tr><td style="padding:6px 10px;font-size:11px">D${i + 1}. ${d.label}${d.label === 'Retention' && d.pct ? ' - ' + d.pct + '%' : ''}</td>
+      <td style="padding:6px 10px;font-size:11px;text-align:right">${d.uptoPrevious ? fmt(d.uptoPrevious) : '-'}</td>
+      <td style="padding:6px 10px;font-size:11px;text-align:right">${d.thisBill ? '(' + fmt(d.thisBill) + ')' : '-'}</td>
+      <td style="padding:6px 10px;font-size:11px;text-align:right">${(d.uptoPrevious || d.thisBill) ? '(' + fmt((d.uptoPrevious || 0) + (d.thisBill || 0)) + ')' : '-'}</td></tr>`).join('');
+
+  const metaRow = (label, val) => val ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">${label}</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px">${val}</td></tr>` : '';
+
+  return `
+  <div style="font-family:'DM Sans',sans-serif;color:#1e293b;background:#ffffff;width:100%;padding:30px 36px;box-sizing:border-box">
+
+    <!-- HEADER -->
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid ${PRIMARY};padding-bottom:14px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:14px">
+        ${s.logoDataUrl ? `<img src="${s.logoDataUrl}" alt="Logo" style="max-height:50px;max-width:220px;object-fit:contain" />` : `<div style="font-size:24px;font-weight:800;color:${PRIMARY}">airdoor</div>`}
+      </div>
+      <div style="font-size:22px;font-weight:800;letter-spacing:3px;color:${PRIMARY}">PAYMENT ADVICE</div>
+    </div>
+
+    <!-- PROJECT META -->
+    <div style="display:flex;justify-content:space-between;gap:24px;margin-bottom:14px">
+      <table style="font-size:12px;border-collapse:collapse;flex:1.4">
+        ${metaRow('Project', doc.project)}
+        ${metaRow('Client', doc.client)}
+        ${metaRow('RA Bill No.', doc.raBillNo)}
+        ${metaRow('Work', doc.work)}
+        ${metaRow('Work Period', doc.workPeriod)}
+      </table>
+      <table style="font-size:12px;border-collapse:collapse;flex:1">
+        ${metaRow('WO Ref', doc.woRef)}
+        ${metaRow('WO Date', doc.woDate ? dateStr(doc.woDate) : '')}
+        ${metaRow('Invoice No.', doc.invoiceNo)}
+        ${metaRow('Invoice Date', doc.invoiceDate ? dateStr(doc.invoiceDate) : '')}
+        ${metaRow('Terms of Payment', doc.termsOfPayment)}
+        ${metaRow('Valuation Date', doc.valuationDate ? dateStr(doc.valuationDate) : '')}
+      </table>
+    </div>
+
+    <!-- CONTRACT AMOUNT SUMMARY -->
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;border:1px solid #e2e8f0">
+      <tr><td style="padding:7px 12px;color:#475569">Accepted / Original Contract Amount (Incl. GST)</td><td style="padding:7px 12px;text-align:right;font-weight:600">₹${fmt(doc.originalContractAmount)}</td></tr>
+      <tr style="background:${ACCENT}"><td style="padding:7px 12px;color:#475569">Authorised Change Orders Amount (Incl. GST)</td><td style="padding:7px 12px;text-align:right;font-weight:600">₹${fmt(doc.changeOrdersAmount)}</td></tr>
+      <tr><td style="padding:7px 12px;color:#475569">Items Paid On-account</td><td style="padding:7px 12px;text-align:right;font-weight:600">₹${fmt(doc.itemsPaidOnAccount)}</td></tr>
+      <tr style="background:${LIGHT_BLUE}"><td style="padding:7px 12px;font-weight:700;color:${PRIMARY}">Revised Contract Amount (Incl. GST)</td><td style="padding:7px 12px;text-align:right;font-weight:800;color:${PRIMARY}">₹${fmt(doc.revisedContractAmount)}</td></tr>
+    </table>
+
+    ${(doc.bankGuarantees || []).length ? `
+    <!-- BANK GUARANTEE -->
+    <div style="font-size:12px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Bank Guarantee Details</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:16px;border:1px solid #e2e8f0">
+      <thead><tr style="background:${PRIMARY};color:#fff">
+        <th style="padding:6px 8px;font-weight:700">S.No</th><th style="padding:6px 8px;font-weight:700;text-align:left">Type</th><th style="padding:6px 8px;font-weight:700;text-align:left">BG Number</th><th style="padding:6px 8px;font-weight:700;text-align:left">Start Date</th><th style="padding:6px 8px;font-weight:700;text-align:left">Expiry Date</th><th style="padding:6px 8px;font-weight:700;text-align:left">Remarks</th>
+      </tr></thead>
+      <tbody>${bgRows}</tbody>
+    </table>` : ''}
+
+    <!-- A / B: MOBILISATION & ADHOC -->
+    ${(doc.sectionA && doc.sectionA.length) ? `
+    <div style="font-size:12px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">A. Mobilisation Advance Payment</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px;border:1px solid #e2e8f0">
+      <thead><tr style="background:${PRIMARY};color:#fff"><th style="padding:6px 10px;text-align:left">Description</th><th style="padding:6px 10px;text-align:right">Upto Previous</th><th style="padding:6px 10px;text-align:right">This Bill</th><th style="padding:6px 10px;text-align:right">Cumulative</th></tr></thead>
+      <tbody>${(doc.sectionA || []).map(r => sectionRow(r)).join('')}${sectionRow({ label: 'Total (A)', thisBill: sectionATotal }, true)}</tbody>
+    </table>` : ''}
+
+    ${(doc.sectionB && doc.sectionB.length) ? `
+    <div style="font-size:12px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">B. Adhoc Payment - RA Bills</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px;border:1px solid #e2e8f0">
+      <thead><tr style="background:${PRIMARY};color:#fff"><th style="padding:6px 10px;text-align:left">Description</th><th style="padding:6px 10px;text-align:right">Upto Previous</th><th style="padding:6px 10px;text-align:right">This Bill</th><th style="padding:6px 10px;text-align:right">Cumulative</th></tr></thead>
+      <tbody>${(doc.sectionB || []).map(r => sectionRow(r)).join('')}${sectionRow({ label: 'Total (B)', thisBill: sectionBTotal }, true)}</tbody>
+    </table>` : ''}
+
+    <!-- C: WORK DONE -->
+    <div style="font-size:12px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">C. Work Done as per Contracts &amp; Change Orders</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px;border:1px solid #e2e8f0">
+      <thead><tr style="background:${PRIMARY};color:#fff">
+        <th style="padding:7px 8px;width:34px">S.No</th><th style="padding:7px 8px;text-align:left">Description</th><th style="padding:7px 8px;text-align:right;width:100px">BoQ Amount</th><th style="padding:7px 8px;text-align:right;width:100px">Upto Previous</th><th style="padding:7px 8px;text-align:right;width:100px">This Bill</th><th style="padding:7px 8px;text-align:right;width:100px">Cumulative</th><th style="padding:7px 8px;text-align:left">Remarks</th>
+      </tr></thead>
+      <tbody>${workRows}
+        <tr style="background:${ACCENT};font-weight:700"><td colspan="2" style="padding:7px 8px;font-size:11px">Total Excl. GST</td>
+          <td style="padding:7px 8px;font-size:11px;text-align:right">₹${fmt(c.boqTotal)}</td>
+          <td style="padding:7px 8px;font-size:11px;text-align:right">₹${fmt(c.upToPrevTotal)}</td>
+          <td style="padding:7px 8px;font-size:11px;text-align:right">₹${fmt(c.thisBillTotal)}</td>
+          <td style="padding:7px 8px;font-size:11px;text-align:right">₹${fmt(c.cumulativeTotal)}</td>
+          <td style="padding:7px 8px;font-size:11px;text-align:right">${c.boqTotal ? c.pctComplete.toFixed(1) + '%' : ''}</td></tr>
+        <tr><td colspan="2" style="padding:6px 8px;font-size:11px;color:#475569">GST @ ${c.gstPct}%</td><td></td><td style="padding:6px 8px;font-size:11px;text-align:right">₹${fmt(c.gstCumulative - c.gstThisBill)}</td><td style="padding:6px 8px;font-size:11px;text-align:right">₹${fmt(c.gstThisBill)}</td><td style="padding:6px 8px;font-size:11px;text-align:right">₹${fmt(c.gstCumulative)}</td><td></td></tr>
+        <tr style="background:${LIGHT_BLUE};font-weight:800"><td colspan="2" style="padding:7px 8px;font-size:12px;color:${PRIMARY}">Total Incl. GST</td><td></td>
+          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.totalInclGSTCumulative - c.totalInclGSTThisBill)}</td>
+          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.totalInclGSTThisBill)}</td>
+          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.totalInclGSTCumulative)}</td><td></td></tr>
+      </tbody>
+    </table>
+
+    <!-- D: DEDUCTIONS -->
+    <div style="font-size:12px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin:14px 0 6px 0">D. Deductions / Withheld</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px;border:1px solid #e2e8f0">
+      <thead><tr style="background:${PRIMARY};color:#fff"><th style="padding:6px 10px;text-align:left">Description</th><th style="padding:6px 10px;text-align:right">Upto Previous</th><th style="padding:6px 10px;text-align:right">This Bill</th><th style="padding:6px 10px;text-align:right">Cumulative</th></tr></thead>
+      <tbody>${deductionRows}
+        <tr style="background:${ACCENT};font-weight:700"><td style="padding:7px 10px;font-size:11px">Total Deductions</td>
+          <td style="padding:7px 10px;font-size:11px;text-align:right">(${fmt(c.dedUpToPrevTotal)})</td>
+          <td style="padding:7px 10px;font-size:11px;text-align:right">(${fmt(c.dedThisBillTotal)})</td>
+          <td style="padding:7px 10px;font-size:11px;text-align:right">(${fmt(c.dedCumulativeTotal)})</td></tr>
+      </tbody>
+    </table>
+
+    <!-- NET CERTIFIED -->
+    <div style="background:${PRIMARY};color:#fff;display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-radius:8px;margin-bottom:26px">
+      <div style="font-size:14px;font-weight:800;letter-spacing:1px">NET CERTIFIED AMOUNT (THIS BILL)</div>
+      <div style="font-size:20px;font-weight:800">₹${fmt(c.netCertifiedThisBill)}</div>
+    </div>
+
+    <!-- SIGNATURES -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px">
+      <div style="text-align:center">
+        <div style="border-top:1.5px solid ${PRIMARY};padding-top:8px;margin-top:50px">
+          <div style="font-size:12px;font-weight:700;color:${PRIMARY}">Approved by Client</div>
+          <div style="font-size:11px;color:#475569">${doc.client || ''}</div>
+        </div>
+      </div>
+      <div style="text-align:center">
+        <div style="border-top:1.5px solid ${PRIMARY};padding-top:8px;margin-top:50px">
+          <div style="font-size:12px;font-weight:700;color:${PRIMARY}">Agreed by Contractor</div>
+          <div style="font-size:11px;color:#475569">Airdoor MEP Solutions</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function previewPA() {
+  const doc = collectPAFormData();
+  document.getElementById('pa-preview').innerHTML = generatePaymentAdviceHTML(doc);
+  showPage('paPreview');
+}
+
+let viewingPAId = null;
+
+async function downloadPAPDF() {
+  toast('Generating PDF…');
+  const el = document.getElementById('pa-preview');
+  const fname = (document.getElementById('pa-invoiceno').value || 'payment-advice').replace(/\//g, '-');
+  await renderToPDF(el, fname);
+  toast('PDF downloaded! ✓', 'success');
+}
+
+async function downloadDocPAPDF(id) {
+  const doc = paymentAdvices.find(d => d.id === id);
+  if (!doc) return;
+  viewingPAId = id;
+  let tempDiv = document.getElementById('_pa_pdf_temp');
+  if (!tempDiv) {
+    tempDiv = document.createElement('div');
+    tempDiv.id = '_pa_pdf_temp';
+    tempDiv.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:white;z-index:-1';
+    document.body.appendChild(tempDiv);
+  }
+  tempDiv.innerHTML = generatePaymentAdviceHTML(doc);
+  await new Promise(r => setTimeout(r, 300));
+  toast('Generating PDF…');
+  const fname = (doc.invoiceNo || 'payment-advice').replace(/\//g, '-');
+  await renderToPDF(tempDiv.firstElementChild, fname);
+  toast('PDF downloaded! ✓', 'success');
+}
+
 window.addEventListener('click', e => {
-  ['customer-modal','expense-modal','category-modal','purchase-modal','employee-modal','salary-modal','payment-modal','pcredit-modal','deposit-modal','vdeposit-modal','sign-picker-modal','profile-modal','delete-confirm-modal','add-user-modal'].forEach(id => {
+  ['customer-modal','amc-modal','amc-docs-modal','expense-modal','category-modal','purchase-modal','employee-modal','salary-modal','payment-modal','pcredit-modal','deposit-modal','vdeposit-modal','sign-picker-modal','profile-modal','delete-confirm-modal','add-user-modal'].forEach(id => {
     const el = document.getElementById(id);
     if (el && e.target === el) el.classList.remove('open');
   });
@@ -5788,6 +6758,466 @@ document.addEventListener('keydown', e => {
 });
 
 document.getElementById('view-modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+// ═══════════════════════════════════════════════════════
+// AMC CONTRACTS MODULE
+// ═══════════════════════════════════════════════════════
+const AMC_COL = 'amc_contracts';
+let amcContracts = [];
+
+function listenToAmc() {
+  db.collection(AMC_COL).orderBy('endDate', 'asc').onSnapshot(snap => {
+    amcContracts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAmcTable();
+    updateAmcDashWidget();
+    updateAmcBadge();
+  }, err => console.warn('AMC listen fail:', err));
+}
+
+// ── Quarter helpers ──────────────────────────────────────
+// Returns array of 4 quarter objects: { label:'Q1', startDate, endDate, dueDate }
+// Quarters are relative to AMC startDate (3-month blocks).
+// dueDate = first day of that quarter (i.e. invoice due when quarter starts).
+function amcQuarters(c) {
+  if (!c.startDate) return [];
+  const start = new Date(c.startDate);
+  return ['Q1','Q2','Q3','Q4'].map((label, i) => {
+    const qStart = new Date(start);
+    qStart.setMonth(qStart.getMonth() + i * 3);
+    const qEnd = new Date(qStart);
+    qEnd.setMonth(qEnd.getMonth() + 3);
+    qEnd.setDate(qEnd.getDate() - 1);
+    // dueDate = first day after quarter ends (i.e. qEnd + 1 day)
+    const dueDate = new Date(qEnd);
+    dueDate.setDate(dueDate.getDate() + 1);
+    return { label, startDate: qStart.toISOString().slice(0,10), endDate: qEnd.toISOString().slice(0,10), dueDate: dueDate.toISOString().slice(0,10) };
+  });
+}
+
+// Which quarters have reached their dueDate but not yet billed AND not pending
+function amcDueUnbilledQtrs(c) {
+  const today = new Date().toISOString().slice(0,10);
+  const billed = c.billedQuarters || [];
+  const pending = c.pendingQuarters || {};
+  return amcQuarters(c).filter(q => q.dueDate <= today && !billed.includes(q.label) && !pending[q.label]);
+}
+
+function amcStatus(c) {
+  const today = new Date().toISOString().slice(0,10);
+  if (!c.startDate || !c.endDate) return 'unknown';
+  if (c.startDate > today) return 'upcoming';
+  if (c.endDate < today) return 'expired';
+  return 'active';
+}
+
+function amcStatusBadge(status) {
+  const map = {
+    active:   ['background:#dcfce7;color:#166534', '✅ Active'],
+    expired:  ['background:#fef2f2;color:#b91c1c', '🔴 Expired'],
+    upcoming: ['background:#dbeafe;color:#1e40af', '🔵 Upcoming'],
+    unknown:  ['background:#f3f4f6;color:#6b7280', '— Unknown'],
+  };
+  const [style, label] = map[status] || map.unknown;
+  return `<span style="padding:3px 9px;border-radius:4px;font-size:11px;font-weight:600;${style}">${label}</span>`;
+}
+
+// ── Quarter billing tracker badge ────────────────────────
+// States: ⏳ upcoming | 🔴 due-unbilled | 🟡 invoice-pending | ✅ billed
+function amcQtrsBadge(c) {
+  const qtrs = amcQuarters(c);
+  if (!qtrs.length) return '—';
+  const today = new Date().toISOString().slice(0,10);
+  const billed = c.billedQuarters || [];          // ['Q1','Q3'] — confirmed paid
+  const pending = c.pendingQuarters || {};        // { Q2: 'invoiceId' } — invoice generated, not yet confirmed
+
+  return qtrs.map(q => {
+    const reached = q.dueDate <= today;
+    const isBilled  = billed.includes(q.label);
+    const isPending = !!pending[q.label];
+
+    let bg, icon, tip, onclick;
+    if (isBilled) {
+      bg='#dcfce7'; icon='✅'; tip=`${q.label} billed — click to view invoice`;
+      onclick=`amcViewInvoice('${c.id}','${q.label}')`;
+    } else if (isPending) {
+      bg='#fef3c7'; icon='🟡'; tip=`${q.label} invoice generated — click to mark as billed or view`;
+      onclick=`amcPendingClick('${c.id}','${q.label}')`;
+    } else if (reached) {
+      bg='#fef2f2'; icon='🔴'; tip=`${q.label} due — click to issue invoice`;
+      onclick=`amcIssueInvoice('${c.id}','${q.label}')`;
+    } else {
+      bg='#f3f4f6'; icon='⏳'; tip=`${q.label} upcoming`;
+      onclick='';
+    }
+    return `<span title="${tip}" style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;background:${bg};margin:1px;cursor:${onclick?'pointer':'default'}" ${onclick?`onclick="${onclick}"`:''}>${icon}${q.label}</span>`;
+  }).join('');
+}
+
+// Called after invoice is generated — mark quarter as pending (🟡) with invoice ID
+function _amcMarkQtrPending(amcId, qtrLabel, invoiceId) {
+  const c = amcContracts.find(x => x.id === amcId);
+  if (!c || !qtrLabel || !invoiceId) return;
+  const pending = { ...(c.pendingQuarters || {}), [qtrLabel]: invoiceId };
+  db.collection(AMC_COL).doc(amcId).set({ pendingQuarters: pending }, { merge: true })
+    .then(() => toast(`${qtrLabel} marked as invoice pending 🟡`, 'success'))
+    .catch(err => console.warn('AMC pending mark fail:', err));
+}
+
+// Clicking 🟡 — show options: view invoice or mark as billed
+function amcPendingClick(amcId, qtrLabel) {
+  const c = amcContracts.find(x => x.id === amcId);
+  if (!c) return;
+  const invoiceId = (c.pendingQuarters || {})[qtrLabel];
+  const choice = confirm(`${qtrLabel} — Invoice generated.\n\nOK = Mark as Billed ✅\nCancel = View Invoice`);
+  if (choice) {
+    // Mark billed: move from pendingQuarters to billedQuarters
+    const pending = { ...(c.pendingQuarters || {}) };
+    delete pending[qtrLabel];
+    const billed = [...new Set([...(c.billedQuarters || []), qtrLabel])];
+    const invoiceMap = { ...(c.billedInvoices || {}), [qtrLabel]: invoiceId };
+    db.collection(AMC_COL).doc(amcId).set({ pendingQuarters: pending, billedQuarters: billed, billedInvoices: invoiceMap }, { merge: true })
+      .then(() => toast(`${qtrLabel} marked as billed ✅`, 'success'))
+      .catch(err => toast('Error: ' + err.message, 'error'));
+  } else {
+    if (invoiceId) amcViewInvoice(amcId, qtrLabel);
+  }
+}
+
+// Clicking ✅ — navigate to invoice in list
+function amcViewInvoice(amcId, qtrLabel) {
+  const c = amcContracts.find(x => x.id === amcId);
+  if (!c) return;
+  const invoiceId = (c.billedInvoices || {})[qtrLabel] || (c.pendingQuarters || {})[qtrLabel];
+  if (!invoiceId) { toast('Invoice not found', 'error'); return; }
+  showPage('list');
+  filterDocs('all');
+  // Highlight/open the invoice
+  setTimeout(() => {
+    const row = document.querySelector(`[data-doc-id="${invoiceId}"]`);
+    if (row) { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); row.style.background = '#fef3c7'; setTimeout(() => row.style.background = '', 2000); }
+    viewDoc(invoiceId);
+  }, 400);
+}
+
+// ── Render table ────────────────────────────────────────
+function renderAmcTable() {
+  const tbody = document.getElementById('amc-tbody');
+  if (!tbody) return;
+
+  // Populate customer filter
+  const custSel = document.getElementById('amc-filter-customer');
+  if (custSel) { const cur = custSel.value; custSel.innerHTML = '<option value="">All Customers</option>' + customers.map(c => `<option value="${c.name}">${c.name}</option>`).join(''); custSel.value = cur; }
+
+  // Populate project filter
+  const projSel = document.getElementById('amc-filter-project');
+  if (projSel) {
+    const cur = projSel.value;
+    const projNames = [...new Set(amcContracts.map(c => c.projectName).filter(Boolean))].sort();
+    projSel.innerHTML = '<option value="">All Projects</option>' + projNames.map(p => `<option value="${p}">${p}</option>`).join('');
+    projSel.value = cur;
+  }
+
+  const filterCust   = document.getElementById('amc-filter-customer')?.value || '';
+  const filterProj   = document.getElementById('amc-filter-project')?.value || '';
+  const filterStatus = document.getElementById('amc-filter-status')?.value || '';
+  const filterQtr    = document.getElementById('amc-filter-qtr')?.value || '';
+
+  let rows = amcContracts.filter(c => {
+    if (filterCust && c.customerName !== filterCust) return false;
+    if (filterProj && c.projectName !== filterProj) return false;
+    if (filterStatus && amcStatus(c) !== filterStatus) return false;
+    if (filterQtr) {
+      const today = new Date().toISOString().slice(0,10);
+      const billed = c.billedQuarters || [];
+      const qtrs = amcQuarters(c);
+      const qtr = qtrs.find(q => q.label === filterQtr);
+      if (!qtr || qtr.dueDate > today || billed.includes(filterQtr)) return false;
+    }
+    return true;
+  });
+
+  // Summary cards
+  const active = amcContracts.filter(c => amcStatus(c) === 'active');
+  const totalVal = active.reduce((s,c) => s + (Number(c.value) || 0), 0);
+  const dueNow = active.filter(c => amcDueUnbilledQtrs(c).length > 0);
+  const totalPending = active.reduce((s,c) => s + amcDueUnbilledQtrs(c).length, 0);
+  const el = id => document.getElementById(id);
+  if (el('amc-stat-active'))       el('amc-stat-active').textContent = active.length;
+  if (el('amc-stat-inv-due'))      el('amc-stat-inv-due').textContent = dueNow.length;
+  if (el('amc-stat-qtrs-pending')) el('amc-stat-qtrs-pending').textContent = totalPending;
+  if (el('amc-stat-value'))        el('amc-stat-value').textContent = '₹' + totalVal.toLocaleString('en-IN', {maximumFractionDigits:0});
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">🔧</div><h3>No AMC contracts found</h3></div></td></tr>';
+    return;
+  }
+
+  const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) : '—';
+
+  tbody.innerHTML = rows.map(c => {
+    const status = amcStatus(c);
+    const docCount = (c.documents || []).length;
+    const docBtn = docCount > 0
+      ? `<button class="btn btn-outline" style="padding:4px 8px;font-size:11px" onclick="openAmcDocs('${c.id}')">📄 ${docCount}</button>`
+      : `<span style="color:var(--gray400);font-size:12px">—</span>`;
+    const dueQtrs = amcDueUnbilledQtrs(c);
+    const invoiceBtn = dueQtrs.length > 0
+      ? `<button class="btn btn-gold" style="padding:4px 8px;font-size:11px;animation:pulse 1.5s infinite" onclick="amcIssueInvoice('${c.id}','${dueQtrs[0].label}')">🧾 ${dueQtrs[0].label}</button>`
+      : `<button class="btn btn-outline" style="padding:4px 8px;font-size:11px;opacity:.5" onclick="amcIssueInvoice('${c.id}',null)" title="All due quarters billed">🧾</button>`;
+    return `<tr>
+      <td style="font-weight:700;color:var(--navy)">${c.customerName || '—'}</td>
+      <td style="font-size:12px;color:var(--gray600)">${c.projectName || '—'}</td>
+      <td style="font-size:12px;color:var(--gray600)">${c.contractNo || '—'}</td>
+      <td style="font-size:12px;max-width:160px">${c.scope || '—'}</td>
+      <td style="font-size:11px;white-space:nowrap">${fmtDate(c.startDate)}<br><span style="color:var(--gray500)">→ ${fmtDate(c.endDate)}</span></td>
+      <td class="amount-cell">${c.value ? '₹' + Number(c.value).toLocaleString('en-IN',{maximumFractionDigits:0}) : '—'}</td>
+      <td style="min-width:140px">${amcQtrsBadge(c)}</td>
+      <td>${amcStatusBadge(status)}</td>
+      <td>${docBtn}</td>
+      <td>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn btn-outline" style="padding:4px 8px;font-size:11px" onclick="editAmc('${c.id}')">✏</button>
+          ${invoiceBtn}
+          ${rowDeleteMenu('amc-menu-'+c.id,'deleteAmc',c.id,'this AMC contract')}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Dashboard widget — invoice due reminders ─────────────
+function updateAmcDashWidget() {
+  const widget = document.getElementById('amc-dash-widget');
+  const listEl = document.getElementById('amc-dash-list');
+  const titleEl = document.getElementById('amc-dash-title');
+  if (!widget || !listEl) return;
+
+  // Collect all due-unbilled quarters across active contracts
+  const dueItems = [];
+  amcContracts.filter(c => amcStatus(c) === 'active').forEach(c => {
+    amcDueUnbilledQtrs(c).forEach(q => dueItems.push({ c, q }));
+  });
+
+  if (!dueItems.length) { widget.style.display = 'none'; return; }
+  widget.style.display = '';
+  titleEl.textContent = `${dueItems.length} AMC quarter invoice${dueItems.length>1?'s':''} due — not yet billed`;
+
+  listEl.innerHTML = dueItems.slice(0,6).map(({ c, q }) => {
+    return `<div style="display:flex;align-items:center;justify-content:space-between;background:white;border-radius:8px;padding:8px 12px;border:1px solid #fcd34d">
+      <div>
+        <span style="font-weight:700;font-size:13px;color:var(--navy)">${c.customerName}</span>
+        ${c.projectName ? `<span style="font-size:11px;color:var(--gray500);margin-left:6px">• ${c.projectName}</span>` : ''}
+        <span style="font-size:11px;color:var(--gray500);margin-left:6px">${c.contractNo || ''}</span>
+        <div style="font-size:11px;color:var(--gray600);margin-top:1px">${q.label} — due since ${new Date(q.dueDate).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})} — ₹${(Number(c.value||0)/4).toLocaleString('en-IN',{maximumFractionDigits:0})}</div>
+      </div>
+      <button class="btn btn-gold" style="padding:4px 10px;font-size:11px;white-space:nowrap" onclick="amcIssueInvoice('${c.id}','${q.label}')">Invoice ${q.label}</button>
+    </div>`;
+  }).join('');
+}
+
+// ── Nav badge ───────────────────────────────────────────
+function updateAmcBadge() {
+  const badge = document.getElementById('badge-amc-expiring');
+  if (!badge) return;
+  const count = amcContracts.filter(c => amcStatus(c) === 'active' && amcDueUnbilledQtrs(c).length > 0).length;
+  if (count > 0) { badge.textContent = count; badge.style.display = ''; }
+  else { badge.style.display = 'none'; }
+}
+
+// ── Modal helpers ───────────────────────────────────────
+function amcSetDuration(months) {
+  if (!months) return;
+  const startVal = document.getElementById('amc-start').value;
+  if (!startVal) { toast('Set start date first', 'error'); return; }
+  const end = new Date(startVal);
+  end.setMonth(end.getMonth() + parseInt(months));
+  document.getElementById('amc-end').value = end.toISOString().slice(0,10);
+}
+
+function _amcPopulateModal(c) {
+  // Customer dropdown
+  const custSel = document.getElementById('amc-customer');
+  custSel.innerHTML = '<option value="">— Select customer —</option>' + customers.map(cu => `<option value="${cu.name}">${cu.name}</option>`).join('');
+  custSel.value = c ? (c.customerName || '') : '';
+
+  // Project dropdown
+  const projSel = document.getElementById('amc-project');
+  projSel.innerHTML = '<option value="">— Select project (optional) —</option>' + projectsList.map(p => `<option value="${p.name}">${p.jobNo ? p.jobNo+' — ' : ''}${p.name}</option>`).join('');
+  projSel.value = c ? (c.projectName || '') : '';
+
+  document.getElementById('amc-contract-no').value = c ? (c.contractNo || '') : `AMC/${new Date().getFullYear()}/${String(amcContracts.length+1).padStart(3,'0')}`;
+  document.getElementById('amc-scope').value    = c ? (c.scope    || '') : '';
+  document.getElementById('amc-start').value    = c ? (c.startDate|| '') : '';
+  document.getElementById('amc-end').value      = c ? (c.endDate  || '') : '';
+  document.getElementById('amc-value').value    = c ? (c.value    || '') : '';
+  document.getElementById('amc-frequency').value= c ? (c.frequency|| '') : '';
+  document.getElementById('amc-notes').value    = c ? (c.notes    || '') : '';
+  document.getElementById('amc-docs-input').value = '';
+
+  const docsDiv = document.getElementById('amc-existing-docs');
+  const docs = c ? (c.documents || []) : [];
+  docsDiv.innerHTML = docs.length ? docs.map((d,i) => `
+    <div style="display:flex;align-items:center;gap:6px;background:var(--gray50);border:1px solid var(--gray200);border-radius:6px;padding:5px 10px;font-size:12px">
+      📄 <a href="${d.url}" target="_blank" style="color:var(--navy);text-decoration:none;flex:1">${d.name}</a>
+      <button onclick="amcRemoveDoc('${c.id}',${i})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:14px;padding:0">✕</button>
+    </div>`).join('') : '';
+}
+
+function openAmcModal() {
+  document.getElementById('amc-edit-id').value = '';
+  document.getElementById('amc-modal-title').textContent = 'Add AMC Contract';
+  _amcPopulateModal(null);
+  document.getElementById('amc-modal').classList.add('open');
+}
+
+function editAmc(id) {
+  const c = amcContracts.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('amc-edit-id').value = id;
+  document.getElementById('amc-modal-title').textContent = 'Edit AMC Contract';
+  _amcPopulateModal(c);
+  document.getElementById('amc-modal').classList.add('open');
+}
+
+async function saveAmc() {
+  const custName  = document.getElementById('amc-customer').value;
+  const projName  = document.getElementById('amc-project').value;
+  const startDate = document.getElementById('amc-start').value;
+  const endDate   = document.getElementById('amc-end').value;
+  if (!custName)  { toast('Select a customer', 'error'); return; }
+  if (!startDate) { toast('Start date required', 'error'); return; }
+  if (!endDate)   { toast('End date required', 'error'); return; }
+  if (endDate <= startDate) { toast('End date must be after start date', 'error'); return; }
+
+  const editId = document.getElementById('amc-edit-id').value;
+  const existing = editId ? (amcContracts.find(c => c.id === editId) || {}) : {};
+  const existingDocs = existing.documents || [];
+  const existingBilledQtrs = existing.billedQuarters || [];
+
+  const fileInput = document.getElementById('amc-docs-input');
+  const newFiles = Array.from(fileInput.files || []);
+  let uploadedDocs = [...existingDocs];
+
+  if (newFiles.length) {
+    toast('Uploading documents…', 'info');
+    for (const file of newFiles) {
+      try {
+        const path = `amc_docs/${editId || Date.now()}_${file.name}`;
+        const ref = storage.ref(path);
+        await ref.put(file);
+        const url = await ref.getDownloadURL();
+        uploadedDocs.push({ name: file.name, url, path });
+      } catch(err) { toast(`Upload failed: ${file.name}`, 'error'); return; }
+    }
+  }
+
+  const data = {
+    customerName: custName,
+    projectName:  projName || '',
+    contractNo:   document.getElementById('amc-contract-no').value.trim(),
+    scope:        document.getElementById('amc-scope').value.trim(),
+    startDate, endDate,
+    value:        parseFloat(document.getElementById('amc-value').value) || 0,
+    frequency:    document.getElementById('amc-frequency').value,
+    notes:        document.getElementById('amc-notes').value.trim(),
+    documents:    uploadedDocs,
+    billedQuarters: existingBilledQtrs,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  const op = editId
+    ? db.collection(AMC_COL).doc(editId).set(data, { merge: true })
+    : db.collection(AMC_COL).add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+  op.then(() => { closeMiniModal('amc-modal'); toast('AMC contract saved ✓', 'success'); })
+    .catch(err => toast('Save failed: ' + err.message, 'error'));
+}
+
+function deleteAmc(id) {
+  db.collection(AMC_COL).doc(id).delete()
+    .then(() => toast('AMC contract deleted'))
+    .catch(err => toast('Delete failed: ' + err.message, 'error'));
+}
+
+async function amcRemoveDoc(amcId, docIndex) {
+  if (!confirm('Remove this document?')) return;
+  const c = amcContracts.find(x => x.id === amcId);
+  if (!c) return;
+  const docs = [...(c.documents || [])];
+  const removed = docs.splice(docIndex, 1)[0];
+  if (removed?.path) { try { await storage.ref(removed.path).delete(); } catch(e) {} }
+  db.collection(AMC_COL).doc(amcId).set({ documents: docs }, { merge: true })
+    .then(() => { toast('Document removed'); editAmc(amcId); })
+    .catch(err => toast('Error: ' + err.message, 'error'));
+}
+
+function openAmcDocs(id) {
+  const c = amcContracts.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('amc-docs-modal-title').textContent = `📁 ${c.customerName} — ${c.contractNo || 'Documents'}`;
+  const docs = c.documents || [];
+  const listEl = document.getElementById('amc-docs-list');
+  if (!docs.length) { listEl.innerHTML = '<div style="color:var(--gray500);text-align:center;padding:20px">No documents attached</div>'; }
+  else {
+    listEl.innerHTML = docs.map((d,i) => {
+      const isImg = /\.(jpg|jpeg|png)$/i.test(d.name);
+      const isPdf = /\.pdf$/i.test(d.name);
+      return `<div style="border:1px solid var(--gray200);border-radius:8px;overflow:hidden">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gray50)">
+          <span style="font-size:20px">${isPdf ? '📕' : isImg ? '🖼️' : '📄'}</span>
+          <span style="font-weight:600;font-size:13px;flex:1;word-break:break-all">${d.name}</span>
+          <a href="${d.url}" target="_blank" class="btn btn-outline" style="padding:4px 10px;font-size:12px">Open ↗</a>
+        </div>
+        ${isImg ? `<img src="${d.url}" style="width:100%;max-height:200px;object-fit:contain;background:#000" />` : ''}
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('amc-docs-modal').classList.add('open');
+}
+
+// qtrLabel: 'Q1'|'Q2'|'Q3'|'Q4'|null
+function amcIssueInvoice(id, qtrLabel) {
+  const c = amcContracts.find(x => x.id === id);
+  if (!c) return;
+
+  const qtrs = amcQuarters(c);
+  let targetQtr = qtrLabel ? qtrs.find(q => q.label === qtrLabel) : (amcDueUnbilledQtrs(c)[0] || qtrs[0]);
+  if (!targetQtr) targetQtr = qtrs[0];
+
+  const qtrValue = (Number(c.value) || 0) / 4;
+  const cust = customers.find(x => x.name === c.customerName);
+
+  // Set pending context — will be consumed after invoice generated
+  pendingAmcQtr = { amcId: id, qtrLabel: targetQtr.label };
+
+  showPage('new');
+  selectType('Tax Invoice');
+
+  if (cust) {
+    const custSel = document.getElementById('customer-select');
+    if (custSel) { custSel.value = cust.id; fillCustomerFromSelect(); }
+  } else {
+    const nameEl = document.getElementById('client-name');
+    if (nameEl) nameEl.value = c.customerName;
+  }
+
+  if (c.projectName) {
+    const wsEl = document.getElementById('doc-worksite');
+    if (wsEl) wsEl.value = c.projectName;
+  }
+
+  const notesEl = document.getElementById('doc-notes');
+  if (notesEl) notesEl.value = `AMC Invoice — ${targetQtr.label} — Contract: ${c.contractNo || ''}${c.scope ? '\n'+c.scope : ''}`;
+
+  const firstDescEl = document.querySelector('#items-tbody tr:first-child .item-desc');
+  const firstQtyEl  = document.querySelector('#items-tbody tr:first-child .item-qty');
+  const firstRateEl = document.querySelector('#items-tbody tr:first-child .item-rate');
+  if (firstDescEl) firstDescEl.value = `AMC ${targetQtr.label} — ${c.scope || c.customerName}${c.projectName ? ' ('+c.projectName+')' : ''}`;
+  if (firstQtyEl)  firstQtyEl.value  = 1;
+  if (firstRateEl) { firstRateEl.value = qtrValue.toFixed(2); calcTotals(); }
+
+  toast(`Invoice pre-filled — ${c.customerName} ${targetQtr.label} ₹${qtrValue.toLocaleString('en-IN',{maximumFractionDigits:0})} ✓ — Generate to mark as pending`, 'success');
+}
 </script>
 </body>
 </html>
