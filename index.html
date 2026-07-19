@@ -414,6 +414,38 @@
     color: #bfe0ff;
   }
 
+  /* ── PAYMENT ADVICE : DARK MODE (was unstyled — header text was navy-on-navy) ── */
+  body.dark-mode:has(#page-paymentAdvice.active),
+  body.dark-mode:has(#page-paymentAdviceForm.active),
+  body.dark-mode:has(#page-paPreview.active) {
+    background: linear-gradient(160deg, #150a35 0%, #0d0a28 50%, #170b30 100%);
+  }
+  body.dark-mode:has(#page-paymentAdvice.active) .content,
+  body.dark-mode:has(#page-paymentAdviceForm.active) .content,
+  body.dark-mode:has(#page-paPreview.active) .content { background: transparent; }
+  body.dark-mode:has(#page-paymentAdvice.active) .section-title,
+  body.dark-mode:has(#page-paymentAdviceForm.active) .section-title,
+  body.dark-mode:has(#page-paPreview.active) .section-title,
+  body.dark-mode:has(#page-paymentAdviceForm.active) .form-title,
+  body.dark-mode:has(#page-paymentAdvice.active) h3,
+  body.dark-mode:has(#page-paymentAdviceForm.active) h3 { color: #f1f5f9 !important; }
+  body.dark-mode:has(#page-paymentAdvice.active) .table-wrap,
+  body.dark-mode:has(#page-paymentAdviceForm.active) .form-card,
+  body.dark-mode:has(#page-paymentAdviceForm.active) .table-wrap { background: rgba(8,14,26,0.9); border-color: rgba(255,255,255,0.12); }
+  body.dark-mode:has(#page-paymentAdvice.active) table th,
+  body.dark-mode:has(#page-paymentAdviceForm.active) table th { background: rgba(255,255,255,0.06); color: #c3d0e0 !important; }
+  body.dark-mode:has(#page-paymentAdvice.active) table td,
+  body.dark-mode:has(#page-paymentAdviceForm.active) table td { color: #e7ecf3 !important; border-bottom-color: rgba(255,255,255,0.07); }
+  body.dark-mode:has(#page-paymentAdviceForm.active) label { color: #c9def5 !important; }
+  body.dark-mode:has(#page-paymentAdviceForm.active) input,
+  body.dark-mode:has(#page-paymentAdviceForm.active) select {
+    background: rgba(8,14,26,0.7) !important; color: #e2e8f0 !important; border-color: rgba(255,255,255,0.15) !important;
+  }
+  body.dark-mode:has(#page-paymentAdviceForm.active) input::placeholder { color: #7a8aa0 !important; }
+  body.dark-mode:has(#page-paymentAdviceForm.active) .empty-state h3 { color: #cbd5e1 !important; }
+  body.dark-mode:has(#page-paymentAdviceForm.active) .empty-state p { color: #94a3b8 !important; }
+  /* The generated PDF preview (#pa-preview) sets its own explicit white background — leave untouched so the printed doc stays correct regardless of theme. */
+
   /* ── PRINT STYLES ── */
   /* ═══════════════════════════════════════════════════════
      MOBILE / TABLET RESPONSIVE
@@ -529,7 +561,7 @@
   .table-wrap {
     background: var(--white);
     border-radius: var(--radius);
-    border: 1px solid var(--gray200);
+    border: 2px solid var(--gray200);
     box-shadow: var(--shadow);
     overflow: hidden;
   }
@@ -555,7 +587,7 @@
   .form-card {
     background: var(--white);
     border-radius: var(--radius);
-    border: 1px solid var(--gray200);
+    border: 2px solid var(--gray200);
     box-shadow: var(--shadow);
     padding: 32px;
     margin-bottom: 24px;
@@ -1873,7 +1905,7 @@
           <div class="form-group full"><label>Work Description</label><input type="text" id="pa-work" placeholder="e.g. Installation and copper piping of VRF Systems" /></div>
           <div class="form-group"><label>WO Ref</label><input type="text" id="pa-woref" /></div>
           <div class="form-group"><label>WO Date</label><input type="date" id="pa-wodate" /></div>
-          <div class="form-group full"><label>Invoice No. <span style="font-size:10px;color:var(--gray400);font-weight:400">(pick an existing invoice, or type a new number manually)</span></label>
+          <div class="form-group full"><label>Invoice No. <span style="font-size:10px;color:var(--gray400);font-weight:400">(picking an invoice adds it to "Work Done" below — pick one or more; type manually if this bill has no invoice yet)</span></label>
             <select id="pa-invoice-select" onchange="selectPAInvoice()" style="margin-bottom:6px">
               <option value="">— Select Existing Invoice —</option>
             </select>
@@ -2811,6 +2843,7 @@ function listenToData() {
     renderList();
     renderCustomersTable();
     if (document.getElementById('page-invoiceHistory')?.classList.contains('active')) renderInvoiceHistory();
+    if (document.getElementById('page-reports')?.classList.contains('active') && typeof currentReportTab !== 'undefined' && currentReportTab === 'pnl') renderPnL();
   }));
 
   listenToCustomers();
@@ -4288,7 +4321,7 @@ function _updatePnLProjectDropdown() {
   const pSel = document.getElementById('pnl-filter-project');
   if (!pSel) return;
   const cur = pSel.value;
-  const filtered = custF ? projectsList.filter(p => p.customer === custF) : projectsList;
+  const filtered = custF ? projectsList.filter(p => String(p.customer||'').trim() === custF.trim()) : projectsList;
   pSel.innerHTML = '<option value="">All Projects</option>' + filtered.map(p => `<option value="${p.name}">${p.jobNo} – ${p.name}</option>`).join('');
   pSel.value = filtered.find(p => p.name === cur) ? cur : '';
 }
@@ -4328,8 +4361,22 @@ function saveCustomer() {
   if (!name) { toast('Customer name required', 'error'); return; }
   const data = { name, gst: document.getElementById('cust-gst').value.toUpperCase(), address: document.getElementById('cust-address').value, contact: document.getElementById('cust-contact').value };
   const editId = document.getElementById('cust-edit-id').value;
+  const oldCust = editId ? customers.find(c => c.id === editId) : null;
+  const oldName = oldCust ? oldCust.name : null;
   const op = editId ? db.collection(CUST_COL).doc(editId).set(data) : db.collection(CUST_COL).add(data);
-  op.then(() => { closeMiniModal('customer-modal'); toast('Customer saved! ✓', 'success'); }).catch(e => toast('Error: ' + e.message, 'error'));
+  op.then(async () => {
+    // Customer renamed: projects store customer as a plain name string, so re-link them or the
+    // P&L / Payment Advice project dropdown silently drops that customer's projects.
+    if (oldName && oldName !== name) {
+      const affected = projectsList.filter(p => p.customer === oldName);
+      if (affected.length) {
+        const batch = db.batch();
+        affected.forEach(p => batch.update(db.collection(PROJ_COL).doc(p.id), { customer: name }));
+        try { await batch.commit(); } catch (e) { console.warn('Project re-link failed:', e); }
+      }
+    }
+    closeMiniModal('customer-modal'); toast('Customer saved! ✓', 'success');
+  }).catch(e => toast('Error: ' + e.message, 'error'));
 }
 
 function deleteCustomer(id) {
@@ -6150,8 +6197,16 @@ function selectPAInvoice() {
   if (doc.clientName) document.getElementById('pa-client').value = doc.clientName;
   if (doc.worksite) document.getElementById('pa-project').value = doc.worksite;
   if (doc.jobNo) document.getElementById('pa-woref').value = doc.jobNo;
-  if (doc.items && doc.items.length) document.getElementById('pa-work').value = doc.items.map(i => i.desc).filter(Boolean).join(', ');
   if (doc.grand) document.getElementById('pa-originalamount').value = doc.grand;
+
+  // Invoice description + amount go into "C. Work Done as per Contracts" as a new line item —
+  // the header Work Description stays manual (typed by the user), not auto-filled.
+  const itemDesc = (doc.items && doc.items.length) ? doc.items.map(i => i.desc).filter(Boolean).join(', ') : '';
+  const workDesc = `${doc.number || ''}${doc.number && itemDesc ? ' — ' : ''}${itemDesc}`.trim() || (doc.number || doc.type || 'Invoice');
+  addPAWorkItem(workDesc, doc.grand || 0, 0, doc.grand || 0, doc.type || '');
+
+  // Reset the picker so another invoice can be selected — lets multiple invoices be added to Work Done.
+  sel.value = '';
   onPAInvoiceNoChange();
 }
 
@@ -6582,7 +6637,7 @@ function generatePaymentAdviceHTML(doc) {
   const metaRow = (label, val) => val ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">${label}</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px">${val}</td></tr>` : '';
 
   return `
-  <div style="font-family:'DM Sans',sans-serif;color:#1e293b;background:#ffffff;width:100%;padding:30px 36px;box-sizing:border-box">
+  <div style="font-family:'DM Sans',sans-serif;color:#1e293b;background:#ffffff;width:100%;padding:60px 72px;box-sizing:border-box;border:2px solid ${PRIMARY};border-radius:6px">
 
     <!-- HEADER -->
     <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid ${PRIMARY};padding-bottom:14px;margin-bottom:16px">
@@ -6613,18 +6668,18 @@ function generatePaymentAdviceHTML(doc) {
 
     <!-- CONTRACT AMOUNT SUMMARY -->
     <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;border:1px solid #e2e8f0">
-      <tr><td style="padding:7px 12px;color:#475569">Accepted / Original Contract Amount (Incl. GST)</td><td style="padding:7px 12px;text-align:right;font-weight:600">₹${fmt(doc.originalContractAmount)}</td></tr>
-      <tr style="background:${ACCENT}"><td style="padding:7px 12px;color:#475569">Authorised Change Orders Amount (Incl. GST)</td><td style="padding:7px 12px;text-align:right;font-weight:600">₹${fmt(doc.changeOrdersAmount)}</td></tr>
+      <tr><td style="padding:7px 12px;color:#475569">Accepted / Original Contract Amount${doc.applyGST ? ' (Incl. GST)' : ''}</td><td style="padding:7px 12px;text-align:right;font-weight:600">₹${fmt(doc.originalContractAmount)}</td></tr>
+      <tr style="background:${ACCENT}"><td style="padding:7px 12px;color:#475569">Authorised Change Orders Amount${doc.applyGST ? ' (Incl. GST)' : ''}</td><td style="padding:7px 12px;text-align:right;font-weight:600">₹${fmt(doc.changeOrdersAmount)}</td></tr>
       <tr><td style="padding:7px 12px;color:#475569">Items Paid On-account</td><td style="padding:7px 12px;text-align:right;font-weight:600">₹${fmt(doc.itemsPaidOnAccount)}</td></tr>
-      <tr style="background:${LIGHT_BLUE}"><td style="padding:7px 12px;font-weight:700;color:${PRIMARY}">Revised Contract Amount (Incl. GST)</td><td style="padding:7px 12px;text-align:right;font-weight:800;color:${PRIMARY}">₹${fmt(doc.revisedContractAmount)}</td></tr>
+      <tr style="background:${LIGHT_BLUE}"><td style="padding:7px 12px;font-weight:700;color:${PRIMARY}">Revised Contract Amount${doc.applyGST ? ' (Incl. GST)' : ''}</td><td style="padding:7px 12px;text-align:right;font-weight:800;color:${PRIMARY}">₹${fmt(doc.revisedContractAmount)}</td></tr>
     </table>
 
     ${(doc.bankGuarantees || []).length ? `
     <!-- BANK GUARANTEE -->
     <div style="font-size:12px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Bank Guarantee Details</div>
     <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:16px;border:1px solid #e2e8f0">
-      <thead><tr style="background:${PRIMARY};color:#fff">
-        <th style="padding:6px 8px;font-weight:700">S.No</th><th style="padding:6px 8px;font-weight:700;text-align:left">Type</th><th style="padding:6px 8px;font-weight:700;text-align:left">BG Number</th><th style="padding:6px 8px;font-weight:700;text-align:left">Start Date</th><th style="padding:6px 8px;font-weight:700;text-align:left">Expiry Date</th><th style="padding:6px 8px;font-weight:700;text-align:left">Remarks</th>
+      <thead><tr style="background:${PRIMARY}">
+        <th style="padding:6px 8px;font-weight:700;color:#fff">S.No</th><th style="padding:6px 8px;font-weight:700;text-align:left;color:#fff">Type</th><th style="padding:6px 8px;font-weight:700;text-align:left;color:#fff">BG Number</th><th style="padding:6px 8px;font-weight:700;text-align:left;color:#fff">Start Date</th><th style="padding:6px 8px;font-weight:700;text-align:left;color:#fff">Expiry Date</th><th style="padding:6px 8px;font-weight:700;text-align:left;color:#fff">Remarks</th>
       </tr></thead>
       <tbody>${bgRows}</tbody>
     </table>` : ''}
@@ -6633,24 +6688,25 @@ function generatePaymentAdviceHTML(doc) {
     ${(doc.sectionA && doc.sectionA.length) ? `
     <div style="font-size:12px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">A. Mobilisation Advance Payment</div>
     <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px;border:1px solid #e2e8f0">
-      <thead><tr style="background:${PRIMARY};color:#fff"><th style="padding:6px 10px;text-align:left">Description</th><th style="padding:6px 10px;text-align:right">Upto Previous</th><th style="padding:6px 10px;text-align:right">This Bill</th><th style="padding:6px 10px;text-align:right">Cumulative</th></tr></thead>
+      <thead><tr style="background:${PRIMARY}"><th style="padding:6px 10px;text-align:left;color:#fff">Description</th><th style="padding:6px 10px;text-align:right;color:#fff">Upto Previous</th><th style="padding:6px 10px;text-align:right;color:#fff">This Bill</th><th style="padding:6px 10px;text-align:right;color:#fff">Cumulative</th></tr></thead>
       <tbody>${(doc.sectionA || []).map(r => sectionRow(r)).join('')}${sectionRow({ label: 'Total (A)', thisBill: sectionATotal }, true)}</tbody>
     </table>` : ''}
 
     ${(doc.sectionB && doc.sectionB.length) ? `
     <div style="font-size:12px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">B. Adhoc Payment - RA Bills</div>
     <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px;border:1px solid #e2e8f0">
-      <thead><tr style="background:${PRIMARY};color:#fff"><th style="padding:6px 10px;text-align:left">Description</th><th style="padding:6px 10px;text-align:right">Upto Previous</th><th style="padding:6px 10px;text-align:right">This Bill</th><th style="padding:6px 10px;text-align:right">Cumulative</th></tr></thead>
+      <thead><tr style="background:${PRIMARY}"><th style="padding:6px 10px;text-align:left;color:#fff">Description</th><th style="padding:6px 10px;text-align:right;color:#fff">Upto Previous</th><th style="padding:6px 10px;text-align:right;color:#fff">This Bill</th><th style="padding:6px 10px;text-align:right;color:#fff">Cumulative</th></tr></thead>
       <tbody>${(doc.sectionB || []).map(r => sectionRow(r)).join('')}${sectionRow({ label: 'Total (B)', thisBill: sectionBTotal }, true)}</tbody>
     </table>` : ''}
 
     <!-- C: WORK DONE -->
     <div style="font-size:12px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">C. Work Done as per Contracts &amp; Change Orders</div>
     <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px;border:1px solid #e2e8f0">
-      <thead><tr style="background:${PRIMARY};color:#fff">
-        <th style="padding:7px 8px;width:34px">S.No</th><th style="padding:7px 8px;text-align:left">Description</th><th style="padding:7px 8px;text-align:right;width:100px">BoQ Amount</th><th style="padding:7px 8px;text-align:right;width:100px">Upto Previous</th><th style="padding:7px 8px;text-align:right;width:100px">This Bill</th><th style="padding:7px 8px;text-align:right;width:100px">Cumulative</th><th style="padding:7px 8px;text-align:left">Remarks</th>
+      <thead><tr style="background:${PRIMARY}">
+        <th style="padding:7px 8px;width:34px;color:#fff">S.No</th><th style="padding:7px 8px;text-align:left;color:#fff">Description</th><th style="padding:7px 8px;text-align:right;width:100px;color:#fff">BoQ Amount</th><th style="padding:7px 8px;text-align:right;width:100px;color:#fff">Upto Previous</th><th style="padding:7px 8px;text-align:right;width:100px;color:#fff">This Bill</th><th style="padding:7px 8px;text-align:right;width:100px;color:#fff">Cumulative</th><th style="padding:7px 8px;text-align:left;color:#fff">Remarks</th>
       </tr></thead>
       <tbody>${workRows}
+        ${doc.applyGST ? `
         <tr style="background:${ACCENT};font-weight:700"><td colspan="2" style="padding:7px 8px;font-size:11px">Total Excl. GST</td>
           <td style="padding:7px 8px;font-size:11px;text-align:right">₹${fmt(c.boqTotal)}</td>
           <td style="padding:7px 8px;font-size:11px;text-align:right">₹${fmt(c.upToPrevTotal)}</td>
@@ -6661,14 +6717,20 @@ function generatePaymentAdviceHTML(doc) {
         <tr style="background:${LIGHT_BLUE};font-weight:800"><td colspan="2" style="padding:7px 8px;font-size:12px;color:${PRIMARY}">Total Incl. GST</td><td></td>
           <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.totalInclGSTCumulative - c.totalInclGSTThisBill)}</td>
           <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.totalInclGSTThisBill)}</td>
-          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.totalInclGSTCumulative)}</td><td></td></tr>
+          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.totalInclGSTCumulative)}</td><td></td></tr>` : `
+        <tr style="background:${LIGHT_BLUE};font-weight:800"><td colspan="2" style="padding:7px 8px;font-size:12px;color:${PRIMARY}">Total</td>
+          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.boqTotal)}</td>
+          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.upToPrevTotal)}</td>
+          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.thisBillTotal)}</td>
+          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.cumulativeTotal)}</td>
+          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">${c.boqTotal ? c.pctComplete.toFixed(1) + '%' : ''}</td></tr>`}
       </tbody>
     </table>
 
     <!-- D: DEDUCTIONS -->
     <div style="font-size:12px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin:14px 0 6px 0">D. Deductions / Withheld</div>
     <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px;border:1px solid #e2e8f0">
-      <thead><tr style="background:${PRIMARY};color:#fff"><th style="padding:6px 10px;text-align:left">Description</th><th style="padding:6px 10px;text-align:right">Upto Previous</th><th style="padding:6px 10px;text-align:right">This Bill</th><th style="padding:6px 10px;text-align:right">Cumulative</th></tr></thead>
+      <thead><tr style="background:${PRIMARY}"><th style="padding:6px 10px;text-align:left;color:#fff">Description</th><th style="padding:6px 10px;text-align:right;color:#fff">Upto Previous</th><th style="padding:6px 10px;text-align:right;color:#fff">This Bill</th><th style="padding:6px 10px;text-align:right;color:#fff">Cumulative</th></tr></thead>
       <tbody>${deductionRows}
         <tr style="background:${ACCENT};font-weight:700"><td style="padding:7px 10px;font-size:11px">Total Deductions</td>
           <td style="padding:7px 10px;font-size:11px;text-align:right">(${fmt(c.dedUpToPrevTotal)})</td>
@@ -7003,12 +7065,12 @@ function updateAmcDashWidget() {
   titleEl.textContent = `${dueItems.length} AMC quarter invoice${dueItems.length>1?'s':''} due — not yet billed`;
 
   listEl.innerHTML = dueItems.slice(0,6).map(({ c, q }) => {
-    return `<div style="display:flex;align-items:center;justify-content:space-between;background:white;border-radius:8px;padding:8px 12px;border:1px solid #fcd34d">
+    return `<div style="display:flex;align-items:center;justify-content:space-between;background:#ffffff;border-radius:8px;padding:8px 12px;border:1px solid #fcd34d">
       <div>
-        <span style="font-weight:700;font-size:13px;color:var(--navy)">${c.customerName}</span>
-        ${c.projectName ? `<span style="font-size:11px;color:var(--gray500);margin-left:6px">• ${c.projectName}</span>` : ''}
-        <span style="font-size:11px;color:var(--gray500);margin-left:6px">${c.contractNo || ''}</span>
-        <div style="font-size:11px;color:var(--gray600);margin-top:1px">${q.label} — due since ${new Date(q.dueDate).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})} — ₹${(Number(c.value||0)/4).toLocaleString('en-IN',{maximumFractionDigits:0})}</div>
+        <span style="font-weight:700;font-size:13px;color:#1A3D63">${c.customerName}</span>
+        ${c.projectName ? `<span style="font-size:11px;color:#64748b;margin-left:6px">• ${c.projectName}</span>` : ''}
+        <span style="font-size:11px;color:#64748b;margin-left:6px">${c.contractNo || ''}</span>
+        <div style="font-size:11px;color:#475569;margin-top:1px">${q.label} — due since ${new Date(q.dueDate).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})} — ₹${(Number(c.value||0)/4).toLocaleString('en-IN',{maximumFractionDigits:0})}</div>
       </div>
       <button class="btn btn-gold" style="padding:4px 10px;font-size:11px;white-space:nowrap" onclick="amcIssueInvoice('${c.id}','${q.label}')">Invoice ${q.label}</button>
     </div>`;
