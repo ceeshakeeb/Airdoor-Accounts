@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1280, user-scalable=no, maximum-scale=1.0">
+<meta name="viewport" content="width=1280, user-scalable=yes, minimum-scale=0.25, maximum-scale=3.0">
 <title>Airdoor Billing System</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1194,8 +1194,9 @@
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <input type="text" id="search-box" placeholder="🔍 Search by name, number..." oninput="renderList()" style="width:200px" />
           <select id="list-filter-customer" onchange="renderList()" style="font-size:13px;padding:8px 12px;min-width:160px"><option value="">All Customers</option></select>
+          <select id="list-filter-project" onchange="renderList()" style="font-size:13px;padding:8px 12px;min-width:160px"><option value="">All Projects</option></select>
           <select id="list-filter-fy" onchange="renderList()" style="font-size:13px;padding:8px 12px;min-width:130px"><option value="">All Years</option></select>
-          <button class="btn btn-outline" onclick="document.getElementById('search-box').value='';document.getElementById('list-filter-customer').value='';document.getElementById('list-filter-fy').value='';renderList()">Clear</button>
+          <button class="btn btn-outline" onclick="document.getElementById('search-box').value='';document.getElementById('list-filter-customer').value='';document.getElementById('list-filter-project').value='';document.getElementById('list-filter-fy').value='';renderList()">Clear</button>
           <button class="btn btn-gold" onclick="startNewDocument()">＋ New Document</button>
         </div>
       </div>
@@ -3121,13 +3122,11 @@ function selectType(type) {
   if (type === 'Invoice') document.getElementById('type-invoice').classList.add('selected-tax');
   if (type === 'Proforma Invoice') document.getElementById('type-proforma').classList.add('selected-proforma');
   if (type === 'Quotation') document.getElementById('type-quotation').classList.add('selected-quotation');
-  const showTax = type !== 'Quotation';
-  document.getElementById('cgst-row').style.display = showTax ? '' : 'none';
-  document.getElementById('sgst-row').style.display = showTax ? '' : 'none';
-  document.getElementById('igst-row').style.display = 'none';
   document.getElementById('against-proforma-wrap').style.display = type === 'Tax Invoice' ? '' : 'none';
   document.getElementById('items-section')?.classList.toggle('show-hsn', type === 'Tax Invoice');
   if (type === 'Tax Invoice') populateProformaDropdown();
+  if (!editingDocId) autoNumber();
+  updateTaxDisplay();
   calcTotals();
 }
 
@@ -3883,6 +3882,12 @@ function populateListFilters() {
     cSel.innerHTML = '<option value="">All Customers</option>' + customers.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
     cSel.value = cur;
   }
+  const pSel = document.getElementById('list-filter-project');
+  if (pSel) {
+    const cur = pSel.value;
+    pSel.innerHTML = '<option value="">All Projects</option>' + projectsList.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+    pSel.value = cur;
+  }
   const fySel = document.getElementById('list-filter-fy');
   if (fySel) {
     const cur = fySel.value;
@@ -3896,10 +3901,12 @@ function populateListFilters() {
 function renderList() {
   const q = (document.getElementById('search-box')?.value || '').toLowerCase();
   const custF = document.getElementById('list-filter-customer')?.value || '';
+  const projF = document.getElementById('list-filter-project')?.value || '';
   const fyF = document.getElementById('list-filter-fy')?.value || '';
   let filtered = documents;
   if (currentFilter !== 'all') filtered = filtered.filter(d => d.type === currentFilter);
   if (custF) filtered = filtered.filter(d => d.clientName === custF);
+  if (projF) filtered = filtered.filter(d => d.worksite === projF);
   if (fyF) filtered = filtered.filter(d => fyOf(d.date) === fyF);
   if (q) filtered = filtered.filter(d => (d.clientName||'').toLowerCase().includes(q) || (d.number||'').toLowerCase().includes(q) || (d.worksite||'').toLowerCase().includes(q));
   const tbody = document.getElementById('list-tbody');
@@ -3918,7 +3925,7 @@ function docRow(doc, showWorksite = false) {
   const historicalBadge = doc.historical ? `<span title="Added via Invoice History" style="background:#eef2ff;color:#4338ca;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">📜 IMPORTED</span>` : '';
   const editBtn = `<button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="editDraft('${doc.id}')">✏ Edit</button>`;
   const reportIcon = doc.serviceReportUrl ? `<span title="Service report attached" style="font-size:13px">📎</span>` : '';
-  return `<tr data-doc-id="${doc.id}"><td><span style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600">${doc.number || '—'}</span>${statusBadge}${historicalBadge} ${reportIcon}</td><td><span class="doc-type ${typeClass}">${doc.type}</span></td><td style="font-weight:700; color:var(--navy);">${doc.clientName || '—'}</td>${showWorksite ? `<td style="font-size:12px;color:var(--gray600)">${doc.worksite || '—'}</td>` : ''}<td style="font-size:12px;color:var(--gray600)">${dateStr}</td><td class="amount-cell">₹${Number(doc.grand||0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap">${editBtn}<button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="viewDoc('${doc.id}')">👁 View</button><button class="btn btn-blue" style="padding:5px 10px;font-size:12px" onclick="downloadDocPDF('${doc.id}')">⬇ PDF</button><button class="btn btn-outline" style="padding:5px 8px;font-size:12px" title="Send via Email" onclick="sendViaEmail('${doc.id}')">📧</button><button class="btn btn-outline" style="padding:5px 8px;font-size:12px;color:#1ba94c" title="Send via WhatsApp" onclick="sendViaWhatsApp('${doc.id}')">💬</button>${rowDeleteMenu('doc-menu-'+doc.id,'deleteDoc',doc.id,'this document')}</div></td></tr>`;
+  return `<tr data-doc-id="${doc.id}"><td><span style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600">${doc.number || '—'}</span>${statusBadge}${historicalBadge} ${reportIcon}</td><td><span class="doc-type ${typeClass}">${doc.type}</span></td><td style="font-weight:700; color:var(--navy);">${doc.clientName || '—'}</td>${showWorksite ? `<td style="font-size:12px;color:var(--gray600)">${doc.worksite || '—'}</td>` : ''}<td style="font-size:12px;color:var(--gray600)">${dateStr}</td><td class="amount-cell">₹${Number(doc.grand||0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap">${editBtn}<button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="viewDoc('${doc.id}')">👁 View</button><button class="btn btn-blue" style="padding:5px 10px;font-size:12px" onclick="downloadDocPDF('${doc.id}')">⬇ PDF</button><button class="btn btn-outline" style="padding:5px 10px;font-size:12px;color:var(--red)" onclick="requestDelete('deleteDoc','${doc.id}','this document')">🗑 Delete</button>${currentFilter !== 'all' ? rowShareMenu('doc-share-'+doc.id, doc.id) : ''}</div></td></tr>`;
 }
 
 function sendViaEmail(id) {
@@ -4476,6 +4483,16 @@ function fillJobFromProject() {
   const p = projectsList.find(x => x.id === sel.value);
   document.getElementById('doc-job').value = p ? (p.jobNo || '') : '';
   if (p && p.name) document.getElementById('doc-worksite').value = p.name;
+  // Auto-fill the client from the project's linked customer.
+  if (p && p.customer) {
+    document.getElementById('client-name').value = p.customer;
+    const cust = customers.find(c => c.name === p.customer);
+    if (cust) {
+      if (cust.gst) document.getElementById('client-gst').value = cust.gst;
+      if (cust.address) document.getElementById('client-address').value = cust.address;
+      if (cust.contact) document.getElementById('client-contact').value = cust.contact;
+    }
+  }
 }
 
 function populateProjectSelects() {
@@ -5441,9 +5458,21 @@ document.addEventListener('click', e => {
 function rowDeleteMenu(menuId, fnName, id, label, extraHtml) {
   return `<div class="row-action-wrap" style="position:relative;display:inline-block;margin-left:4px">
     <button class="btn btn-outline" style="padding:5px 8px;font-size:14px" title="More actions" onclick="toggleMenu('${menuId}')">⋮</button>
-    <div id="${menuId}" class="row-action-menu" style="display:none;position:absolute;right:0;top:100%;margin-top:4px;background:var(--white);border:1px solid var(--gray200);border-radius:8px;box-shadow:var(--shadow);z-index:50;min-width:180px;overflow:hidden">
+    <div id="${menuId}" class="row-action-menu" style="display:none;position:absolute;right:0;bottom:100%;margin-bottom:4px;background:var(--white);border:1px solid var(--gray200);border-radius:8px;box-shadow:var(--shadow);z-index:50;min-width:180px;overflow:hidden">
       ${extraHtml || ''}
       <div style="padding:9px 14px;cursor:pointer;font-size:12px;color:var(--red);font-weight:600" onmouseover="this.style.background='var(--gray50)'" onmouseout="this.style.background='none'" onclick="toggleMenu('${menuId}');requestDelete('${fnName}','${id}','${label}')">🗑 Delete</div>
+    </div>
+  </div>`;
+}
+
+// "⋮" share menu (Email / WhatsApp) — only shown on the filtered Tax Invoice / Non-Tax Invoice /
+// Proforma / Quotation views, not on the unfiltered "All Documents" view.
+function rowShareMenu(menuId, docId) {
+  return `<div class="row-action-wrap" style="position:relative;display:inline-block;margin-left:4px">
+    <button class="btn btn-outline" style="padding:5px 8px;font-size:14px" title="Share" onclick="toggleMenu('${menuId}')">⋮</button>
+    <div id="${menuId}" class="row-action-menu" style="display:none;position:absolute;right:0;bottom:100%;margin-bottom:4px;background:var(--white);border:1px solid var(--gray200);border-radius:8px;box-shadow:var(--shadow);z-index:50;min-width:190px;overflow:hidden">
+      <div style="padding:9px 14px;cursor:pointer;font-size:12px;color:var(--gray800);font-weight:600" onmouseover="this.style.background='var(--gray50)'" onmouseout="this.style.background='none'" onclick="toggleMenu('${menuId}');sendViaEmail('${docId}')">📧 Send via Email</div>
+      <div style="padding:9px 14px;cursor:pointer;font-size:12px;color:#1ba94c;font-weight:600" onmouseover="this.style.background='var(--gray50)'" onmouseout="this.style.background='none'" onclick="toggleMenu('${menuId}');sendViaWhatsApp('${docId}')">💬 Send via WhatsApp</div>
     </div>
   </div>`;
 }
@@ -6524,7 +6553,6 @@ function finalizePA() {
 }
 
 function deletePA(id) {
-  if (!confirm('Delete this payment advice?')) return;
   db.collection(PA_COLLECTION).doc(id).delete().then(() => toast('Payment advice deleted', 'error')).catch(err => toast('Delete failed: ' + err.message, 'error'));
 }
 
@@ -6578,10 +6606,9 @@ function renderPaymentAdvices() {
       <td style="font-size:12px">${doc.invoiceDate || '—'}</td>
       <td class="amount-cell">${fmt(c.netCertifiedThisBill)}</td>
       <td>${statusBadge}</td>
-      <td><div style="display:flex;gap:6px">
-        <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="editPA('${doc.id}')">✏</button>
-        <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="downloadDocPAPDF('${doc.id}')">⬇</button>
-        <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="deletePA('${doc.id}')">🗑</button>
+      <td><div style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-gold" style="padding:5px 12px;font-size:12px;white-space:nowrap" onclick="previewSavedPA('${doc.id}')">👁 Preview</button>
+        ${rowDeleteMenu('pa-menu-' + doc.id, 'deletePA', doc.id, doc.invoiceNo || doc.raBillNo || 'this payment advice', `<div style="padding:9px 14px;cursor:pointer;font-size:12px;color:var(--gray800);font-weight:600" onmouseover="this.style.background='var(--gray50)'" onmouseout="this.style.background='none'" onclick="toggleMenu('pa-menu-${doc.id}');editPA('${doc.id}')">✏ Edit</div>`)}
       </div></td>
     </tr>`;
   }).join('');
@@ -6601,62 +6628,62 @@ function generatePaymentAdviceHTML(doc) {
   const LIGHT_BLUE = '#B3CFE5';
 
   const bgRows = (doc.bankGuarantees || []).map((bg, i) => `
-    <tr><td style="padding:6px 8px;font-size:11px;text-align:center">${i + 1}</td>
-      <td style="padding:6px 8px;font-size:11px">${bg.type || '—'}</td>
-      <td style="padding:6px 8px;font-size:11px">${bg.bgNumber || '—'}</td>
-      <td style="padding:6px 8px;font-size:11px">${bg.startDate ? dateStr(bg.startDate) : '—'}</td>
-      <td style="padding:6px 8px;font-size:11px">${bg.expiryDate ? dateStr(bg.expiryDate) : '—'}</td>
-      <td style="padding:6px 8px;font-size:11px">${bg.remarks || '—'}</td></tr>`).join('');
+    <tr><td style="padding:3px 6px;font-size:9px;text-align:center;color:#1e293b">${i + 1}</td>
+      <td style="padding:3px 6px;font-size:9px;color:#1e293b">${bg.type || '—'}</td>
+      <td style="padding:3px 6px;font-size:9px;color:#1e293b">${bg.bgNumber || '—'}</td>
+      <td style="padding:3px 6px;font-size:9px;color:#1e293b">${bg.startDate ? dateStr(bg.startDate) : '—'}</td>
+      <td style="padding:3px 6px;font-size:9px;color:#1e293b">${bg.expiryDate ? dateStr(bg.expiryDate) : '—'}</td>
+      <td style="padding:3px 6px;font-size:9px;color:#1e293b">${bg.remarks || '—'}</td></tr>`).join('');
 
   const sectionRow = (r, isTotal) => `<tr style="${isTotal ? 'background:' + ACCENT + ';font-weight:700' : ''}">
-      <td style="padding:6px 10px;font-size:11px">${r.label}</td>
-      <td style="padding:6px 10px;font-size:11px;text-align:right">${r.uptoPrevious ? fmt(r.uptoPrevious) : '-'}</td>
-      <td style="padding:6px 10px;font-size:11px;text-align:right">${r.thisBill ? fmt(r.thisBill) : '-'}</td>
-      <td style="padding:6px 10px;font-size:11px;text-align:right">${(r.uptoPrevious || r.thisBill) ? fmt((r.uptoPrevious || 0) + (r.thisBill || 0)) : '-'}</td></tr>`;
+      <td style="padding:3px 8px;font-size:9px;color:#1e293b">${r.label}</td>
+      <td style="padding:3px 8px;font-size:9px;text-align:right;color:#1e293b">${r.uptoPrevious ? fmt(r.uptoPrevious) : '-'}</td>
+      <td style="padding:3px 8px;font-size:9px;text-align:right;color:#1e293b">${r.thisBill ? fmt(r.thisBill) : '-'}</td>
+      <td style="padding:3px 8px;font-size:9px;text-align:right;color:#1e293b">${(r.uptoPrevious || r.thisBill) ? fmt((r.uptoPrevious || 0) + (r.thisBill || 0)) : '-'}</td></tr>`;
 
   const sectionATotal = (doc.sectionA || []).reduce((a, r) => a + (r.thisBill || 0), 0);
   const sectionBTotal = (doc.sectionB || []).reduce((a, r) => a + (r.thisBill || 0), 0);
 
   const workRows = (doc.workItems || []).map((w, i) => `
     <tr style="background:${i % 2 === 0 ? '#ffffff' : '#f0f6fc'}">
-      <td style="padding:7px 8px;font-size:11px;text-align:center;color:${PRIMARY}">${i + 1}</td>
-      <td style="padding:7px 8px;font-size:12px">${w.desc || '—'}</td>
-      <td style="padding:7px 8px;font-size:12px;text-align:right">${fmt(w.boqAmount)}</td>
-      <td style="padding:7px 8px;font-size:12px;text-align:right">${w.uptoPrevious ? fmt(w.uptoPrevious) : '-'}</td>
-      <td style="padding:7px 8px;font-size:12px;text-align:right;font-weight:600">${fmt(w.thisBill)}</td>
-      <td style="padding:7px 8px;font-size:12px;text-align:right">${fmt((w.uptoPrevious || 0) + (w.thisBill || 0))}</td>
-      <td style="padding:7px 8px;font-size:11px">${w.remarks || ''}</td>
+      <td style="padding:4px 6px;font-size:9px;text-align:center;color:${PRIMARY}">${i + 1}</td>
+      <td style="padding:4px 6px;font-size:10px;color:#1e293b">${w.desc || '—'}</td>
+      <td style="padding:4px 6px;font-size:10px;text-align:right;color:#1e293b">${fmt(w.boqAmount)}</td>
+      <td style="padding:4px 6px;font-size:10px;text-align:right;color:#1e293b">${w.uptoPrevious ? fmt(w.uptoPrevious) : '-'}</td>
+      <td style="padding:4px 6px;font-size:10px;text-align:right;font-weight:600;color:#1e293b">${fmt(w.thisBill)}</td>
+      <td style="padding:4px 6px;font-size:10px;text-align:right;color:#1e293b">${fmt((w.uptoPrevious || 0) + (w.thisBill || 0))}</td>
+      <td style="padding:4px 6px;font-size:9px;color:#1e293b">${w.remarks || ''}</td>
     </tr>`).join('');
 
   const deductionRows = (doc.deductions || []).map((d, i) => `
-    <tr><td style="padding:6px 10px;font-size:11px">D${i + 1}. ${d.label}${d.label === 'Retention' && d.pct ? ' - ' + d.pct + '%' : ''}</td>
-      <td style="padding:6px 10px;font-size:11px;text-align:right">${d.uptoPrevious ? fmt(d.uptoPrevious) : '-'}</td>
-      <td style="padding:6px 10px;font-size:11px;text-align:right">${d.thisBill ? '(' + fmt(d.thisBill) + ')' : '-'}</td>
-      <td style="padding:6px 10px;font-size:11px;text-align:right">${(d.uptoPrevious || d.thisBill) ? '(' + fmt((d.uptoPrevious || 0) + (d.thisBill || 0)) + ')' : '-'}</td></tr>`).join('');
+    <tr><td style="padding:3px 8px;font-size:9px;color:#1e293b">D${i + 1}. ${d.label}${d.label === 'Retention' && d.pct ? ' - ' + d.pct + '%' : ''}</td>
+      <td style="padding:3px 8px;font-size:9px;text-align:right;color:#1e293b">${d.uptoPrevious ? fmt(d.uptoPrevious) : '-'}</td>
+      <td style="padding:3px 8px;font-size:9px;text-align:right;color:#1e293b">${d.thisBill ? '(' + fmt(d.thisBill) + ')' : '-'}</td>
+      <td style="padding:3px 8px;font-size:9px;text-align:right;color:#1e293b">${(d.uptoPrevious || d.thisBill) ? '(' + fmt((d.uptoPrevious || 0) + (d.thisBill || 0)) + ')' : '-'}</td></tr>`).join('');
 
-  const metaRow = (label, val) => val ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">${label}</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px">${val}</td></tr>` : '';
+  const metaRow = (label, val) => val ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">${label}</td><td style="padding:2px 0 2px 10px;color:#1e293b">:</td><td style="padding:2px 0 2px 8px;color:#1e293b">${val}</td></tr>` : '';
 
   return `
-  <div style="font-family:'DM Sans',sans-serif;color:#1e293b;background:#ffffff;width:100%;padding:60px 72px;box-sizing:border-box;border:2px solid ${PRIMARY};border-radius:6px">
+  <div style="font-family:'DM Sans',sans-serif;color:#1e293b;background:#ffffff;width:100%;padding:36px 43px;box-sizing:border-box;border:2px solid ${PRIMARY};border-radius:6px">
 
     <!-- HEADER -->
-    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid ${PRIMARY};padding-bottom:14px;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid ${PRIMARY};padding-bottom:8px;margin-bottom:8px">
       <div style="display:flex;align-items:center;gap:14px">
-        ${s.logoDataUrl ? `<img src="${s.logoDataUrl}" alt="Logo" style="max-height:50px;max-width:220px;object-fit:contain" />` : `<div style="font-size:24px;font-weight:800;color:${PRIMARY}">airdoor</div>`}
+        ${s.logoDataUrl ? `<img src="${s.logoDataUrl}" alt="Logo" style="max-height:38px;max-width:170px;object-fit:contain" />` : `<div style="font-size:20px;font-weight:800;color:${PRIMARY}">airdoor</div>`}
       </div>
-      <div style="font-size:22px;font-weight:800;letter-spacing:3px;color:${PRIMARY}">PAYMENT ADVICE</div>
+      <div style="font-size:18px;font-weight:800;letter-spacing:3px;color:${PRIMARY}">PAYMENT ADVICE</div>
     </div>
 
     <!-- PROJECT META -->
-    <div style="display:flex;justify-content:space-between;gap:24px;margin-bottom:14px">
-      <table style="font-size:12px;border-collapse:collapse;flex:1.4">
+    <div style="display:flex;justify-content:space-between;gap:14px;margin-bottom:7px">
+      <table style="font-size:10px;border-collapse:collapse;flex:1.4">
         ${metaRow('Project', doc.project)}
         ${metaRow('Client', doc.client)}
         ${metaRow('RA Bill No.', doc.raBillNo)}
         ${metaRow('Work', doc.work)}
         ${metaRow('Work Period', doc.workPeriod)}
       </table>
-      <table style="font-size:12px;border-collapse:collapse;flex:1">
+      <table style="font-size:10px;border-collapse:collapse;flex:1">
         ${metaRow('WO Ref', doc.woRef)}
         ${metaRow('WO Date', doc.woDate ? dateStr(doc.woDate) : '')}
         ${metaRow('Invoice No.', doc.invoiceNo)}
@@ -6667,96 +6694,96 @@ function generatePaymentAdviceHTML(doc) {
     </div>
 
     <!-- CONTRACT AMOUNT SUMMARY -->
-    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;border:1px solid #e2e8f0">
-      <tr><td style="padding:7px 12px;color:#475569">Accepted / Original Contract Amount${doc.applyGST ? ' (Incl. GST)' : ''}</td><td style="padding:7px 12px;text-align:right;font-weight:600">₹${fmt(doc.originalContractAmount)}</td></tr>
-      <tr style="background:${ACCENT}"><td style="padding:7px 12px;color:#475569">Authorised Change Orders Amount${doc.applyGST ? ' (Incl. GST)' : ''}</td><td style="padding:7px 12px;text-align:right;font-weight:600">₹${fmt(doc.changeOrdersAmount)}</td></tr>
-      <tr><td style="padding:7px 12px;color:#475569">Items Paid On-account</td><td style="padding:7px 12px;text-align:right;font-weight:600">₹${fmt(doc.itemsPaidOnAccount)}</td></tr>
-      <tr style="background:${LIGHT_BLUE}"><td style="padding:7px 12px;font-weight:700;color:${PRIMARY}">Revised Contract Amount${doc.applyGST ? ' (Incl. GST)' : ''}</td><td style="padding:7px 12px;text-align:right;font-weight:800;color:${PRIMARY}">₹${fmt(doc.revisedContractAmount)}</td></tr>
+    <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:8px;border:1px solid #e2e8f0">
+      <tr><td style="padding:4px 10px;color:#475569">Accepted / Original Contract Amount${doc.applyGST ? ' (Incl. GST)' : ''}</td><td style="padding:4px 10px;text-align:right;font-weight:600">₹${fmt(doc.originalContractAmount)}</td></tr>
+      <tr style="background:${ACCENT}"><td style="padding:4px 10px;color:#475569">Authorised Change Orders Amount${doc.applyGST ? ' (Incl. GST)' : ''}</td><td style="padding:4px 10px;text-align:right;font-weight:600">₹${fmt(doc.changeOrdersAmount)}</td></tr>
+      <tr><td style="padding:4px 10px;color:#475569">Items Paid On-account</td><td style="padding:4px 10px;text-align:right;font-weight:600">₹${fmt(doc.itemsPaidOnAccount)}</td></tr>
+      <tr style="background:${LIGHT_BLUE}"><td style="padding:4px 10px;font-weight:700;color:${PRIMARY}">Revised Contract Amount${doc.applyGST ? ' (Incl. GST)' : ''}</td><td style="padding:4px 10px;text-align:right;font-weight:800;color:${PRIMARY}">₹${fmt(doc.revisedContractAmount)}</td></tr>
     </table>
 
     ${(doc.bankGuarantees || []).length ? `
     <!-- BANK GUARANTEE -->
-    <div style="font-size:12px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Bank Guarantee Details</div>
-    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:16px;border:1px solid #e2e8f0">
+    <div style="font-size:10px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">Bank Guarantee Details</div>
+    <table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:8px;border:1px solid #e2e8f0">
       <thead><tr style="background:${PRIMARY}">
-        <th style="padding:6px 8px;font-weight:700;color:#fff">S.No</th><th style="padding:6px 8px;font-weight:700;text-align:left;color:#fff">Type</th><th style="padding:6px 8px;font-weight:700;text-align:left;color:#fff">BG Number</th><th style="padding:6px 8px;font-weight:700;text-align:left;color:#fff">Start Date</th><th style="padding:6px 8px;font-weight:700;text-align:left;color:#fff">Expiry Date</th><th style="padding:6px 8px;font-weight:700;text-align:left;color:#fff">Remarks</th>
+        <th style="padding:3px 6px;font-weight:700;color:#fff">S.No</th><th style="padding:3px 6px;font-weight:700;text-align:left;color:#fff">Type</th><th style="padding:3px 6px;font-weight:700;text-align:left;color:#fff">BG Number</th><th style="padding:3px 6px;font-weight:700;text-align:left;color:#fff">Start Date</th><th style="padding:3px 6px;font-weight:700;text-align:left;color:#fff">Expiry Date</th><th style="padding:3px 6px;font-weight:700;text-align:left;color:#fff">Remarks</th>
       </tr></thead>
       <tbody>${bgRows}</tbody>
     </table>` : ''}
 
     <!-- A / B: MOBILISATION & ADHOC -->
     ${(doc.sectionA && doc.sectionA.length) ? `
-    <div style="font-size:12px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">A. Mobilisation Advance Payment</div>
-    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px;border:1px solid #e2e8f0">
-      <thead><tr style="background:${PRIMARY}"><th style="padding:6px 10px;text-align:left;color:#fff">Description</th><th style="padding:6px 10px;text-align:right;color:#fff">Upto Previous</th><th style="padding:6px 10px;text-align:right;color:#fff">This Bill</th><th style="padding:6px 10px;text-align:right;color:#fff">Cumulative</th></tr></thead>
+    <div style="font-size:10px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">A. Mobilisation Advance Payment</div>
+    <table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:7px;border:1px solid #e2e8f0">
+      <thead><tr style="background:${PRIMARY}"><th style="padding:3px 8px;text-align:left;color:#fff">Description</th><th style="padding:3px 8px;text-align:right;color:#fff">Upto Previous</th><th style="padding:3px 8px;text-align:right;color:#fff">This Bill</th><th style="padding:3px 8px;text-align:right;color:#fff">Cumulative</th></tr></thead>
       <tbody>${(doc.sectionA || []).map(r => sectionRow(r)).join('')}${sectionRow({ label: 'Total (A)', thisBill: sectionATotal }, true)}</tbody>
     </table>` : ''}
 
     ${(doc.sectionB && doc.sectionB.length) ? `
-    <div style="font-size:12px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">B. Adhoc Payment - RA Bills</div>
-    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px;border:1px solid #e2e8f0">
-      <thead><tr style="background:${PRIMARY}"><th style="padding:6px 10px;text-align:left;color:#fff">Description</th><th style="padding:6px 10px;text-align:right;color:#fff">Upto Previous</th><th style="padding:6px 10px;text-align:right;color:#fff">This Bill</th><th style="padding:6px 10px;text-align:right;color:#fff">Cumulative</th></tr></thead>
+    <div style="font-size:10px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">B. Adhoc Payment - RA Bills</div>
+    <table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:7px;border:1px solid #e2e8f0">
+      <thead><tr style="background:${PRIMARY}"><th style="padding:3px 8px;text-align:left;color:#fff">Description</th><th style="padding:3px 8px;text-align:right;color:#fff">Upto Previous</th><th style="padding:3px 8px;text-align:right;color:#fff">This Bill</th><th style="padding:3px 8px;text-align:right;color:#fff">Cumulative</th></tr></thead>
       <tbody>${(doc.sectionB || []).map(r => sectionRow(r)).join('')}${sectionRow({ label: 'Total (B)', thisBill: sectionBTotal }, true)}</tbody>
     </table>` : ''}
 
     <!-- C: WORK DONE -->
-    <div style="font-size:12px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">C. Work Done as per Contracts &amp; Change Orders</div>
-    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px;border:1px solid #e2e8f0">
+    <div style="font-size:10px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">C. Work Done as per Contracts &amp; Change Orders</div>
+    <table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:4px;border:1px solid #e2e8f0">
       <thead><tr style="background:${PRIMARY}">
-        <th style="padding:7px 8px;width:34px;color:#fff">S.No</th><th style="padding:7px 8px;text-align:left;color:#fff">Description</th><th style="padding:7px 8px;text-align:right;width:100px;color:#fff">BoQ Amount</th><th style="padding:7px 8px;text-align:right;width:100px;color:#fff">Upto Previous</th><th style="padding:7px 8px;text-align:right;width:100px;color:#fff">This Bill</th><th style="padding:7px 8px;text-align:right;width:100px;color:#fff">Cumulative</th><th style="padding:7px 8px;text-align:left;color:#fff">Remarks</th>
+        <th style="padding:4px 6px;width:34px;color:#fff">S.No</th><th style="padding:4px 6px;text-align:left;color:#fff">Description</th><th style="padding:4px 6px;text-align:right;width:100px;color:#fff">BoQ Amount</th><th style="padding:4px 6px;text-align:right;width:100px;color:#fff">Upto Previous</th><th style="padding:4px 6px;text-align:right;width:100px;color:#fff">This Bill</th><th style="padding:4px 6px;text-align:right;width:100px;color:#fff">Cumulative</th><th style="padding:4px 6px;text-align:left;color:#fff">Remarks</th>
       </tr></thead>
       <tbody>${workRows}
         ${doc.applyGST ? `
-        <tr style="background:${ACCENT};font-weight:700"><td colspan="2" style="padding:7px 8px;font-size:11px">Total Excl. GST</td>
-          <td style="padding:7px 8px;font-size:11px;text-align:right">₹${fmt(c.boqTotal)}</td>
-          <td style="padding:7px 8px;font-size:11px;text-align:right">₹${fmt(c.upToPrevTotal)}</td>
-          <td style="padding:7px 8px;font-size:11px;text-align:right">₹${fmt(c.thisBillTotal)}</td>
-          <td style="padding:7px 8px;font-size:11px;text-align:right">₹${fmt(c.cumulativeTotal)}</td>
-          <td style="padding:7px 8px;font-size:11px;text-align:right">${c.boqTotal ? c.pctComplete.toFixed(1) + '%' : ''}</td></tr>
-        <tr><td colspan="2" style="padding:6px 8px;font-size:11px;color:#475569">GST @ ${c.gstPct}%</td><td></td><td style="padding:6px 8px;font-size:11px;text-align:right">₹${fmt(c.gstCumulative - c.gstThisBill)}</td><td style="padding:6px 8px;font-size:11px;text-align:right">₹${fmt(c.gstThisBill)}</td><td style="padding:6px 8px;font-size:11px;text-align:right">₹${fmt(c.gstCumulative)}</td><td></td></tr>
-        <tr style="background:${LIGHT_BLUE};font-weight:800"><td colspan="2" style="padding:7px 8px;font-size:12px;color:${PRIMARY}">Total Incl. GST</td><td></td>
-          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.totalInclGSTCumulative - c.totalInclGSTThisBill)}</td>
-          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.totalInclGSTThisBill)}</td>
-          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.totalInclGSTCumulative)}</td><td></td></tr>` : `
-        <tr style="background:${LIGHT_BLUE};font-weight:800"><td colspan="2" style="padding:7px 8px;font-size:12px;color:${PRIMARY}">Total</td>
-          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.boqTotal)}</td>
-          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.upToPrevTotal)}</td>
-          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.thisBillTotal)}</td>
-          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">₹${fmt(c.cumulativeTotal)}</td>
-          <td style="padding:7px 8px;font-size:12px;text-align:right;color:${PRIMARY}">${c.boqTotal ? c.pctComplete.toFixed(1) + '%' : ''}</td></tr>`}
+        <tr style="background:${ACCENT};font-weight:700"><td colspan="2" style="padding:4px 6px;font-size:9px;color:#1e293b">Total Excl. GST</td>
+          <td style="padding:4px 6px;font-size:9px;text-align:right;color:#1e293b">₹${fmt(c.boqTotal)}</td>
+          <td style="padding:4px 6px;font-size:9px;text-align:right;color:#1e293b">₹${fmt(c.upToPrevTotal)}</td>
+          <td style="padding:4px 6px;font-size:9px;text-align:right;color:#1e293b">₹${fmt(c.thisBillTotal)}</td>
+          <td style="padding:4px 6px;font-size:9px;text-align:right;color:#1e293b">₹${fmt(c.cumulativeTotal)}</td>
+          <td style="padding:4px 6px;font-size:9px;text-align:right;color:#1e293b">${c.boqTotal ? c.pctComplete.toFixed(1) + '%' : ''}</td></tr>
+        <tr><td colspan="2" style="padding:3px 6px;font-size:9px;color:#475569">GST @ ${c.gstPct}%</td><td></td><td style="padding:3px 6px;font-size:9px;text-align:right">₹${fmt(c.gstCumulative - c.gstThisBill)}</td><td style="padding:3px 6px;font-size:9px;text-align:right">₹${fmt(c.gstThisBill)}</td><td style="padding:3px 6px;font-size:9px;text-align:right">₹${fmt(c.gstCumulative)}</td><td></td></tr>
+        <tr style="background:${LIGHT_BLUE};font-weight:800"><td colspan="2" style="padding:4px 6px;font-size:10px;color:${PRIMARY}">Total Incl. GST</td><td></td>
+          <td style="padding:4px 6px;font-size:10px;text-align:right;color:${PRIMARY}">₹${fmt(c.totalInclGSTCumulative - c.totalInclGSTThisBill)}</td>
+          <td style="padding:4px 6px;font-size:10px;text-align:right;color:${PRIMARY}">₹${fmt(c.totalInclGSTThisBill)}</td>
+          <td style="padding:4px 6px;font-size:10px;text-align:right;color:${PRIMARY}">₹${fmt(c.totalInclGSTCumulative)}</td><td></td></tr>` : `
+        <tr style="background:${LIGHT_BLUE};font-weight:800"><td colspan="2" style="padding:4px 6px;font-size:10px;color:${PRIMARY}">Total</td>
+          <td style="padding:4px 6px;font-size:10px;text-align:right;color:${PRIMARY}">₹${fmt(c.boqTotal)}</td>
+          <td style="padding:4px 6px;font-size:10px;text-align:right;color:${PRIMARY}">₹${fmt(c.upToPrevTotal)}</td>
+          <td style="padding:4px 6px;font-size:10px;text-align:right;color:${PRIMARY}">₹${fmt(c.thisBillTotal)}</td>
+          <td style="padding:4px 6px;font-size:10px;text-align:right;color:${PRIMARY}">₹${fmt(c.cumulativeTotal)}</td>
+          <td style="padding:4px 6px;font-size:10px;text-align:right;color:${PRIMARY}">${c.boqTotal ? c.pctComplete.toFixed(1) + '%' : ''}</td></tr>`}
       </tbody>
     </table>
 
     <!-- D: DEDUCTIONS -->
-    <div style="font-size:12px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin:14px 0 6px 0">D. Deductions / Withheld</div>
-    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px;border:1px solid #e2e8f0">
-      <thead><tr style="background:${PRIMARY}"><th style="padding:6px 10px;text-align:left;color:#fff">Description</th><th style="padding:6px 10px;text-align:right;color:#fff">Upto Previous</th><th style="padding:6px 10px;text-align:right;color:#fff">This Bill</th><th style="padding:6px 10px;text-align:right;color:#fff">Cumulative</th></tr></thead>
+    <div style="font-size:10px;font-weight:700;color:${PRIMARY};text-transform:uppercase;letter-spacing:1px;margin:7px 0 3px 0">D. Deductions / Withheld</div>
+    <table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:7px;border:1px solid #e2e8f0">
+      <thead><tr style="background:${PRIMARY}"><th style="padding:3px 8px;text-align:left;color:#fff">Description</th><th style="padding:3px 8px;text-align:right;color:#fff">Upto Previous</th><th style="padding:3px 8px;text-align:right;color:#fff">This Bill</th><th style="padding:3px 8px;text-align:right;color:#fff">Cumulative</th></tr></thead>
       <tbody>${deductionRows}
-        <tr style="background:${ACCENT};font-weight:700"><td style="padding:7px 10px;font-size:11px">Total Deductions</td>
-          <td style="padding:7px 10px;font-size:11px;text-align:right">(${fmt(c.dedUpToPrevTotal)})</td>
-          <td style="padding:7px 10px;font-size:11px;text-align:right">(${fmt(c.dedThisBillTotal)})</td>
-          <td style="padding:7px 10px;font-size:11px;text-align:right">(${fmt(c.dedCumulativeTotal)})</td></tr>
+        <tr style="background:${ACCENT};font-weight:700"><td style="padding:4px 8px;font-size:9px;color:#1e293b">Total Deductions</td>
+          <td style="padding:4px 8px;font-size:9px;text-align:right;color:#1e293b">(${fmt(c.dedUpToPrevTotal)})</td>
+          <td style="padding:4px 8px;font-size:9px;text-align:right;color:#1e293b">(${fmt(c.dedThisBillTotal)})</td>
+          <td style="padding:4px 8px;font-size:9px;text-align:right;color:#1e293b">(${fmt(c.dedCumulativeTotal)})</td></tr>
       </tbody>
     </table>
 
     <!-- NET CERTIFIED -->
-    <div style="background:${PRIMARY};color:#fff;display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-radius:8px;margin-bottom:26px">
-      <div style="font-size:14px;font-weight:800;letter-spacing:1px">NET CERTIFIED AMOUNT (THIS BILL)</div>
-      <div style="font-size:20px;font-weight:800">₹${fmt(c.netCertifiedThisBill)}</div>
+    <div class="pa-nobreak" style="background:${PRIMARY};color:#fff;display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-radius:8px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:800;letter-spacing:1px">NET CERTIFIED AMOUNT (THIS BILL)</div>
+      <div style="font-size:16px;font-weight:800">₹${fmt(c.netCertifiedThisBill)}</div>
     </div>
 
     <!-- SIGNATURES -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px">
+    <div class="pa-nobreak" style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:20px">
       <div style="text-align:center">
-        <div style="border-top:1.5px solid ${PRIMARY};padding-top:8px;margin-top:50px">
-          <div style="font-size:12px;font-weight:700;color:${PRIMARY}">Approved by Client</div>
-          <div style="font-size:11px;color:#475569">${doc.client || ''}</div>
+        <div style="border-top:1.5px solid ${PRIMARY};padding-top:5px;margin-top:22px">
+          <div style="font-size:10px;font-weight:700;color:${PRIMARY}">Approved by Client</div>
+          <div style="font-size:9px;color:#475569">${doc.client || ''}</div>
         </div>
       </div>
       <div style="text-align:center">
-        <div style="border-top:1.5px solid ${PRIMARY};padding-top:8px;margin-top:50px">
-          <div style="font-size:12px;font-weight:700;color:${PRIMARY}">Agreed by Contractor</div>
-          <div style="font-size:11px;color:#475569">Airdoor MEP Solutions</div>
+        <div style="border-top:1.5px solid ${PRIMARY};padding-top:5px;margin-top:22px">
+          <div style="font-size:10px;font-weight:700;color:${PRIMARY}">Agreed by Contractor</div>
+          <div style="font-size:9px;color:#475569">Airdoor MEP Solutions</div>
         </div>
       </div>
     </div>
@@ -6769,20 +6796,77 @@ function previewPA() {
   showPage('paPreview');
 }
 
-let viewingPAId = null;
+// Payment Advice PDF renderer — tries to fit everything on one page (shrinking slightly if it's
+// only just over), and if it truly needs multiple pages, snaps page breaks to row boundaries so a
+// table row (or the net-certified/signature blocks) never gets sliced in half across pages.
+async function renderPAToPDF(el, fname) {
+  const scale = 2;
+  const canvas = await html2canvas(el, { scale, useCORS: true, backgroundColor: '#ffffff' });
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const imgW = canvas.width;
+  const imgH = canvas.height;
+  const mmPerPx = pageW / imgW;
+  const totalHeightMM = imgH * mmPerPx;
 
-async function downloadPAPDF() {
-  toast('Generating PDF…');
-  const el = document.getElementById('pa-preview');
-  const fname = (document.getElementById('pa-invoiceno').value || 'payment-advice').replace(/\//g, '-');
-  await renderToPDF(el, fname);
-  toast('PDF downloaded! ✓', 'success');
+  if (totalHeightMM <= pageH) {
+    pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pageW, totalHeightMM);
+    pdf.save(fname + '.pdf');
+    return;
+  }
+
+  // Prefer forcing everything onto a single page — shrink fairly aggressively (up to ~40% smaller)
+  // rather than falling into multi-page slicing, which is where uneven/broken page splits came from.
+  const shrinkFactor = pageH / totalHeightMM;
+  if (shrinkFactor >= 0.6) {
+    const scaledW = pageW * shrinkFactor;
+    const scaledH = pageH;
+    pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', (pageW - scaledW) / 2, 0, scaledW, scaledH);
+    pdf.save(fname + '.pdf');
+    return;
+  }
+
+  // Genuinely needs multiple pages — find safe break points (top edge of each table row / no-break
+  // block) so the page split always lands between rows, never through one.
+  const elTop = el.getBoundingClientRect().top;
+  const safeBreaks = Array.from(el.querySelectorAll('tr, .pa-nobreak'))
+    .map(r => Math.round((r.getBoundingClientRect().top - elTop) * scale))
+    .filter(y => y > 0 && y < imgH)
+    .sort((a, b) => a - b);
+
+  const sliceHeightPx = Math.floor(pageH / mmPerPx);
+  let offsetPx = 0, firstPage = true;
+  while (offsetPx < imgH) {
+    const idealEnd = Math.min(offsetPx + sliceHeightPx, imgH);
+    let bestBreak = idealEnd;
+    for (const y of safeBreaks) {
+      if (y > offsetPx && y <= idealEnd) bestBreak = y;
+      if (y > idealEnd) break;
+    }
+    // Guard against a single oversized row producing a near-zero slice (would loop forever).
+    if (bestBreak - offsetPx < sliceHeightPx * 0.3) bestBreak = idealEnd;
+    const sliceH = Math.min(bestBreak - offsetPx, imgH - offsetPx);
+    const sliceCanvas = document.createElement('canvas');
+    sliceCanvas.width = imgW; sliceCanvas.height = sliceH;
+    sliceCanvas.getContext('2d').drawImage(canvas, 0, offsetPx, imgW, sliceH, 0, 0, imgW, sliceH);
+    if (!firstPage) pdf.addPage();
+    pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pageW, sliceH * mmPerPx);
+    offsetPx += sliceH; firstPage = false;
+  }
+  pdf.save(fname + '.pdf');
 }
 
-async function downloadDocPAPDF(id) {
-  const doc = paymentAdvices.find(d => d.id === id);
-  if (!doc) return;
-  viewingPAId = id;
+let viewingPAId = null;
+
+// Both PA download entry points (Preview page button, and the list's Download PDF button) now go
+// through this single path. Previously the Preview button captured the on-screen #pa-preview element
+// (whose width depends on the browser's viewport / layout at that moment), while the list button
+// rendered into a fixed 794px-wide offscreen div — different widths wrap the long "Description" text
+// differently, producing a different total page height and therefore different (sometimes broken)
+// pagination. Rendering both from the same fixed-width offscreen div guarantees identical output.
+async function _renderAndDownloadPA(doc, fname) {
   let tempDiv = document.getElementById('_pa_pdf_temp');
   if (!tempDiv) {
     tempDiv = document.createElement('div');
@@ -6791,11 +6875,26 @@ async function downloadDocPAPDF(id) {
     document.body.appendChild(tempDiv);
   }
   tempDiv.innerHTML = generatePaymentAdviceHTML(doc);
-  await new Promise(r => setTimeout(r, 300));
+  // Let fonts/layout fully settle before measuring row positions & rasterizing — a fixed 300ms
+  // guess could fire before text metrics were ready, shifting line-wraps/row heights between runs.
+  if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   toast('Generating PDF…');
-  const fname = (doc.invoiceNo || 'payment-advice').replace(/\//g, '-');
-  await renderToPDF(tempDiv.firstElementChild, fname);
+  await renderPAToPDF(tempDiv.firstElementChild, fname);
   toast('PDF downloaded! ✓', 'success');
+}
+
+async function downloadPAPDF() {
+  const doc = collectPAFormData();
+  const fname = `Payment Advice${doc.raBillNo ? ' - ' + doc.raBillNo : ''}`.replace(/\//g, '-');
+  await _renderAndDownloadPA(doc, fname);
+}
+
+function previewSavedPA(id) {
+  const doc = paymentAdvices.find(d => d.id === id);
+  if (!doc) return;
+  editPA(id);
+  previewPA();
 }
 
 window.addEventListener('click', e => {
