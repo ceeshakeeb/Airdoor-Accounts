@@ -3212,10 +3212,8 @@ function calcTotals() {
   const taxable = subtotal - discount;
   let cgst = 0, sgst = 0, igst = 0;
 
-  if (currentDocType !== 'Quotation') {
-    if (taxType === 'cgst_sgst') { cgst = sgst = taxable * 0.09; }
-    else if (taxType === 'igst') { igst = taxable * 0.18; }
-  }
+  if (taxType === 'cgst_sgst') { cgst = sgst = taxable * 0.09; }
+  else if (taxType === 'igst') { igst = taxable * 0.18; }
 
   const rawGrand = taxable + cgst + sgst + igst;
   const grand = Math.round(rawGrand);
@@ -3231,9 +3229,9 @@ function calcTotals() {
 
 function updateTaxDisplay() {
   const taxType = document.getElementById('tax-type').value;
-  document.getElementById('cgst-row').style.display = (taxType === 'cgst_sgst' && currentDocType !== 'Quotation') ? '' : 'none';
-  document.getElementById('sgst-row').style.display = (taxType === 'cgst_sgst' && currentDocType !== 'Quotation') ? '' : 'none';
-  document.getElementById('igst-row').style.display = (taxType === 'igst' && currentDocType !== 'Quotation') ? '' : 'none';
+  document.getElementById('cgst-row').style.display = (taxType === 'cgst_sgst') ? '' : 'none';
+  document.getElementById('sgst-row').style.display = (taxType === 'cgst_sgst') ? '' : 'none';
+  document.getElementById('igst-row').style.display = (taxType === 'igst') ? '' : 'none';
 }
 
 function updateBankPreview() {
@@ -3258,9 +3256,7 @@ function collectFormData() {
   let discount = discType === 'pct' ? subtotal * discVal / 100 : discType === 'flat' ? discVal : 0;
   const taxable = subtotal - discount;
   let cgst = 0, sgst = 0, igst = 0;
-  if (currentDocType !== 'Quotation') {
-    if (taxType === 'cgst_sgst') { cgst = sgst = taxable * 0.09; } else if (taxType === 'igst') { igst = taxable * 0.18; }
-  }
+  if (taxType === 'cgst_sgst') { cgst = sgst = taxable * 0.09; } else if (taxType === 'igst') { igst = taxable * 0.18; }
   const rawGrand = taxable + cgst + sgst + igst;
   const grand = Math.round(rawGrand);
   const roundOff = grand - rawGrand;
