@@ -3285,12 +3285,10 @@ function generateInvoiceHTML(doc) {
   const dateStr = doc.date ? new Date(doc.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '';
   
   let taxRows = '';
-  if (doc.type !== 'Quotation') {
-    if (doc.taxType === 'cgst_sgst') {
-      taxRows = `<tr><td style="padding:5px 10px;color:#475569">CGST @ 9%</td><td style="padding:5px 10px;text-align:right">${fmt(doc.cgst)}</td></tr>
-                 <tr><td style="padding:5px 10px;color:#475569">SGST @ 9%</td><td style="padding:5px 10px;text-align:right">${fmt(doc.sgst)}</td></tr>`;
-    } else if (doc.taxType === 'igst') { taxRows = `<tr><td style="padding:5px 10px;color:#475569">IGST @ 18%</td><td style="padding:5px 10px;text-align:right">${fmt(doc.igst)}</td></tr>`; }
-  }
+  if (doc.taxType === 'cgst_sgst') {
+    taxRows = `<tr><td style="padding:5px 10px;color:#475569">CGST @ 9%</td><td style="padding:5px 10px;text-align:right">${fmt(doc.cgst)}</td></tr>
+               <tr><td style="padding:5px 10px;color:#475569">SGST @ 9%</td><td style="padding:5px 10px;text-align:right">${fmt(doc.sgst)}</td></tr>`;
+  } else if (doc.taxType === 'igst') { taxRows = `<tr><td style="padding:5px 10px;color:#475569">IGST @ 18%</td><td style="padding:5px 10px;text-align:right">${fmt(doc.igst)}</td></tr>`; }
   let discRow = doc.discount > 0 ? `<tr><td style="padding:5px 10px;color:#dc2626">Discount</td><td style="padding:5px 10px;text-align:right;color:#dc2626">-${fmt(doc.discount)}</td></tr>` : '';
   const roundOff = doc.roundOff || 0;
   const roundOffRow = Math.abs(roundOff) >= 0.01 ? `<tr><td style="padding:5px 10px;color:#475569">Round Off</td><td style="padding:5px 10px;text-align:right">${roundOff >= 0 ? '+' : '-'}₹${Math.abs(roundOff).toFixed(2)}</td></tr>` : '';
