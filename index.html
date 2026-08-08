@@ -3461,19 +3461,34 @@ function _persistDoc(doc, status, successMsg) {
   } else {
     delete doc.id;
     doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+
+    if (status === 'final') {
+      // Number is allocated INSIDE the transaction from a fresh Firestore read —
+      // never from the locally cached `settings` object — so it can't repeat or
+      // collide even if the settings listener hasn't caught up yet, or two
+      // documents of the same type are generated back-to-back.
+      const newDocRef = db.collection(DOCS_COLLECTION).doc();
+      const field = doc.type === 'Tax Invoice' ? 'taxNext'
+        : doc.type === 'Invoice' ? 'invoiceNext'
+        : doc.type === 'Proforma Invoice' ? 'proNext'
+        : 'quotNext';
+      const prefix = doc.type === 'Tax Invoice' ? settings.taxPrefix
+        : doc.type === 'Invoice' ? (settings.invoicePrefix || 'ADM/INV/25-26/')
+        : doc.type === 'Proforma Invoice' ? settings.proPrefix
+        : settings.quotPrefix;
+
+      return db.runTransaction(tx => {
+        return tx.get(SETTINGS_REF).then(snap => {
+          const freshNext = (snap.exists && snap.data()[field]) || 1;
+          doc.number = prefix + freshNext;
+          tx.set(newDocRef, doc);
+          tx.set(SETTINGS_REF, { [field]: freshNext + 1 }, { merge: true });
+        });
+      }).then(() => { toast(successMsg, 'success'); showPage('list'); filterDocs('all'); return newDocRef.id; });
+    }
+
     return db.collection(DOCS_COLLECTION).add(doc)
-      .then(ref => {
-        if (status === 'final') {
-          const updates = {};
-          if (doc.type === 'Tax Invoice') updates.taxNext = (settings.taxNext || 1) + 1;
-          else if (doc.type === 'Invoice') updates.invoiceNext = (settings.invoiceNext || 1) + 1;
-          else if (doc.type === 'Proforma Invoice') updates.proNext = (settings.proNext || 1) + 1;
-          else updates.quotNext = (settings.quotNext || 1) + 1;
-          return SETTINGS_REF.set(updates, { merge: true }).then(() => ref.id);
-        }
-        return ref.id;
-      })
-      .then(id => { toast(successMsg, 'success'); showPage('list'); filterDocs('all'); return id; });
+      .then(ref => { toast(successMsg, 'success'); showPage('list'); filterDocs('all'); return ref.id; });
   }
 }
 
